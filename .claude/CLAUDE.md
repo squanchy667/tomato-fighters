@@ -66,6 +66,7 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 | `/generate-task-specs` | Generate detailed task specs from TASK_BOARD.md |
 | `/check-pillar` | Verify no cross-pillar import violations |
 | `/sync-docs` | Update docs repo: statuses, changelog, SUMMARY.md |
+| `/plan-task TXXX` | Interactive planning conversation before executing a task |
 
 ## Available Agents
 
