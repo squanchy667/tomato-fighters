@@ -1,12 +1,14 @@
 {
   "version": "1.0.0",
-  "scannedAt": "2026-03-02T18:00:00Z",
+  "scannedAt": "2026-03-02T22:00:00Z",
   "repoPath": "TomatoFighters/tomato-fighters",
+  "unityProjectPath": "unity/TomatoFighters",
   "stats": {
     "totalFiles": 1,
     "totalDirectories": 30,
     "totalTokens": 450,
-    "status": "scaffold-only"
+    "status": "scaffold-only",
+    "unityDefaultAssets": ["InputSystem_Actions.inputactions", "DefaultVolumeProfile.asset", "UniversalRenderPipelineGlobalSettings.asset"]
   },
   "languages": {
     "csharp": { "files": 0, "estimatedTokens": 0, "note": "All code TBD — 60 tasks pending" }
