@@ -56,6 +56,7 @@ TomatoFighters/
 | `/capture-learnings` | Extract patterns from completed phases |
 | `/generate-task-specs` | Generate detailed task specs from TASK_BOARD.md |
 | `/check-pillar` | Verify no cross-pillar import violations |
+| `/sync-docs` | Update docs repo: statuses, changelog, SUMMARY.md |
 
 ## Available Agents
 
@@ -81,6 +82,7 @@ TomatoFighters/
 | `quality-gate` | Quality checking | haiku |
 | `test-validator` | Validate against acceptance criteria | sonnet |
 | `documenter` | Audit trail generation | haiku |
+| `docs-writer` | Docs repo updates (GitBook format) | haiku |
 | `repo-scanner` | Index the repository | sonnet |
 | `agent-tailor` | Create new specialized agents | sonnet |
 

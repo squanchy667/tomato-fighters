@@ -109,6 +109,7 @@ Suggest updates to:
 | quality-gate | Quality checking | haiku | Meta |
 | task-analyzer | Task analysis | haiku | Meta |
 | documenter | Audit trail | haiku | Meta |
+| docs-writer | Docs repo updates (GitBook) | haiku | Meta |
 | repo-scanner | Repo indexing | sonnet | Meta |
 | test-validator | Output validation | sonnet | Meta |
 | phase-planner | Planning and batching | sonnet | Meta |

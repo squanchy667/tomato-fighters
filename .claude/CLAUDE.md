@@ -65,12 +65,13 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 | `/capture-learnings` | Extract patterns from completed phases |
 | `/generate-task-specs` | Generate detailed task specs from TASK_BOARD.md |
 | `/check-pillar` | Verify no cross-pillar import violations |
+| `/sync-docs` | Update docs repo: statuses, changelog, SUMMARY.md |
 
 ## Available Agents
 
 **Project agents** (code generation): `shared-contracts`, `combat-agent`, `roguelite-agent`, `world-agent`, `so-architect`, `ability-agent`, `integration-agent`, `balance-agent`
 
-**Meta agents** (pipeline): `task-spec-writer`, `phase-orchestrator`, `phase-planner`, `task-analyzer`, `quality-gate`, `test-validator`, `documenter`, `repo-scanner`, `agent-tailor`
+**Meta agents** (pipeline): `task-spec-writer`, `phase-orchestrator`, `phase-planner`, `task-analyzer`, `quality-gate`, `test-validator`, `documenter`, `docs-writer`, `repo-scanner`, `agent-tailor`
 
 Use the `agent-tailor` agent to create new specialized agents when needed.
 
@@ -80,3 +81,4 @@ Use the `agent-tailor` agent to create new specialized agents when needed.
 2. Read this file and your crew guide: `tomato-fighters-docs/developer/dev{N}-*.md`
 3. Use `/task-execute TXXX` to run your assigned tasks
 4. Use `/check-pillar {your-pillar}` to verify pillar boundaries
+5. Use `/sync-docs` after completing tasks to update documentation
