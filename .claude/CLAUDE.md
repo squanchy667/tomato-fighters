@@ -65,7 +65,7 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 | `/capture-learnings` | Extract patterns from completed phases |
 | `/generate-task-specs` | Generate detailed task specs from TASK_BOARD.md |
 | `/check-pillar` | Verify no cross-pillar import violations |
-| `/sync-docs` | Update docs repo: statuses, changelog, SUMMARY.md |
+| `/sync-docs` | Update docs repo (modes: full, status, changelog, summary, tasks, validate) |
 | `/plan-task TXXX` | Interactive planning conversation before executing a task |
 | `/dump` | Save current task context before ending a session (handoff) |
 | `/fetch` | Resume work by loading a dump file and project context |
