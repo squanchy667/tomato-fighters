@@ -69,6 +69,7 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 | `/plan-task TXXX` | Interactive planning conversation before executing a task |
 | `/dump` | Save current task context before ending a session (handoff) |
 | `/fetch` | Resume work by loading a dump file and project context |
+| `/merge-task TXXX` | Merge a completed task branch into gal (or specified branch) |
 
 ## Available Agents
 
