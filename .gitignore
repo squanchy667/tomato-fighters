@@ -1,0 +1,74 @@
+# ===========================
+# Unity Generated
+# ===========================
+/unity/TomatoFighters/[Ll]ibrary/
+/unity/TomatoFighters/[Tt]emp/
+/unity/TomatoFighters/[Oo]bj/
+/unity/TomatoFighters/[Bb]uild/
+/unity/TomatoFighters/[Bb]uilds/
+/unity/TomatoFighters/[Ll]ogs/
+/unity/TomatoFighters/[Uu]ser[Ss]ettings/
+/unity/TomatoFighters/[Mm]emoryCaptures/
+/unity/TomatoFighters/[Rr]ecordings/
+
+# ===========================
+# Asset meta (never ignore .meta files — Unity needs them)
+# ===========================
+
+# ===========================
+# Visual Studio / Rider / IDE
+# ===========================
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# ===========================
+# OS Generated
+# ===========================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# ===========================
+# Unity specific files
+# ===========================
+/unity/TomatoFighters/[Aa]ssets/AssetStoreTools*
+/unity/TomatoFighters/[Aa]ssets/[Pp]lugins/Editor/JetBrains*
+
+# Crash reports
+sysinfo.txt
+crashlytics-build.properties
+
+# Gradle (Android builds)
+*.apk
+*.aab
+*.unitypackage
+*.gradle
