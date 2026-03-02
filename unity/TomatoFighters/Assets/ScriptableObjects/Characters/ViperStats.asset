@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f9a2e8b1c7d5a3f6e2b9d4c8f1a0e7b, type: 3}
+  m_Name: ViperStats
+  m_EditorClassIdentifier:
+  characterType: 3
+  passiveAbilityId: DistanceBonus
+  description: "Zone controller and crowd manager. Ranged specialist with split ATK
+    scaling: 0.6 melee / 1.8 ranged. Ranged attacks gain +2% damage per unit of
+    distance from target (max +30%). Keep enemies at arm's length."
+  health: 80
+  defense: 10
+  attack: 0.6
+  rangedAttack: 1.8
+  speed: 1.1
+  mana: 120
+  manaRegen: 6
+  critChance: 0.1
+  stunRate: 0.8
