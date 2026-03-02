@@ -8,7 +8,7 @@
 |------|-------|-------|--------|------------|
 | T001 | Shared Interfaces, Enums, and Data Structures | ALL | DONE | — |
 | T002 | CharacterController — belt-scroll movement, jump, dash | Dev 1 | DONE | T001 |
-| T003 | ComboSystem — light/heavy chains, finishers | Dev 1 | PENDING | T001 |
+| T003 | ComboSystem — light/heavy chains, finishers | Dev 1 | DONE | T001 |
 | T004 | HitboxManager — animation-driven hitbox activation | Dev 1 | PENDING | T002 |
 | T005 | AttackData SO — damage, knockback, launch, timing | Dev 1 | PENDING | T002, T003 |
 | T006 | DefenseSystem — deflect, clash, dodge | Dev 1 | PENDING | T002, T003 |

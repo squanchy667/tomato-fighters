@@ -1,5 +1,31 @@
 # Changelog
 
+## [Phase 1] — 2026-03-02 (T003 Combo System — DONE)
+
+### Completed
+- **T003: ComboSystem — light/heavy chains, finishers** — 7 code files + 1 test file + editor updates
+  - AttackType: Light/Heavy enum
+  - ComboState: Idle/Attacking/ComboWindow/Finisher enum
+  - ComboStep: serializable struct with branching tree indices (nextOnLight/nextOnHeavy)
+  - ComboDefinition: ScriptableObject with flat step array, root indices, per-step window overrides
+  - ComboStateMachine: plain C# state machine — input buffering, combo window timer, animation event callbacks
+  - ComboController: MonoBehaviour — input → state machine → animation → events
+  - ComboDebugUI: debug overlay with auto-advance (simulates animation events), sprite flashing, OnGUI HUD
+  - CharacterInputHandler: updated with lightAttackAction/heavyAttackAction InputActionReferences
+
+### Test Infrastructure
+- 25 edit-mode unit tests for ComboStateMachine (branching, buffering, timing, finishers, guards)
+- MovementTestSceneCreator: updated with combo wiring, ComboDefinition creation, attack input mapping
+- PlayerPrefabCreator: updated with ComboController on Player prefab
+- Brutor_ComboDefinition SO: 7-step branching tree (L→L→L sweep, L→H launcher, H→H ground pound)
+
+### Design Decisions
+- DD-1: Branching combo tree (L→L→H vs L→L→L) for deep combat variety
+- DD-2: Flat array with index pointers — simple inspector authoring
+- DD-3: Local C# events (AttackStarted/ComboDropped/FinisherStarted/ComboEnded) — matches T002 pattern
+- DD-4: Plain C# state machine with Tick(dt) — testable without Unity runtime
+- ComboDebugUI auto-advance disabled when Animator is present
+
 ## [Phase 1] — 2026-03-02
 
 ### Completed

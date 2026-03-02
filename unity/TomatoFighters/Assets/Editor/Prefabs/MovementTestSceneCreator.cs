@@ -9,7 +9,7 @@ using UnityEngine.InputSystem;
 namespace TomatoFighters.Editor.Prefabs
 {
     /// <summary>
-    /// Creates a minimal test scene for verifying belt-scroll movement.
+    /// Creates a minimal test scene for verifying belt-scroll movement and combo system.
     /// Run via menu: TomatoFighters > Create Movement Test Scene.
     /// </summary>
     public static class MovementTestSceneCreator
@@ -18,6 +18,8 @@ namespace TomatoFighters.Editor.Prefabs
         private const string SCENE_PATH = SCENE_FOLDER + "/MovementTest.unity";
         private const string CONFIG_FOLDER = "Assets/ScriptableObjects/MovementConfigs";
         private const string CONFIG_PATH = CONFIG_FOLDER + "/Brutor_MovementConfig.asset";
+        private const string COMBO_FOLDER = "Assets/ScriptableObjects/ComboDefinitions";
+        private const string COMBO_PATH = COMBO_FOLDER + "/Brutor_ComboDefinition.asset";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
         private const float ARENA_WIDTH = 20f;
@@ -39,8 +41,9 @@ namespace TomatoFighters.Editor.Prefabs
 
             // Create player
             var config = CreateOrLoadMovementConfig();
+            var comboDef = CreateOrLoadComboDefinition();
             var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
-            CreatePlayer(config, inputActions);
+            CreatePlayer(config, comboDef, inputActions);
 
             // Create debug UI
             CreateDebugCanvas();
@@ -50,7 +53,7 @@ namespace TomatoFighters.Editor.Prefabs
             EditorSceneManager.SaveScene(scene, SCENE_PATH);
 
             Debug.Log($"[MovementTestScene] Scene created at {SCENE_PATH}");
-            Debug.Log("[MovementTestScene] Controls: WASD = move, Space = jump, Left Shift = dash");
+            Debug.Log("[MovementTestScene] Controls: WASD = move, Space = jump, Left Shift = dash, J = light attack, K = heavy attack");
         }
 
         private static void SetupCamera()
@@ -124,7 +127,7 @@ namespace TomatoFighters.Editor.Prefabs
             col.size = size;
         }
 
-        private static void CreatePlayer(MovementConfig config, InputActionAsset inputActions)
+        private static void CreatePlayer(MovementConfig config, ComboDefinition comboDef, InputActionAsset inputActions)
         {
             var root = new GameObject("Player");
             root.transform.position = Vector3.zero;
@@ -169,10 +172,21 @@ namespace TomatoFighters.Editor.Prefabs
             motorSO.FindProperty("spriteTransform").objectReferenceValue = spriteChild.transform;
             motorSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // ComboController
+            var comboController = root.AddComponent<ComboController>();
+            var comboSO = new SerializedObject(comboController);
+            comboSO.FindProperty("comboDefinition").objectReferenceValue = comboDef;
+            comboSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Brutor;
+            comboSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // ComboDebugUI — visual feedback for combo testing
+            root.AddComponent<ComboDebugUI>();
+
             // CharacterInputHandler with input action wiring
             var inputHandler = root.AddComponent<CharacterInputHandler>();
             var inputSO = new SerializedObject(inputHandler);
             inputSO.FindProperty("motor").objectReferenceValue = motor;
+            inputSO.FindProperty("comboController").objectReferenceValue = comboController;
 
             if (inputActions != null)
             {
@@ -182,10 +196,14 @@ namespace TomatoFighters.Editor.Prefabs
                     var moveRef = FindActionReference(inputActions, "Player/Move");
                     var jumpRef = FindActionReference(inputActions, "Player/Jump");
                     var dashRef = FindActionReference(inputActions, "Player/Sprint"); // Sprint = Dash for testing
+                    var lightRef = FindActionReference(inputActions, "Player/Attack"); // LMB = Light attack
+                    var heavyRef = FindActionReference(inputActions, "Player/Crouch"); // C = Heavy attack for testing
 
                     if (moveRef != null) inputSO.FindProperty("moveAction").objectReferenceValue = moveRef;
                     if (jumpRef != null) inputSO.FindProperty("jumpAction").objectReferenceValue = jumpRef;
                     if (dashRef != null) inputSO.FindProperty("dashAction").objectReferenceValue = dashRef;
+                    if (lightRef != null) inputSO.FindProperty("lightAttackAction").objectReferenceValue = lightRef;
+                    if (heavyRef != null) inputSO.FindProperty("heavyAttackAction").objectReferenceValue = heavyRef;
                 }
             }
             else
@@ -212,13 +230,115 @@ namespace TomatoFighters.Editor.Prefabs
             // Simple world-space text showing controls
             var textGO = new GameObject("ControlsHint");
             var tm = textGO.AddComponent<TextMesh>();
-            tm.text = "WASD: Move | Space: Jump | L-Shift: Dash";
+            tm.text = "WASD: Move | Space: Jump | L-Shift: Dash | LMB: Light | C: Heavy";
             tm.fontSize = 24;
             tm.characterSize = 0.15f;
             tm.anchor = TextAnchor.UpperCenter;
             tm.alignment = TextAlignment.Center;
             tm.color = new Color(1f, 1f, 1f, 0.5f);
             textGO.transform.position = new Vector3(0f, ARENA_HEIGHT / 2f - 0.5f, 0f);
+        }
+
+        private static ComboDefinition CreateOrLoadComboDefinition()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<ComboDefinition>(COMBO_PATH);
+            if (existing != null) return existing;
+
+            PlayerPrefabCreator_EnsureFolderExists(COMBO_FOLDER);
+
+            var def = ScriptableObject.CreateInstance<ComboDefinition>();
+            def.defaultComboWindow = 0.8f;
+            def.rootLightIndex = 0;
+            def.rootHeavyIndex = 5;
+
+            // Brutor combo tree: slow but powerful
+            // L1 → L2 → L3 (finisher sweep) or L2 → H (slam finisher)
+            // H1 → H2 (finisher ground pound)
+            // L1 → H (launcher, branches to H finisher)
+            def.steps = new ComboStep[]
+            {
+                // [0] Light 1
+                new ComboStep
+                {
+                    attackType = AttackType.Light,
+                    animationTrigger = "Light1",
+                    damageMultiplier = 1.0f,
+                    comboWindowDuration = 0f,
+                    nextOnLight = 1,
+                    nextOnHeavy = 3,
+                    isFinisher = false
+                },
+                // [1] Light 2
+                new ComboStep
+                {
+                    attackType = AttackType.Light,
+                    animationTrigger = "Light2",
+                    damageMultiplier = 1.0f,
+                    comboWindowDuration = 0f,
+                    nextOnLight = 2,
+                    nextOnHeavy = 4,
+                    isFinisher = false
+                },
+                // [2] Light 3 finisher (sweep)
+                new ComboStep
+                {
+                    attackType = AttackType.Light,
+                    animationTrigger = "LightFinisher",
+                    damageMultiplier = 1.5f,
+                    comboWindowDuration = 0f,
+                    nextOnLight = -1,
+                    nextOnHeavy = -1,
+                    isFinisher = true
+                },
+                // [3] L→H launcher
+                new ComboStep
+                {
+                    attackType = AttackType.Heavy,
+                    animationTrigger = "Launcher",
+                    damageMultiplier = 1.3f,
+                    comboWindowDuration = 0.5f,
+                    nextOnLight = -1,
+                    nextOnHeavy = 4,
+                    isFinisher = false
+                },
+                // [4] Heavy finisher (slam)
+                new ComboStep
+                {
+                    attackType = AttackType.Heavy,
+                    animationTrigger = "HeavySlam",
+                    damageMultiplier = 2.0f,
+                    comboWindowDuration = 0f,
+                    nextOnLight = -1,
+                    nextOnHeavy = -1,
+                    isFinisher = true
+                },
+                // [5] Heavy 1 (root heavy)
+                new ComboStep
+                {
+                    attackType = AttackType.Heavy,
+                    animationTrigger = "Heavy1",
+                    damageMultiplier = 1.5f,
+                    comboWindowDuration = 0.5f,
+                    nextOnLight = -1,
+                    nextOnHeavy = 6,
+                    isFinisher = false
+                },
+                // [6] Heavy 2 finisher (ground pound)
+                new ComboStep
+                {
+                    attackType = AttackType.Heavy,
+                    animationTrigger = "HeavyFinisher",
+                    damageMultiplier = 2.2f,
+                    comboWindowDuration = 0f,
+                    nextOnLight = -1,
+                    nextOnHeavy = -1,
+                    isFinisher = true
+                },
+            };
+
+            AssetDatabase.CreateAsset(def, COMBO_PATH);
+            AssetDatabase.SaveAssets();
+            return def;
         }
 
         private static MovementConfig CreateOrLoadMovementConfig()

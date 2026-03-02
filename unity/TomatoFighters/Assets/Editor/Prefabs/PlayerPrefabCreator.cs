@@ -14,17 +14,21 @@ namespace TomatoFighters.Editor.Prefabs
     {
         private const string PREFAB_FOLDER = "Assets/Prefabs/Player";
         private const string CONFIG_FOLDER = "Assets/ScriptableObjects/MovementConfigs";
+        private const string COMBO_FOLDER = "Assets/ScriptableObjects/ComboDefinitions";
         private const string PREFAB_PATH = PREFAB_FOLDER + "/Player.prefab";
         private const string CONFIG_PATH = CONFIG_FOLDER + "/Brutor_MovementConfig.asset";
+        private const string COMBO_PATH = COMBO_FOLDER + "/Brutor_ComboDefinition.asset";
 
         [MenuItem("TomatoFighters/Create Player Prefab")]
         public static void CreatePlayerPrefab()
         {
             EnsureFolderExists(PREFAB_FOLDER);
             EnsureFolderExists(CONFIG_FOLDER);
+            EnsureFolderExists(COMBO_FOLDER);
 
             var config = CreateOrLoadMovementConfig();
-            var prefab = BuildPrefab(config);
+            var comboDef = LoadComboDefinition();
+            var prefab = BuildPrefab(config, comboDef);
 
             Debug.Log($"[PlayerPrefabCreator] Player prefab created at {PREFAB_PATH}");
             Debug.Log($"[PlayerPrefabCreator] MovementConfig created at {CONFIG_PATH}");
@@ -63,7 +67,15 @@ namespace TomatoFighters.Editor.Prefabs
             return config;
         }
 
-        private static GameObject BuildPrefab(MovementConfig config)
+        private static ComboDefinition LoadComboDefinition()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<ComboDefinition>(COMBO_PATH);
+            if (existing == null)
+                Debug.LogWarning($"[PlayerPrefabCreator] ComboDefinition not found at {COMBO_PATH}. Run 'Create Movement Test Scene' first, or create one manually.");
+            return existing;
+        }
+
+        private static GameObject BuildPrefab(MovementConfig config, ComboDefinition comboDef)
         {
             // Check for existing prefab
             var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_PATH);
@@ -118,10 +130,21 @@ namespace TomatoFighters.Editor.Prefabs
             motorSO.FindProperty("spriteTransform").objectReferenceValue = spriteChild.transform;
             motorSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // -- ComboController --
+            var comboController = root.AddComponent<ComboController>();
+            if (comboDef != null)
+            {
+                var comboSO = new SerializedObject(comboController);
+                comboSO.FindProperty("comboDefinition").objectReferenceValue = comboDef;
+                comboSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Brutor;
+                comboSO.ApplyModifiedPropertiesWithoutUndo();
+            }
+
             // -- CharacterInputHandler --
             var inputHandler = root.AddComponent<CharacterInputHandler>();
             var inputSO = new SerializedObject(inputHandler);
             inputSO.FindProperty("motor").objectReferenceValue = motor;
+            inputSO.FindProperty("comboController").objectReferenceValue = comboController;
             inputSO.ApplyModifiedPropertiesWithoutUndo();
 
             // Save as prefab
