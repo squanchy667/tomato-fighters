@@ -21,6 +21,25 @@ namespace TomatoFighters.Combat
         /// <summary>Buffered attack input waiting to be consumed when the combo window opens.</summary>
         public AttackType? BufferedInput { get; private set; }
 
+        /// <summary>Whether the current attack has been confirmed as hitting a target.</summary>
+        public bool HitConfirmed { get; private set; }
+
+        /// <summary>Whether dash-cancel is currently available (hit confirmed + step flag).</summary>
+        public bool CanDashCancel =>
+            HitConfirmed &&
+            definition != null &&
+            definition.IsValidStep(CurrentStepIndex) &&
+            definition.steps[CurrentStepIndex].canDashCancelOnHit &&
+            (CurrentState == ComboState.Attacking || CurrentState == ComboState.ComboWindow);
+
+        /// <summary>Whether jump-cancel is currently available (hit confirmed + step flag).</summary>
+        public bool CanJumpCancel =>
+            HitConfirmed &&
+            definition != null &&
+            definition.IsValidStep(CurrentStepIndex) &&
+            definition.steps[CurrentStepIndex].canJumpCancelOnHit &&
+            (CurrentState == ComboState.Attacking || CurrentState == ComboState.ComboWindow);
+
         private ComboDefinition definition;
         private float windowTimer;
 
@@ -104,6 +123,28 @@ namespace TomatoFighters.Combat
         }
 
         /// <summary>
+        /// Signal that the current attack has connected with a target.
+        /// Enables cancel windows for the current step if its flags allow it.
+        /// Called by HitboxManager (T015, future) or debug key.
+        /// </summary>
+        public void OnHitConfirmed()
+        {
+            if (CurrentState != ComboState.Attacking && CurrentState != ComboState.ComboWindow) return;
+            HitConfirmed = true;
+        }
+
+        /// <summary>
+        /// Signal that a cancel (dash or jump) has been executed.
+        /// Resets the combo state. The caller is responsible for executing
+        /// the actual dash/jump on CharacterMotor.
+        /// </summary>
+        public void CancelPerformed()
+        {
+            if (CurrentState == ComboState.Idle) return;
+            Reset();
+        }
+
+        /// <summary>
         /// Called by animation event when the finisher animation completes.
         /// </summary>
         public void OnFinisherEnd()
@@ -114,13 +155,14 @@ namespace TomatoFighters.Combat
             FinisherEnded?.Invoke();
         }
 
-        /// <summary>Reset combo state to Idle. Clears chain position, length, and buffer.</summary>
+        /// <summary>Reset combo state to Idle. Clears chain position, length, buffer, and hit-confirm.</summary>
         public void Reset()
         {
             CurrentState = ComboState.Idle;
             CurrentStepIndex = -1;
             ComboLength = 0;
             BufferedInput = null;
+            HitConfirmed = false;
             windowTimer = 0f;
         }
 

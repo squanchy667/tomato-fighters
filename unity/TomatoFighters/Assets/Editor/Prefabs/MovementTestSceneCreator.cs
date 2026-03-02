@@ -257,7 +257,7 @@ namespace TomatoFighters.Editor.Prefabs
             // L1 → H (launcher, branches to H finisher)
             def.steps = new ComboStep[]
             {
-                // [0] Light 1
+                // [0] Light 1 — Shield Jab: no cancel
                 new ComboStep
                 {
                     attackType = AttackType.Light,
@@ -266,9 +266,11 @@ namespace TomatoFighters.Editor.Prefabs
                     comboWindowDuration = 0f,
                     nextOnLight = 1,
                     nextOnHeavy = 3,
+                    canDashCancelOnHit = false,
+                    canJumpCancelOnHit = false,
                     isFinisher = false
                 },
-                // [1] Light 2
+                // [1] Light 2 — Shield Swipe: dash cancel on hit
                 new ComboStep
                 {
                     attackType = AttackType.Light,
@@ -277,9 +279,11 @@ namespace TomatoFighters.Editor.Prefabs
                     comboWindowDuration = 0f,
                     nextOnLight = 2,
                     nextOnHeavy = 4,
+                    canDashCancelOnHit = true,
+                    canJumpCancelOnHit = false,
                     isFinisher = false
                 },
-                // [2] Light 3 finisher (sweep)
+                // [2] Light 3 finisher (sweep) — no cancel
                 new ComboStep
                 {
                     attackType = AttackType.Light,
@@ -288,9 +292,11 @@ namespace TomatoFighters.Editor.Prefabs
                     comboWindowDuration = 0f,
                     nextOnLight = -1,
                     nextOnHeavy = -1,
+                    canDashCancelOnHit = false,
+                    canJumpCancelOnHit = false,
                     isFinisher = true
                 },
-                // [3] L→H launcher
+                // [3] L→H launcher — dash + jump cancel on hit
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
@@ -299,9 +305,11 @@ namespace TomatoFighters.Editor.Prefabs
                     comboWindowDuration = 0.5f,
                     nextOnLight = -1,
                     nextOnHeavy = 4,
+                    canDashCancelOnHit = true,
+                    canJumpCancelOnHit = true,
                     isFinisher = false
                 },
-                // [4] Heavy finisher (slam)
+                // [4] Heavy finisher (slam) — no cancel
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
@@ -310,9 +318,11 @@ namespace TomatoFighters.Editor.Prefabs
                     comboWindowDuration = 0f,
                     nextOnLight = -1,
                     nextOnHeavy = -1,
+                    canDashCancelOnHit = false,
+                    canJumpCancelOnHit = false,
                     isFinisher = true
                 },
-                // [5] Heavy 1 (root heavy)
+                // [5] Heavy 1 (root heavy) — dash cancel on hit
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
@@ -321,9 +331,11 @@ namespace TomatoFighters.Editor.Prefabs
                     comboWindowDuration = 0.5f,
                     nextOnLight = -1,
                     nextOnHeavy = 6,
+                    canDashCancelOnHit = true,
+                    canJumpCancelOnHit = false,
                     isFinisher = false
                 },
-                // [6] Heavy 2 finisher (ground pound)
+                // [6] Heavy 2 finisher (ground pound) — no cancel
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
@@ -332,6 +344,8 @@ namespace TomatoFighters.Editor.Prefabs
                     comboWindowDuration = 0f,
                     nextOnLight = -1,
                     nextOnHeavy = -1,
+                    canDashCancelOnHit = false,
+                    canJumpCancelOnHit = false,
                     isFinisher = true
                 },
             };

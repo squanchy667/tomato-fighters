@@ -21,9 +21,20 @@ The docs repo is a GitBook-compatible documentation site:
 - Update `TASK_BOARD.md` task statuses based on code repo state
 - Append dated entries to `resources/changelog.md`
 - Rebuild `SUMMARY.md` navigation from current file tree
-- Update task spec metadata tables (status, completion date)
+- Update task spec **metadata tables only** (status, completion date, branch)
 - Write new documentation pages in GitBook format
 - Create phase README files (`tasks/phase-{N}/README.md`)
+
+## Hard Boundary — What You Must NEVER Modify
+
+When syncing or updating existing task specs, you may ONLY change **metadata fields** in the metadata table (Status, Completed, Branch). You must **NEVER rewrite, add, or delete**:
+- Task descriptions or objectives
+- Acceptance criteria (neither the text nor the checked/unchecked state)
+- File plans or file lists
+- Requirements sections
+- Implementation notes or design decisions
+
+**If the implementation doesn't match the spec** (different files, changed architecture, dropped requirements), **report the deviation** in your output — do NOT silently rewrite the spec to match the code. The spec is the requirements contract. Only a human can authorize changes to what was specified.
 
 ## Docs Repo Structure
 

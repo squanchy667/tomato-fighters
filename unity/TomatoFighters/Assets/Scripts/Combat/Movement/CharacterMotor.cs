@@ -33,6 +33,8 @@ namespace TomatoFighters.Combat
         private Vector2 dashDirection;
         private bool dashInvulnerable;
 
+        private bool isAttackLocked;
+
         // Optional buff integration — wired at runtime, avoids singleton
         private IBuffProvider buffProvider;
 
@@ -122,6 +124,18 @@ namespace TomatoFighters.Combat
             return true;
         }
 
+        /// <summary>Whether movement is currently locked by the combo system.</summary>
+        public bool IsAttackLocked => isAttackLocked;
+
+        /// <summary>
+        /// Lock or unlock movement during combo attacks.
+        /// Called by ComboController — safe to call before Awake (just stores a bool).
+        /// </summary>
+        public void SetAttackLock(bool locked)
+        {
+            isAttackLocked = locked;
+        }
+
         /// <summary>
         /// Wire the buff provider for speed multipliers.
         /// Called during character setup to avoid singleton pattern.
@@ -209,6 +223,12 @@ namespace TomatoFighters.Combat
             {
                 // During dash, override velocity entirely on ground plane
                 rb.linearVelocity = dashDirection * config.dashSpeed;
+                return;
+            }
+
+            if (isAttackLocked)
+            {
+                rb.linearVelocity = Vector2.zero;
                 return;
             }
 

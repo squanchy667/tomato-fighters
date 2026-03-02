@@ -28,6 +28,12 @@ namespace TomatoFighters.Combat
         [Tooltip("Index of next step on heavy input. -1 = no branch.")]
         public int nextOnHeavy;
 
+        [Tooltip("If true AND hit confirmed, player can cancel into dash.")]
+        public bool canDashCancelOnHit;
+
+        [Tooltip("If true AND hit confirmed, player can cancel into jump.")]
+        public bool canJumpCancelOnHit;
+
         [Tooltip("Whether this step is a combo finisher with bonus effects.")]
         public bool isFinisher;
     }

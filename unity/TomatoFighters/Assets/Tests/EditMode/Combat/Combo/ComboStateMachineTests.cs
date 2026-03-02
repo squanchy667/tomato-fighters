@@ -28,7 +28,7 @@ namespace TomatoFighters.Tests.EditMode.Combat.Combo
             def.rootHeavyIndex = 6;
             def.steps = new ComboStep[]
             {
-                // [0] L1
+                // [0] L1 — no cancel
                 new ComboStep
                 {
                     attackType = AttackType.Light,
@@ -37,9 +37,11 @@ namespace TomatoFighters.Tests.EditMode.Combat.Combo
                     comboWindowDuration = 0f,
                     nextOnLight = 1,
                     nextOnHeavy = 3,
+                    canDashCancelOnHit = false,
+                    canJumpCancelOnHit = false,
                     isFinisher = false
                 },
-                // [1] L2
+                // [1] L2 — dash + jump cancel on hit
                 new ComboStep
                 {
                     attackType = AttackType.Light,
@@ -48,6 +50,8 @@ namespace TomatoFighters.Tests.EditMode.Combat.Combo
                     comboWindowDuration = 0f,
                     nextOnLight = 2,
                     nextOnHeavy = 4,
+                    canDashCancelOnHit = true,
+                    canJumpCancelOnHit = true,
                     isFinisher = false
                 },
                 // [2] L3 finisher (sweep)
@@ -468,6 +472,158 @@ namespace TomatoFighters.Tests.EditMode.Combat.Combo
             sm.OnFinisherEnd(); // called in Attacking — should be ignored
 
             Assert.AreEqual(ComboState.Attacking, sm.CurrentState);
+        }
+
+        // --- Hit-Confirm ---
+
+        [Test]
+        public void HitConfirmed_DefaultsFalse()
+        {
+            sm.ReceiveInput(AttackType.Light);
+
+            Assert.IsFalse(sm.HitConfirmed);
+        }
+
+        [Test]
+        public void OnHitConfirmed_SetsFlag_DuringAttacking()
+        {
+            sm.ReceiveInput(AttackType.Light);
+
+            sm.OnHitConfirmed();
+
+            Assert.IsTrue(sm.HitConfirmed);
+        }
+
+        [Test]
+        public void OnHitConfirmed_SetsFlag_DuringComboWindow()
+        {
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnComboWindowOpen();
+
+            sm.OnHitConfirmed();
+
+            Assert.IsTrue(sm.HitConfirmed);
+        }
+
+        [Test]
+        public void OnHitConfirmed_Ignored_DuringIdle()
+        {
+            sm.OnHitConfirmed();
+
+            Assert.IsFalse(sm.HitConfirmed);
+        }
+
+        [Test]
+        public void OnHitConfirmed_Ignored_DuringFinisher()
+        {
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnComboWindowOpen();
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnComboWindowOpen();
+            sm.ReceiveInput(AttackType.Light); // finisher
+
+            sm.OnHitConfirmed();
+
+            Assert.IsFalse(sm.HitConfirmed);
+        }
+
+        [Test]
+        public void HitConfirmed_ClearedOnReset()
+        {
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnHitConfirmed();
+
+            sm.Reset();
+
+            Assert.IsFalse(sm.HitConfirmed);
+        }
+
+        // --- Cancel Properties ---
+
+        [Test]
+        public void CanDashCancel_False_WithoutHitConfirm()
+        {
+            // Step 1 has canDashCancelOnHit = true (set in test definition)
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnComboWindowOpen();
+            sm.ReceiveInput(AttackType.Light); // step 1
+
+            Assert.IsFalse(sm.CanDashCancel);
+        }
+
+        [Test]
+        public void CanDashCancel_True_WithHitConfirm_OnCancelableStep()
+        {
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnComboWindowOpen();
+            sm.ReceiveInput(AttackType.Light); // step 1 (canDashCancelOnHit = true)
+            sm.OnHitConfirmed();
+
+            Assert.IsTrue(sm.CanDashCancel);
+        }
+
+        [Test]
+        public void CanDashCancel_False_OnNonCancelableStep()
+        {
+            sm.ReceiveInput(AttackType.Light); // step 0 (canDashCancelOnHit = false)
+            sm.OnHitConfirmed();
+
+            Assert.IsFalse(sm.CanDashCancel);
+        }
+
+        [Test]
+        public void CanJumpCancel_True_WithHitConfirm_OnJumpCancelableStep()
+        {
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnComboWindowOpen();
+            sm.ReceiveInput(AttackType.Light); // step 1 (canJumpCancelOnHit = true)
+            sm.OnHitConfirmed();
+
+            Assert.IsTrue(sm.CanJumpCancel);
+        }
+
+        [Test]
+        public void CanJumpCancel_False_OnNonJumpCancelableStep()
+        {
+            sm.ReceiveInput(AttackType.Light); // step 0 (canJumpCancelOnHit = false)
+            sm.OnHitConfirmed();
+
+            Assert.IsFalse(sm.CanJumpCancel);
+        }
+
+        // --- CancelPerformed ---
+
+        [Test]
+        public void CancelPerformed_ResetsToIdle()
+        {
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnHitConfirmed();
+
+            sm.CancelPerformed();
+
+            Assert.AreEqual(ComboState.Idle, sm.CurrentState);
+            Assert.AreEqual(0, sm.ComboLength);
+            Assert.IsFalse(sm.HitConfirmed);
+        }
+
+        [Test]
+        public void CancelPerformed_DuringIdle_DoesNothing()
+        {
+            sm.CancelPerformed(); // should not crash or change state
+
+            Assert.AreEqual(ComboState.Idle, sm.CurrentState);
+        }
+
+        [Test]
+        public void CancelPerformed_DuringComboWindow_Resets()
+        {
+            sm.ReceiveInput(AttackType.Light);
+            sm.OnComboWindowOpen();
+            sm.OnHitConfirmed();
+
+            sm.CancelPerformed();
+
+            Assert.AreEqual(ComboState.Idle, sm.CurrentState);
         }
     }
 }
