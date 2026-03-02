@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4f9a2e8b1c7d5a3f6e2b9d4c8f1a0e7b, type: 3}
+  m_Name: MysticaStats
+  m_EditorClassIdentifier:
+  characterType: 2
+  passiveAbilityId: ArcaneResonance
+  description: "The team enabler. Lowest HP in the game but highest Mana and ManaRegen.
+    Each cast gives nearby allies +5% damage (up to 3 stacks). Hardest character
+    to master, highest team impact."
+  health: 50
+  defense: 5
+  attack: 0.5
+  rangedAttack: 0.6
+  speed: 1
+  mana: 150
+  manaRegen: 8
+  critChance: 0.05
+  stunRate: 0.5
