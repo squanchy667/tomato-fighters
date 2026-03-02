@@ -9,11 +9,11 @@ TomatoFighters/
 ├── tomato-fighters/               ← Code repository (Unity project)
 │   ├── .claude/
 │   │   ├── CLAUDE.md              ← Project conventions (non-negotiable rules)
-│   │   ├── agents/                ← 17 specialized agents
-│   │   ├── commands/              ← 8 workflow commands
+│   │   ├── agents/                ← 20 specialized agents
+│   │   ├── commands/              ← 12 workflow commands
 │   │   └── skills/                ← 4 always-on context modules
-│   ├── Assets/
-│   │   ├── Scripts/
+│   ├── unity/TomatoFighters/      ← Unity project root
+│   │   ├── Assets/Scripts/
 │   │   │   ├── Shared/            ← Cross-pillar contracts (ALL devs)
 │   │   │   │   ├── Interfaces/    ← ICombatEvents, IBuffProvider, etc.
 │   │   │   │   ├── Enums/         ← CharacterType, PathType, etc.
@@ -56,7 +56,7 @@ TomatoFighters/
 | `/capture-learnings` | Extract patterns from completed phases |
 | `/generate-task-specs` | Generate detailed task specs from TASK_BOARD.md |
 | `/check-pillar` | Verify no cross-pillar import violations |
-| `/sync-docs` | Update docs repo: statuses, changelog, SUMMARY.md |
+| `/sync-docs` | Update docs repo (modes: full, status, changelog, summary, tasks, validate) |
 | `/plan-task` | Interactive planning conversation before executing a task |
 | `/dump` | Save current task context before ending a session (handoff) |
 | `/fetch` | Resume work by loading a dump file and project context |
@@ -81,6 +81,7 @@ TomatoFighters/
 | `task-spec-writer` | Generate detailed task specs | sonnet |
 | `phase-orchestrator` | Coordinate phase execution | sonnet |
 | `phase-planner` | Build execution plans | sonnet |
+| `task-planner` | Interactive planning conversations | sonnet |
 | `task-analyzer` | Analyze task metadata | haiku |
 | `quality-gate` | Quality checking | haiku |
 | `test-validator` | Validate against acceptance criteria | sonnet |
