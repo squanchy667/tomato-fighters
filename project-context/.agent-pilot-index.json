@@ -1,0 +1,188 @@
+{
+  "version": "1.0.0",
+  "scannedAt": "2026-03-02T18:00:00Z",
+  "repoPath": "TomatoFighters/tomato-fighters",
+  "stats": {
+    "totalFiles": 1,
+    "totalDirectories": 30,
+    "totalTokens": 450,
+    "status": "scaffold-only"
+  },
+  "languages": {
+    "csharp": { "files": 0, "estimatedTokens": 0, "note": "All code TBD — 60 tasks pending" }
+  },
+  "categories": {
+    "config": {
+      "files": [".claude/CLAUDE.md"],
+      "count": 1
+    },
+    "source": {
+      "files": [],
+      "count": 0,
+      "directories": [
+        "Assets/Scripts/Combat",
+        "Assets/Scripts/Characters",
+        "Assets/Scripts/Roguelite",
+        "Assets/Scripts/Paths",
+        "Assets/Scripts/World",
+        "Assets/Scripts/Shared",
+        "Assets/Scripts/Shared/Interfaces",
+        "Assets/Scripts/Shared/Data",
+        "Assets/Scripts/Shared/Enums",
+        "Assets/Scripts/Shared/Events"
+      ]
+    },
+    "data": {
+      "files": [],
+      "count": 0,
+      "directories": [
+        "Assets/ScriptableObjects/Attacks",
+        "Assets/ScriptableObjects/Characters",
+        "Assets/ScriptableObjects/Enemies",
+        "Assets/ScriptableObjects/Inspirations",
+        "Assets/ScriptableObjects/Islands",
+        "Assets/ScriptableObjects/Paths",
+        "Assets/ScriptableObjects/Rituals",
+        "Assets/ScriptableObjects/Trinkets"
+      ]
+    },
+    "assets": {
+      "files": [],
+      "count": 0,
+      "directories": [
+        "Assets/Animations",
+        "Assets/Prefabs",
+        "Assets/Scenes"
+      ]
+    }
+  },
+  "patterns": {
+    "engine": "Unity 2022 LTS",
+    "language": "C# 10+",
+    "renderPipeline": "2D URP",
+    "architecture": "3-pillar (Combat / Roguelite / World)",
+    "dataLayer": "ScriptableObjects",
+    "inputSystem": "Unity Input System (new)",
+    "physics": "Rigidbody2D",
+    "animation": "Animator + Override Controllers",
+    "tweening": "DOTween",
+    "naming": {
+      "classes": "PascalCase",
+      "fields": "camelCase with [SerializeField]",
+      "constants": "UPPER_SNAKE",
+      "interfaces": "I-prefix",
+      "files": "Match class name (e.g., ComboSystem.cs)"
+    },
+    "rules": [
+      "No singletons — use [SerializeField] injection or SO event channels",
+      "ScriptableObjects for ALL data",
+      "Animation Events for timing — never Update()",
+      "Rigidbody2D for physics — never transform.position",
+      "Interface-only coupling between pillars",
+      "Plain C# for testable logic (calculators, state machines)"
+    ]
+  },
+  "pillarMap": {
+    "combat": {
+      "owner": "Dev 1",
+      "paths": ["Assets/Scripts/Combat/", "Assets/Scripts/Characters/"],
+      "soAssets": ["Assets/ScriptableObjects/Attacks/"],
+      "domains": ["movement", "combos", "hitbox", "defense", "pressure", "abilities"],
+      "estimatedFiles": 47,
+      "estimatedLOC": 4500
+    },
+    "roguelite": {
+      "owner": "Dev 2",
+      "paths": ["Assets/Scripts/Roguelite/", "Assets/Scripts/Paths/"],
+      "soAssets": [
+        "Assets/ScriptableObjects/Characters/",
+        "Assets/ScriptableObjects/Paths/",
+        "Assets/ScriptableObjects/Rituals/",
+        "Assets/ScriptableObjects/Trinkets/",
+        "Assets/ScriptableObjects/Inspirations/"
+      ],
+      "domains": ["stats", "paths", "rituals", "trinkets", "meta", "save", "currency"],
+      "estimatedFiles": 50,
+      "estimatedLOC": 3500
+    },
+    "world": {
+      "owner": "Dev 3",
+      "paths": ["Assets/Scripts/World/"],
+      "soAssets": [
+        "Assets/ScriptableObjects/Enemies/",
+        "Assets/ScriptableObjects/Islands/"
+      ],
+      "domains": ["enemies", "bosses", "waves", "camera", "hud", "navigation", "coop", "vfx"],
+      "estimatedFiles": 60,
+      "estimatedLOC": 4500
+    },
+    "shared": {
+      "owner": "ALL",
+      "paths": [
+        "Assets/Scripts/Shared/Interfaces/",
+        "Assets/Scripts/Shared/Data/",
+        "Assets/Scripts/Shared/Enums/",
+        "Assets/Scripts/Shared/Events/"
+      ],
+      "domains": ["interfaces", "data-structures", "enums", "events"],
+      "estimatedFiles": 15,
+      "estimatedLOC": 600
+    }
+  },
+  "interfaces": {
+    "ICombatEvents": "Combat fires → Roguelite subscribes (ritual triggers)",
+    "IBuffProvider": "Roguelite provides → Combat queries (damage multipliers)",
+    "IPathProvider": "Roguelite provides → Combat+World query (path state)",
+    "IDamageable": "Combat defines → World implements on enemies",
+    "IAttacker": "Combat defines → World implements on enemies",
+    "IRunProgressionEvents": "World fires → Roguelite subscribes (area/boss events)"
+  },
+  "sharedEnums": [
+    "CharacterType (Brutor, Slasher, Mystica, Viper)",
+    "PathType (12: Warden, Bulwark, Guardian, Executioner, Reaper, Shadow, Sage, Enchanter, Conjurer, Marksman, Trapper, Arcanist)",
+    "StatType (Health, Defense, Attack, Speed, Mana, ManaRegen, CritChance, PressureRate)",
+    "DamageType (Physical, Fire, Lightning, Water, Thorn, Gale, Time, Cosmic, Necro)",
+    "RitualTrigger (OnHit, OnKill, OnTakeDamage, OnDeflect, OnCast, etc.)",
+    "RitualFamily (Fire, Lightning, Water, Thorn, Gale, Time, Cosmic, Necro)",
+    "RitualCategory (Core, General, Enhancement, Twin)",
+    "TelegraphType (Normal, Unstoppable)",
+    "DamageResponse (Hit, Deflected, Clashed, Dodged)"
+  ],
+  "sharedDataStructures": [
+    "AttackData (damage multiplier, knockback, launch, animation, hitbox timing, telegraph type)",
+    "DamagePacket (source, target, damage, type, impact force)",
+    "PathData (path type, tier definitions, stat bonuses, ability unlock IDs)",
+    "RitualData (family, category, level power values, trigger, effect type)",
+    "CharacterBaseStats (8 stats: HP, DEF, ATK, SPD, MNA, MRG, CRT, PRS + passive ID)",
+    "FinalStats (calculated stats after all multipliers)",
+    "TrinketData (stat type, modifier value+type, condition)",
+    "InspirationData (character, path, description, modifier type)",
+    "QuestData (trigger, completion condition, reward, world state change)",
+    "EnemyData (stats, AI config, attack patterns, loot)"
+  ],
+  "characters": [
+    { "name": "Brutor", "role": "Tank", "hp": 200, "def": 25, "atk": 0.7, "paths": ["Warden", "Bulwark", "Guardian"] },
+    { "name": "Slasher", "role": "Melee DPS", "hp": 100, "def": 8, "atk": 2.0, "paths": ["Executioner", "Reaper", "Shadow"] },
+    { "name": "Mystica", "role": "Magician", "hp": 50, "def": 5, "atk": 0.5, "paths": ["Sage", "Enchanter", "Conjurer"] },
+    { "name": "Viper", "role": "Range", "hp": 80, "def": 10, "atk": 1.8, "paths": ["Marksman", "Trapper", "Arcanist"] }
+  ],
+  "gitConventions": {
+    "branchFormat": "pillar{N}/{feature-name}",
+    "commitFormat": "[Phase X] TXXX: Brief description",
+    "mainBranch": "main",
+    "strategy": "No direct pushes to main — use integration branch"
+  },
+  "taskPlan": {
+    "totalTasks": 60,
+    "phases": [
+      { "phase": 1, "name": "Foundation", "tasks": "T001-T013", "count": 13 },
+      { "phase": 2, "name": "Core Combat + Path Framework", "tasks": "T014-T025", "count": 12 },
+      { "phase": 3, "name": "Defensive Depth + Build Crafting", "tasks": "T026-T034", "count": 9 },
+      { "phase": 4, "name": "Advanced Combat + Meta-Progression", "tasks": "T035-T044", "count": 10 },
+      { "phase": 5, "name": "Content + Co-op", "tasks": "T045-T052", "count": 8 },
+      { "phase": 6, "name": "Polish + Full Loop", "tasks": "T053-T060", "count": 8 }
+    ],
+    "nextPhase": 1,
+    "nextTask": "T001"
+  }
+}
