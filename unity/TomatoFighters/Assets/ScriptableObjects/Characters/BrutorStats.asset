@@ -19,7 +19,8 @@ MonoBehaviour:
   health: 200
   defense: 25
   attack: 0.7
-  rangedAttack: 0.5
+  rangedAttack: -1
+  throwableAttack: 1.1
   speed: 0.7
   mana: 50
   manaRegen: 2

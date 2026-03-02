@@ -21,6 +21,7 @@ MonoBehaviour:
   defense: 10
   attack: 0.6
   rangedAttack: 1.8
+  throwableAttack: 1.1
   speed: 1.1
   mana: 120
   manaRegen: 6

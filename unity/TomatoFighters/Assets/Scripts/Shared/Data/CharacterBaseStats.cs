@@ -4,7 +4,7 @@ using UnityEngine;
 namespace TomatoFighters.Shared.Data
 {
     /// <summary>
-    /// Pure data container holding the 8 base stats and passive identity for one character.
+    /// Pure data container holding the base stats and passive identity for one character.
     /// No logic lives here — this is fed into <c>CharacterStatCalculator</c> (T007) which
     /// layers path bonuses, ritual multipliers, trinket modifiers, and soul tree bonuses on top.
     ///
@@ -41,22 +41,28 @@ namespace TomatoFighters.Shared.Data
         public int defense = 10;
 
         // ── Attack ───────────────────────────────────────────────────────────
-        // attack     → StatType.Attack       (melee)
-        // rangedAttack → StatType.RangedAttack (projectiles + throwables)
-        //
-        // All characters have both. Non-specialist characters have lower rangedAttack
-        // base values but can still use throwable items — rangedAttack scales that damage.
+        // attack          → StatType.Attack          (melee)
+        // rangedAttack    → StatType.RangedAttack    (Viper projectiles ONLY; -1 for non-Viper)
+        // throwableAttack → StatType.ThrowableAttack (ground-pickup items, ALL characters)
 
         [Header("Attack")]
         [Range(0.1f, 2.0f)]
         [Tooltip("Melee damage multiplier. Used for all physical close-range attacks.")]
         public float attack = 1.0f;
 
-        [Range(0.1f, 2.0f)]
-        [Tooltip("Ranged/throwable damage multiplier. Used by projectile attacks AND " +
-                 "throwable items for all characters (future). Viper is the specialist; " +
-                 "others have lower defaults but the stat is always present.")]
-        public float rangedAttack = 0.5f;
+        [Range(-1f, 2.0f)]
+        [Tooltip("Ranged projectile damage multiplier. VIPER ONLY.\n" +
+                 "Set to -1 for all non-Viper characters to mark this stat as inactive.\n" +
+                 "The stat calculator skips calculation when this value is negative.\n" +
+                 "Maps to StatType.RangedAttack.")]
+        public float rangedAttack = -1f;
+
+        [Range(0.5f, 1.5f)]
+        [Tooltip("Throwable item damage multiplier. Used by ALL characters when picking up " +
+                 "and throwing ground items (bottles, rocks, crates, barrels, etc.).\n" +
+                 "Independent of both melee and ranged attack stats.\n" +
+                 "Maps to StatType.ThrowableAttack.")]
+        public float throwableAttack = 0.9f;
 
         // ── Mobility ─────────────────────────────────────────────────────────
 
