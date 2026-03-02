@@ -1,3 +1,4 @@
+using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 
 namespace TomatoFighters.Shared.Interfaces
@@ -11,11 +12,11 @@ namespace TomatoFighters.Shared.Interfaces
         /// <summary>Which character the player is using this run.</summary>
         CharacterType Character { get; }
 
-        /// <summary>The selected main path. Null/default if not yet selected.</summary>
-        object MainPath { get; } // TODO: Replace with PathData when T008 lands
+        /// <summary>The selected main path. Null if no main path has been chosen yet.</summary>
+        PathData MainPath { get; }
 
-        /// <summary>The selected secondary path. Null/default if not yet selected.</summary>
-        object SecondaryPath { get; } // TODO: Replace with PathData when T008 lands
+        /// <summary>The selected secondary path. Null if no secondary path has been chosen yet.</summary>
+        PathData SecondaryPath { get; }
 
         /// <summary>Main path tier (1-3). 0 if no main path selected.</summary>
         int MainPathTier { get; }
