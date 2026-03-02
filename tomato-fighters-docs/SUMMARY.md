@@ -6,7 +6,7 @@
 
 * Phase 1 — Foundation
   * [T001: Shared Contracts](tasks/phase-1/T001-shared-contracts.md)
-  * [T002: CharacterController](tasks/phase-1/T002-character-controller.md)
+  * [T002: CharacterController (Belt-Scroll)](tasks/phase-1/T002-character-controller.md)
 
 ## Resources
 

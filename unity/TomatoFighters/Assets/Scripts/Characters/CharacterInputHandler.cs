@@ -41,7 +41,7 @@ namespace TomatoFighters.Characters
             if (moveAction == null || motor == null) return;
 
             Vector2 input = moveAction.action.ReadValue<Vector2>();
-            motor.SetMoveInput(input.x);
+            motor.SetMoveInput(input);
         }
 
         private void OnJump(InputAction.CallbackContext ctx)

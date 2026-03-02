@@ -6,24 +6,27 @@ using UnityEngine;
 namespace TomatoFighters.Combat
 {
     /// <summary>
-    /// Physics-based character movement using Rigidbody2D.
-    /// Handles horizontal movement, jumping, and dashing.
-    /// Fires local C# events for combat system integration.
+    /// Belt-scroll character movement using Rigidbody2D.
+    /// Handles XY ground plane movement, simulated jump height with sprite offset,
+    /// and dashing. No physics gravity — jump arc is computed manually.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     public class CharacterMotor : MonoBehaviour
     {
         [Header("Configuration")]
         [SerializeField] private MovementConfig config;
-        [SerializeField] private GroundDetector groundDetector;
         [SerializeField] private CharacterType characterType;
+
+        [Header("Visual")]
+        [SerializeField] private Transform spriteTransform;
 
         private Rigidbody2D rb;
         private MovementStateMachine stateMachine;
 
-        private float moveInput;
+        private Vector2 moveInput;
         private bool facingRight = true;
-        private float coyoteTimeCounter;
+        private float jumpHeight;
+        private float jumpVelocity;
         private float jumpBufferCounter;
         private float dashTimeRemaining;
         private float dashCooldownRemaining;
@@ -39,8 +42,11 @@ namespace TomatoFighters.Combat
         /// <summary>Fired when the character dashes. Args: characterType, direction, hasIFrames.</summary>
         public event Action<CharacterType, Vector2, bool> Dashed;
 
-        /// <summary>Whether the character is currently grounded.</summary>
-        public bool IsGrounded => groundDetector != null && groundDetector.IsGrounded;
+        /// <summary>Fired when the character lands from a jump.</summary>
+        public event Action<CharacterType> Landed;
+
+        /// <summary>Whether the character is currently on the ground (not jumping).</summary>
+        public bool IsGrounded => jumpHeight <= 0f && jumpVelocity <= 0f;
 
         /// <summary>Whether the character is currently dashing.</summary>
         public bool IsDashing => stateMachine.CurrentState == MovementState.Dashing;
@@ -57,25 +63,31 @@ namespace TomatoFighters.Combat
         /// <summary>Which character archetype this motor belongs to.</summary>
         public CharacterType CharacterType => characterType;
 
+        /// <summary>Current simulated jump height above the ground plane.</summary>
+        public float JumpHeight => jumpHeight;
+
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
             stateMachine = new MovementStateMachine();
-            rb.gravityScale = config.defaultGravityScale;
+            rb.gravityScale = 0f;
         }
 
         private void FixedUpdate()
         {
             UpdateTimers();
+            UpdateJump();
             UpdateState();
             ApplyMovement();
-            ApplyGravityModifiers();
+            UpdateSpriteOffset();
         }
 
-        /// <summary>Set horizontal movement input (-1 to 1).</summary>
-        public void SetMoveInput(float direction)
+        /// <summary>Set ground plane movement input (X = horizontal, Y = depth).</summary>
+        public void SetMoveInput(Vector2 input)
         {
-            moveInput = Mathf.Clamp(direction, -1f, 1f);
+            moveInput = new Vector2(
+                Mathf.Clamp(input.x, -1f, 1f),
+                Mathf.Clamp(input.y, -1f, 1f));
         }
 
         /// <summary>Request a jump. Buffered if pressed slightly before landing.</summary>
@@ -85,7 +97,7 @@ namespace TomatoFighters.Combat
         }
 
         /// <summary>
-        /// Request a dash in the given direction.
+        /// Request a dash in the given direction on the ground plane.
         /// Returns true if the dash started, false if on cooldown or state doesn't allow it.
         /// </summary>
         public bool RequestDash(Vector2 direction)
@@ -128,15 +140,32 @@ namespace TomatoFighters.Combat
 
             if (jumpBufferCounter > 0f)
                 jumpBufferCounter -= dt;
+        }
 
-            // Coyote time: brief grace period after leaving ground
-            if (IsGrounded)
+        private void UpdateJump()
+        {
+            if (jumpHeight <= 0f && jumpVelocity <= 0f)
             {
-                coyoteTimeCounter = config.coyoteTime;
+                // On the ground — check for buffered jump
+                if (jumpBufferCounter > 0f)
+                {
+                    ExecuteJump();
+                    jumpBufferCounter = 0f;
+                }
+                return;
             }
-            else
+
+            // Simulate jump arc
+            float dt = Time.fixedDeltaTime;
+            jumpVelocity -= config.jumpGravity * dt;
+            jumpHeight += jumpVelocity * dt;
+
+            // Land
+            if (jumpHeight <= 0f)
             {
-                coyoteTimeCounter -= dt;
+                jumpHeight = 0f;
+                jumpVelocity = 0f;
+                Landed?.Invoke(characterType);
             }
         }
 
@@ -156,39 +185,19 @@ namespace TomatoFighters.Combat
             if (IsGrounded)
             {
                 stateMachine.TransitionTo(MovementState.Grounded);
-                TryConsumeJumpBuffer();
             }
             else
             {
                 stateMachine.TransitionTo(MovementState.Airborne);
-                TryCoyoteJump();
-            }
-        }
-
-        private void TryConsumeJumpBuffer()
-        {
-            if (jumpBufferCounter > 0f)
-            {
-                ExecuteJump();
-                jumpBufferCounter = 0f;
-            }
-        }
-
-        private void TryCoyoteJump()
-        {
-            if (jumpBufferCounter > 0f && coyoteTimeCounter > 0f)
-            {
-                ExecuteJump();
-                jumpBufferCounter = 0f;
-                coyoteTimeCounter = 0f;
             }
         }
 
         private void ExecuteJump()
         {
-            // Zero out vertical velocity before applying jump force for consistent height
-            rb.velocity = new Vector2(rb.velocity.x, 0f);
-            rb.velocity = new Vector2(rb.velocity.x, config.jumpForce);
+            if (stateMachine.CurrentState == MovementState.Dashing) return;
+
+            jumpVelocity = config.jumpForce;
+            jumpHeight = 0.01f; // nudge off ground
             stateMachine.TransitionTo(MovementState.Airborne);
 
             Jumped?.Invoke(characterType, true);
@@ -198,36 +207,36 @@ namespace TomatoFighters.Combat
         {
             if (!stateMachine.CanMove())
             {
-                // During dash, override velocity entirely
-                rb.velocity = dashDirection * config.dashSpeed;
+                // During dash, override velocity entirely on ground plane
+                rb.linearVelocity = dashDirection * config.dashSpeed;
                 return;
             }
 
             float speedMultiplier = buffProvider?.GetSpeedMultiplier() ?? 1f;
-            float targetSpeed = moveInput * config.moveSpeed * speedMultiplier;
+            float targetX = moveInput.x * config.moveSpeed * speedMultiplier;
+            float targetY = moveInput.y * config.depthSpeed * speedMultiplier;
 
             float accel = IsGrounded ? config.groundAcceleration : config.airAcceleration;
-            float newX = Mathf.MoveTowards(rb.velocity.x, targetSpeed, accel * Time.fixedDeltaTime);
-            rb.velocity = new Vector2(newX, rb.velocity.y);
+            float dt = Time.fixedDeltaTime;
+
+            float newX = Mathf.MoveTowards(rb.linearVelocity.x, targetX, accel * dt);
+            float newY = Mathf.MoveTowards(rb.linearVelocity.y, targetY, accel * dt);
+            rb.linearVelocity = new Vector2(newX, newY);
 
             UpdateFacing();
         }
 
-        private void ApplyGravityModifiers()
+        private void UpdateSpriteOffset()
         {
-            if (stateMachine.CurrentState == MovementState.Dashing) return;
-
-            // Higher gravity while falling for snappier game feel
-            rb.gravityScale = rb.velocity.y < 0f
-                ? config.fallGravityMultiplier
-                : config.defaultGravityScale;
+            if (spriteTransform == null) return;
+            spriteTransform.localPosition = new Vector3(0f, jumpHeight, 0f);
         }
 
         private void UpdateFacing()
         {
-            if (moveInput > 0.01f && !facingRight)
+            if (moveInput.x > 0.01f && !facingRight)
                 Flip();
-            else if (moveInput < -0.01f && facingRight)
+            else if (moveInput.x < -0.01f && facingRight)
                 Flip();
         }
 

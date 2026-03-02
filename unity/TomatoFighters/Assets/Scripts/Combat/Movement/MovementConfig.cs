@@ -8,25 +8,33 @@ namespace TomatoFighters.Combat
     [CreateAssetMenu(fileName = "NewMovementConfig", menuName = "TomatoFighters/Combat/Movement Config")]
     public class MovementConfig : ScriptableObject
     {
-        [Header("Horizontal Movement")]
+        [Header("Ground Movement")]
 
         /// <summary>Max horizontal speed in units/sec.</summary>
         [Tooltip("Max horizontal speed in units/sec")]
         public float moveSpeed = 8f;
+
+        /// <summary>Max depth (Y-axis) speed in units/sec. Typically slower than horizontal.</summary>
+        [Tooltip("Max depth (Y-axis) speed in units/sec")]
+        public float depthSpeed = 5f;
 
         /// <summary>Ground acceleration in units/sec² toward target speed.</summary>
         [Tooltip("Ground acceleration (units/sec² toward target speed)")]
         public float groundAcceleration = 60f;
 
         /// <summary>Air acceleration in units/sec² — lower for floatier air control.</summary>
-        [Tooltip("Air acceleration (units/sec² — lower for floatier air control)")]
+        [Tooltip("Air acceleration (units/sec² — reduced horizontal control while airborne)")]
         public float airAcceleration = 30f;
 
         [Header("Jump")]
 
-        /// <summary>Vertical velocity applied on jump.</summary>
-        [Tooltip("Vertical velocity applied on jump")]
+        /// <summary>Initial upward velocity applied on jump (simulated, not physics).</summary>
+        [Tooltip("Initial upward velocity applied on jump (simulated, not physics)")]
         public float jumpForce = 14f;
+
+        /// <summary>Simulated gravity pulling jump height back to 0.</summary>
+        [Tooltip("Simulated gravity pulling jump height back to 0")]
+        public float jumpGravity = 40f;
 
         /// <summary>Seconds after leaving ground where jump is still allowed.</summary>
         [Tooltip("Seconds after leaving ground where jump is still allowed")]
@@ -38,8 +46,8 @@ namespace TomatoFighters.Combat
 
         [Header("Dash")]
 
-        /// <summary>Dash velocity in units/sec.</summary>
-        [Tooltip("Dash velocity in units/sec")]
+        /// <summary>Dash velocity in units/sec on the ground plane.</summary>
+        [Tooltip("Dash velocity in units/sec on the ground plane")]
         public float dashSpeed = 20f;
 
         /// <summary>How long the dash lasts in seconds.</summary>
@@ -53,15 +61,5 @@ namespace TomatoFighters.Combat
         /// <summary>Whether dashing grants invincibility frames.</summary>
         [Tooltip("Whether dashing grants invincibility frames")]
         public bool dashHasIFrames = true;
-
-        [Header("Gravity")]
-
-        /// <summary>Default Rigidbody2D gravity scale.</summary>
-        [Tooltip("Default Rigidbody2D gravity scale")]
-        public float defaultGravityScale = 3f;
-
-        /// <summary>Gravity scale while falling — higher means snappier fall.</summary>
-        [Tooltip("Gravity scale while falling (higher = snappier fall)")]
-        public float fallGravityMultiplier = 5f;
     }
 }
