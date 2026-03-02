@@ -1,20 +1,30 @@
 # /merge-task
 
-Merge a completed task branch into an integration branch, then push.
-Follows the workflow: `pillar{N}/TXXX-*` → `gal` → (you manually merge `gal` → `main`).
+Merge a completed task branch into an integration branch in **both repos**
+(code + docs), then push both.
+
+Workflow: `pillar{N}/TXXX-*` → `gal` → (you manually merge `gal` → `main`)
+The same target branch is used in both repos.
 
 ## Usage
 
 ```
-/merge-task T006           ← merge T006's branch into current branch
-/merge-task T006 gal       ← merge T006's branch into gal explicitly
+/merge-task T006           ← merge T006 into current branch in both repos
+/merge-task T006 gal       ← merge T006 into gal in both repos explicitly
 ```
 
 ## Input
 
 Arguments: $ARGUMENTS
 - First arg: Task ID (e.g., T006)
-- Second arg (optional): Target branch to merge into
+- Second arg (optional): Target branch to merge into (same for both repos)
+
+## Repo Paths
+
+- Code repo:  `tomato-fighters/`          (relative to project parent)
+- Docs repo:  `tomato-fighters-docs/`     (relative to project parent)
+
+Both repos follow the same branch naming and target branch convention.
 
 ## Instructions
 
@@ -22,102 +32,121 @@ Arguments: $ARGUMENTS
 
 Extract:
 - `TASK_ID` — first argument (e.g., `T006`)
-- `TARGET_BRANCH` — second argument if provided, otherwise determine below
+- `TARGET_BRANCH` — second argument if provided, otherwise determine in step 3
 
-### 2. Find the task branch
+### 2. Find the task branch in each repo
 
-Run:
+For each repo run:
 ```bash
-git branch -a | grep -i "TXXX"
+git -C <repo-path> branch -a | grep -i "TASK_ID"
 ```
-(replace TXXX with the task ID, case-insensitive)
 
-If exactly one branch matches → that's the task branch.
-If multiple branches match → list them and ask the user which one to use.
-If no branch matches → report error: "No branch found for TASK_ID. Has it been pushed?"
+For each repo, record:
+- `CODE_TASK_BRANCH` — matching branch in code repo (may not exist if no code was written)
+- `DOCS_TASK_BRANCH` — matching branch in docs repo (may not exist if docs were committed directly to gal)
+
+If a repo has no matching task branch, note it as "no task branch — changes already on target branch"
+and skip the merge step for that repo (but still pull + push to ensure it's current).
+
+If multiple branches match in either repo — list them and ask the user which one to use.
 
 ### 3. Determine the target branch
 
-If `TARGET_BRANCH` was provided as a second argument → use it.
+If `TARGET_BRANCH` was provided as a second argument → use it for both repos.
 
 Otherwise:
-- Check current branch with `git branch --show-current`
-- If current branch is NOT a task branch (i.e., not matching `pillar*/T*` or `shared/T*`) → use current branch as target
-- If current branch IS a task branch → **ask the user** which branch to merge into before proceeding.
-  Offer these options:
+- Check current branch in the code repo: `git -C <code-repo> branch --show-current`
+- If current branch is NOT a task branch (not matching `pillar*/T*` or `shared/T*` or `docs/T*`)
+  → use it as target for both repos
+- If current branch IS a task branch → **ask the user** which branch to merge into.
+  Offer:
   - `gal` (recommended — standard integration branch)
-  - `main` (only if they're sure, warn this bypasses the security review step)
-  - Other (let them type a branch name)
+  - `main` (warn: this bypasses the security review step — are you sure?)
+  - Other (free input)
 
-### 4. Confirm before merging
+### 4. Confirm before touching anything
 
-Print a clear summary and ask for confirmation:
+Print a full plan covering both repos and ask for confirmation:
 
 ```
 Ready to merge:
+
+CODE REPO (tomato-fighters):
   FROM: pillar2/T006-character-base-stats
   INTO: gal
+  Steps: checkout gal → pull → merge --no-ff → push
 
-This will:
-  1. git checkout gal
-  2. git pull origin gal  (ensure it's up to date)
-  3. git merge pillar2/T006-character-base-stats --no-ff -m "Merge T006: CharacterBaseStats SO into gal"
-  4. git push origin gal
+DOCS REPO (tomato-fighters-docs):
+  FROM: (no task branch — changes already on gal)
+  INTO: gal
+  Steps: checkout gal → pull → push
 
 Proceed? (yes / no)
 ```
 
-Wait for user confirmation before running any git commands.
+Wait for explicit confirmation before running any git commands.
 
-### 5. Execute the merge
-
-Run these commands in sequence:
+### 5. Execute — Code Repo
 
 ```bash
+cd <code-repo>
 git checkout <TARGET_BRANCH>
 git pull origin <TARGET_BRANCH>
-git merge <TASK_BRANCH> --no-ff -m "Merge TXXX: <task name> into <TARGET_BRANCH>"
+
+# Only if a task branch exists:
+git merge <CODE_TASK_BRANCH> --no-ff -m "Merge TXXX: <task title> into <TARGET_BRANCH>"
+
 git push origin <TARGET_BRANCH>
 ```
 
-The task name for the commit message should be read from `tomato-fighters-docs/TASK_BOARD.md`
-(find the line matching the task ID and extract the title after the colon).
+### 6. Execute — Docs Repo
 
-Use `--no-ff` (no fast-forward) so the merge commit is always created, keeping branch history
-visible in git log.
+```bash
+cd <docs-repo>
+git checkout <TARGET_BRANCH>
+git pull origin <TARGET_BRANCH>
 
-### 6. Handle merge conflicts
+# Only if a task branch exists:
+git merge <DOCS_TASK_BRANCH> --no-ff -m "Merge TXXX: <task title> (docs) into <TARGET_BRANCH>"
 
-If the merge produces conflicts:
-- Run `git merge --abort` immediately
-- Report which files conflicted
-- Tell the user: "Merge aborted. Resolve conflicts manually, then run:
-  `git merge <TASK_BRANCH> --no-ff` followed by `git push origin <TARGET_BRANCH>`"
+git push origin <TARGET_BRANCH>
+```
+
+The task title for merge commit messages comes from `tomato-fighters-docs/TASK_BOARD.md`
+(find the `### TXXX:` line and extract the title).
+
+### 7. Handle merge conflicts
+
+If any merge step produces conflicts:
+- Run `git merge --abort` in that repo immediately
+- Report which files conflicted and in which repo
+- Provide the manual resolution commands
 - Do NOT attempt to auto-resolve conflicts
-
-### 7. Return to task branch (optional)
-
-After a successful merge, ask:
-"Merge complete. Switch back to `<TASK_BRANCH>` or stay on `<TARGET_BRANCH>`?"
+- Continue with the other repo if it has no conflicts (report clearly which succeeded and which didn't)
 
 ### 8. Report
-
-Output a summary:
 
 ```
 Merge Complete
 ══════════════
-FROM:  pillar2/T006-character-base-stats  (commit abc1234)
-INTO:  gal  (new HEAD: def5678)
-PUSH:  origin/gal ✓
+CODE REPO:
+  FROM:  pillar2/T006-character-base-stats  (abc1234)
+  INTO:  gal  (new HEAD: def5678)
+  PUSH:  origin/gal ✓
 
-Next: gal is ready for you to review and merge into main when you're satisfied.
+DOCS REPO:
+  No task branch — changes already on gal
+  PUSH:  origin/gal ✓ (pulled + pushed to ensure current)
+
+Next: both gal branches are ready for your review.
+      Merge gal → main in each repo when satisfied.
 ```
 
 ## Safety Rules
 
 - **Never merge directly into `main`** without explicit confirmation and a warning
-- **Always `git pull` the target branch first** to avoid pushing stale merges
+- **Always `git pull` the target branch first** in both repos before merging
 - **Never force-push** (`--force`) under any circumstances
 - **Always use `--no-ff`** — preserves task branch history in the merge graph
 - **Stop and report** if any git command exits with a non-zero status
+- **Both repos use the same target branch** — never merge code to `gal` and docs to `main`
