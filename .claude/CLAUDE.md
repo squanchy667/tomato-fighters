@@ -71,7 +71,7 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 
 **Project agents** (code generation): `shared-contracts`, `combat-agent`, `roguelite-agent`, `world-agent`, `so-architect`, `ability-agent`, `integration-agent`, `balance-agent`
 
-**Meta agents** (pipeline): `task-spec-writer`, `phase-orchestrator`, `phase-planner`, `task-analyzer`, `quality-gate`, `test-validator`, `documenter`, `docs-writer`, `repo-scanner`, `agent-tailor`
+**Meta agents** (pipeline): `task-spec-writer`, `task-planner`, `phase-orchestrator`, `phase-planner`, `task-analyzer`, `quality-gate`, `test-validator`, `documenter`, `docs-writer`, `repo-scanner`, `agent-tailor`
 
 Use the `agent-tailor` agent to create new specialized agents when needed.
 
