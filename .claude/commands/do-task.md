@@ -27,6 +27,8 @@ If a task ID is given (TXXX), load the spec from `tomato-fighters-docs/tasks/pha
 
 If plain text is given, analyze it directly.
 
+**IMPORTANT:** If the task spec has a `## Design Decisions` section (added by `/plan-task`), those decisions are BINDING. Follow them exactly — they were agreed with the developer during planning.
+
 ### Step 2: Analyze Task
 Parse the task to extract structured metadata:
 - **Domains:** combat, roguelite, world, shared, unity-editor, animation, physics, UI, SO-data

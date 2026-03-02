@@ -57,6 +57,7 @@ TomatoFighters/
 | `/generate-task-specs` | Generate detailed task specs from TASK_BOARD.md |
 | `/check-pillar` | Verify no cross-pillar import violations |
 | `/sync-docs` | Update docs repo: statuses, changelog, SUMMARY.md |
+| `/plan-task` | Interactive planning conversation before executing a task |
 
 ## Available Agents
 

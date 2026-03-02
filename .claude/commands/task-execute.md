@@ -18,11 +18,15 @@ Task ID: $ARGUMENTS (e.g., T001, T016, T027)
 ### 1. Load Task Spec
 First check for a detailed spec in `tomato-fighters-docs/tasks/phase-{N}/T{XXX}-*.md`. If no spec exists, read the task summary from `tomato-fighters-docs/TASK_BOARD.md`.
 
-Each task has:
-- Type, Priority, Dependencies, Owner
-- File(s) to create/modify
-- Description with implementation details
-- Acceptance criteria checklist
+Each task spec contains:
+- **Metadata** — Type, Priority, Dependencies, Owner, Agent, Branch
+- **Requirements** — Numbered list of everything to build
+- **File Plan** — Exact files to create/modify
+- **Design Decisions** — Agreed architecture choices from `/plan-task` (if present — these are BINDING, follow them exactly)
+- **Implementation Notes** — Patterns, gotchas, code snippets
+- **Acceptance Criteria** — Checklist to verify against
+
+**IMPORTANT:** If the spec has a `## Design Decisions` section, those decisions override any conflicting guidance elsewhere. They were agreed with the developer during planning.
 
 ### 2. Check Dependencies
 Verify all "Depends On" tasks are marked DONE. If any are not, report which dependencies are missing and stop.
