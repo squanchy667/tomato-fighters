@@ -53,5 +53,30 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 - Commit: `[Phase X] TXXX: Brief description`
 - Never push to main directly — use integration branch
 
-## Task Execution
-Use workspace meta-commands: `/do-task`, `/task-execute`, `/execute-phase`, `/build-app`
+## Available Commands
+
+| Command | Purpose |
+|---------|---------|
+| `/do-task` | Execute a single task through the 8-step pipeline |
+| `/task-execute TXXX` | Execute a task from the task board autonomously |
+| `/execute-phase N` | Run all tasks in a phase with parallel batching |
+| `/build-app` | Full orchestration across all phases |
+| `/scan-repo` | Index codebase for smarter context selection |
+| `/capture-learnings` | Extract patterns from completed phases |
+| `/generate-task-specs` | Generate detailed task specs from TASK_BOARD.md |
+| `/check-pillar` | Verify no cross-pillar import violations |
+
+## Available Agents
+
+**Project agents** (code generation): `shared-contracts`, `combat-agent`, `roguelite-agent`, `world-agent`, `so-architect`, `ability-agent`, `integration-agent`, `balance-agent`
+
+**Meta agents** (pipeline): `task-spec-writer`, `phase-orchestrator`, `phase-planner`, `task-analyzer`, `quality-gate`, `test-validator`, `documenter`, `repo-scanner`, `agent-tailor`
+
+Use the `agent-tailor` agent to create new specialized agents when needed.
+
+## Getting Started (Partners)
+
+1. Clone the repo and open in Unity 2022 LTS
+2. Read this file and your crew guide: `tomato-fighters-docs/developer/dev{N}-*.md`
+3. Use `/task-execute TXXX` to run your assigned tasks
+4. Use `/check-pillar {your-pillar}` to verify pillar boundaries
