@@ -1,0 +1,21 @@
+{
+    "name": "TomatoFighters.Editor",
+    "rootNamespace": "TomatoFighters.Editor",
+    "references": [
+        "TomatoFighters.Combat",
+        "TomatoFighters.Characters",
+        "TomatoFighters.Shared",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
