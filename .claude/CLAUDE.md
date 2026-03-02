@@ -67,6 +67,8 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 | `/check-pillar` | Verify no cross-pillar import violations |
 | `/sync-docs` | Update docs repo: statuses, changelog, SUMMARY.md |
 | `/plan-task TXXX` | Interactive planning conversation before executing a task |
+| `/dump` | Save current task context before ending a session (handoff) |
+| `/fetch` | Resume work by loading a dump file and project context |
 
 ## Available Agents
 
