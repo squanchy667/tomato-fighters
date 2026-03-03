@@ -3,7 +3,8 @@
     "rootNamespace": "TomatoFighters.Tests.EditMode",
     "references": [
         "TomatoFighters.Combat",
-        "TomatoFighters.Shared"
+        "TomatoFighters.Shared",
+        "TomatoFighters.Paths"
     ],
     "includePlatforms": [
         "Editor"
