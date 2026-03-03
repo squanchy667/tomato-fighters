@@ -10,7 +10,7 @@ namespace TomatoFighters.Shared.Interfaces
     public interface IAttacker
     {
         /// <summary>The currently active attack data. Null if not attacking.</summary>
-        object CurrentAttack { get; } // TODO: Replace with AttackData when T005 lands
+        AttackData CurrentAttack { get; }
 
         /// <summary>Whether the current attack is unstoppable (cannot be deflected).</summary>
         bool IsCurrentAttackUnstoppable { get; }

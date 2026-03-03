@@ -38,13 +38,13 @@
           "speed": 1.0
         },
         {
-          "name": "run",
-          "motion": "tomato_fighter_run",
+          "name": "walk",
+          "motion": "tomato_fighter_walk",
           "speed": 1.0
         },
         {
-          "name": "walk",
-          "motion": "tomato_fighter_walk",
+          "name": "run",
+          "motion": "tomato_fighter_run",
           "speed": 1.0
         }
       ],
@@ -90,5 +90,5 @@
     }
   ],
   "generated_by": "Animation Forge v0.1.0",
-  "generated_at": "2026-03-02T23:15:54.736956+00:00"
+  "generated_at": "2026-03-03T00:38:26.968835+00:00"
 }

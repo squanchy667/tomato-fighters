@@ -116,7 +116,7 @@ tomato-fighters/                              ← Code repo root
 │   │   ├── Shared/                           ← ALL devs — cross-pillar contracts
 │   │   │   ├── Interfaces/                   (6 interfaces: ICombatEvents, IBuffProvider, etc.)
 │   │   │   ├── Enums/                        (11 enums: CharacterType, PathType, StatType, etc.)
-│   │   │   └── Data/                         (5 structs: CharacterBaseStats, DamagePacket, etc.)
+│   │   │   └── Data/                         (6 data: CharacterBaseStats, DamagePacket, AttackData, etc.)
 │   │   ├── Combat/                           ← Dev 1 pillar
 │   │   │   ├── Combo/                        (ComboController, ComboStateMachine, ComboDefinition, etc.)
 │   │   │   └── Movement/                     (CharacterMotor, MovementStateMachine, MovementConfig)

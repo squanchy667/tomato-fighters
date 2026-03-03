@@ -4,6 +4,7 @@ using UnityEngine;
 namespace TomatoFighters.Editor.Animation
 {
     /// <summary>
+    /// <b>Animation Pipeline — Step 1 of 2 (Editor).</b>
     /// Reads Animation Forge metadata.json and auto-configures sprite sheet import settings
     /// for ALL animations found — no hardcoded animation names.
     /// Run via menu: <b>TomatoFighters &gt; Import Sprite Sheets</b>.
@@ -15,9 +16,16 @@ namespace TomatoFighters.Editor.Animation
     ///     uncompressed, max 8192px</item>
     ///   <item>Grid-slices into individual frames using frame_w/frame_h/cols/rows,
     ///     with custom pivot (typically bottom-center)</item>
+    ///   <item>Names frames with zero-padded indices (<c>idle_00</c>, <c>idle_01</c>, ...)
+    ///     so lexicographic sort matches frame order</item>
     /// </list>
     ///
-    /// <para><b>Run this BEFORE</b> <c>Build Animations</c>, which needs the sliced sprites.</para>
+    /// <para><b>Frame layout:</b> Left-to-right, top-to-bottom in the sheet. Unity sprite
+    /// rects have origin at bottom-left, so Y is flipped:
+    /// <c>Y = texHeight - (row + 1) * frameHeight</c>.</para>
+    ///
+    /// <para><b>Run this BEFORE</b> <see cref="AnimationBuilder"/> (Step 2), which needs
+    /// the sliced sprites as input.</para>
     ///
     /// <para><b>Adding new animations:</b> Just drop the PNG into the Sprites folder and add
     /// the entry to metadata.json. This script picks it up automatically.</para>
@@ -26,6 +34,8 @@ namespace TomatoFighters.Editor.Animation
     /// <c>ISpriteEditorDataProvider</c> requires an assembly not exposed in Unity 6's
     /// built-in 2D Sprite module.</para>
     /// </summary>
+    /// <seealso cref="AnimationForgeMetadata"/>
+    /// <seealso cref="AnimationBuilder"/>
     public static class SpriteSheetImporter
     {
         [MenuItem("TomatoFighters/Import Sprite Sheets")]

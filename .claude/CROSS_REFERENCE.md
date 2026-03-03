@@ -30,7 +30,7 @@
 | T002 CharacterController | `tasks/phase-1/T002-character-controller.md` | `Scripts/Combat/Movement/CharacterMotor.cs`, `MovementStateMachine.cs`, `MovementConfig.cs` |
 | T003 ComboSystem | `tasks/phase-1/T003-combo-chain.md` | `Scripts/Combat/Combo/ComboController.cs`, `ComboStateMachine.cs`, `ComboDefinition.cs`, `ComboStep.cs` |
 | T004 HitboxManager | `tasks/phase-1/T004-combo-chain.md` | `Scripts/Combat/` (pending) |
-| T005 AttackData SO | `tasks/phase-1/T005-attack-data-so.md` | `Scripts/Shared/Data/AttackData.cs`, `ScriptableObjects/Attacks/` (pending) |
+| T005 AttackData SO | `tasks/phase-1/T005-attack-data-so.md` | `Scripts/Shared/Data/AttackData.cs`, `ScriptableObjects/Attacks/Mystica/*.asset`, `Editor/CreateMysticaAttacks.cs` |
 | T006 CharacterBaseStats | `tasks/phase-1/T006-character-base-stats.md` | `Scripts/Shared/Data/CharacterBaseStats.cs`, `ScriptableObjects/Characters/*.asset` |
 | T007 StatCalculator | `tasks/phase-1/T007-stat-calculator.md` | `Scripts/Paths/CharacterStatCalculator.cs`, `FinalStats.cs`, `StatModifierInput.cs` |
 | T008 PathData SO | `tasks/phase-1/T008-path-data-so.md` | `Scripts/Shared/Data/PathData.cs` (pending) |
@@ -83,6 +83,10 @@
 | `ComboDefinitions/Mystica_ComboDefinition.asset` | `Combat/Combo/ComboDefinition.cs` | Placeholder (L-L-L + H-H) |
 | `MovementConfigs/Brutor_MovementConfig.asset` | `Combat/Movement/MovementConfig.cs` | `tasks/phase-1/T002-character-controller.md` |
 | `MovementConfigs/Mystica_MovementConfig.asset` | `Combat/Movement/MovementConfig.cs` | SPD=1.0 mage tuning |
+| `Attacks/Mystica/MysticaStrike1.asset` | `Shared/Data/AttackData.cs` | Magic Burst 1 (0.6×, 16f) |
+| `Attacks/Mystica/MysticaStrike2.asset` | `Shared/Data/AttackData.cs` | Magic Burst 2 (0.8×, 18f) |
+| `Attacks/Mystica/MysticaStrike3.asset` | `Shared/Data/AttackData.cs` | Magic Burst 3 (1.0×, 22f) |
+| `Attacks/Mystica/MysticaArcaneBolt.asset` | `Shared/Data/AttackData.cs` | Arcane Bolt (1.4×, 30f) |
 
 ## Tests → Task Coverage
 

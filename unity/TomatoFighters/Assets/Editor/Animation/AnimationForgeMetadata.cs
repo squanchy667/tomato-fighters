@@ -7,7 +7,10 @@ namespace TomatoFighters.Editor.Animation
 {
     /// <summary>
     /// Shared data model for Animation Forge's <c>metadata.json</c> export format.
-    /// Used by <see cref="SpriteSheetImporter"/> and <see cref="AnimationBuilder"/>.
+    /// Used by <see cref="SpriteSheetImporter"/> (Step 1) and <see cref="AnimationBuilder"/> (Step 2).
+    ///
+    /// <para><b>Pipeline role:</b> Foundation layer — both editor tools deserialize through this
+    /// class, so all animation data (frame dimensions, FPS, loop flag, pivot) lives in one place.</para>
     ///
     /// <para>Uses Newtonsoft.Json (via <c>com.unity.nuget.newtonsoft-json</c>) because
     /// Unity's <c>JsonUtility</c> doesn't support <c>Dictionary</c> deserialization,
@@ -26,9 +29,12 @@ namespace TomatoFighters.Editor.Animation
     /// }
     /// </code>
     ///
-    /// <para><b>Convention:</b> <c>loop: true</c> = locomotion state (Speed-driven transitions).
-    /// <c>loop: false</c> = action state (trigger-driven, returns to idle on exit).</para>
+    /// <para><b>Key convention:</b> The <c>loop</c> field drives the entire wiring strategy:
+    /// <c>true</c> = locomotion state (Speed-driven float transitions),
+    /// <c>false</c> = action state (trigger-driven, returns to idle via Exit Time).</para>
     /// </summary>
+    /// <seealso cref="SpriteSheetImporter"/>
+    /// <seealso cref="AnimationBuilder"/>
     public static class AnimationForgeMetadata
     {
         private const string METADATA_PATH = "Assets/animations/tomato_fighter_animations/metadata.json";

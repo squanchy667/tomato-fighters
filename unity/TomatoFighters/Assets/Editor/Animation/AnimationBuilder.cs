@@ -8,20 +8,27 @@ using UnityEngine;
 namespace TomatoFighters.Editor.Animation
 {
     /// <summary>
+    /// <b>Animation Pipeline — Step 2 of 2 (Editor).</b>
     /// Creates <c>.anim</c> clips from sliced sprite sheets and builds an <c>AnimatorController</c>.
     /// Fully data-driven — reads all animations from metadata.json with no hardcoded names.
     /// Run via menu: <b>TomatoFighters &gt; Build Animations</b>.
     ///
-    /// <para><b>Prerequisites:</b> Run <c>Import Sprite Sheets</c> first.</para>
+    /// <para><b>Prerequisites:</b> Run <see cref="SpriteSheetImporter"/> (Step 1) first to
+    /// generate the sliced sprite assets this step consumes.</para>
+    ///
+    /// <para><b>Output:</b> <c>Assets/Animations/TomatoFighter/</c> —
+    /// <c>.anim</c> clips + <c>TomatoFighter_Controller.controller</c>.</para>
     ///
     /// <para><b>Animation categories (determined by <c>loop</c> field in metadata):</b></para>
     /// <list type="bullet">
     ///   <item><b>Locomotion</b> (<c>loop: true</c>) — idle, walk, run.
     ///     Wired as states with <c>Speed</c> float transitions.
-    ///     idle↔walk at 0.1, walk↔run at 0.9, run→idle direct.</item>
+    ///     idle↔walk at 0.1, walk↔run at 0.9, run→idle direct.
+    ///     Driven at runtime by <see cref="TomatoFighters.Combat.CharacterAnimationBridge"/>.</item>
     ///   <item><b>Action</b> (<c>loop: false</c>) — attacks, hurt, death, etc.
-    ///     Each gets a trigger parameter and a state that plays once,
-    ///     then transitions back to idle via Exit Time.</item>
+    ///     Each gets a trigger parameter (<c>{animName}Trigger</c>) and a state that plays once,
+    ///     then transitions back to idle via Exit Time.
+    ///     Driven at runtime by <see cref="TomatoFighters.Combat.ComboController"/>.</item>
     /// </list>
     ///
     /// <para><b>Adding new animations:</b> Drop PNG + update metadata.json.
@@ -31,6 +38,10 @@ namespace TomatoFighters.Editor.Animation
     /// <para><b>Binding path:</b> Curves target <c>""</c> (empty) because the Animator
     /// and SpriteRenderer share the same Sprite child GameObject.</para>
     /// </summary>
+    /// <seealso cref="AnimationForgeMetadata"/>
+    /// <seealso cref="SpriteSheetImporter"/>
+    /// <seealso cref="TomatoFighters.Combat.TomatoFighterAnimatorParams"/>
+    /// <seealso cref="TomatoFighters.Combat.CharacterAnimationBridge"/>
     public static class AnimationBuilder
     {
         private const string OUTPUT_FOLDER = "Assets/Animations/TomatoFighter";
