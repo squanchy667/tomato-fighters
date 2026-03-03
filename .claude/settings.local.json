@@ -9,7 +9,17 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebSearch",
+      "WebFetch(domain:discussions.unity.com)",
+      "WebFetch(domain:www.gamedeveloper.com)",
+      "WebFetch(domain:sudonull.com)",
+      "WebFetch(domain:medium.com)",
+      "WebFetch(domain:sleepingdaemon.medium.com)",
+      "WebFetch(domain:answers.unity.com)",
+      "Bash(git:*)",
+      "Bash(do echo:*)",
+      "Bash(tr:*)"
     ]
   }
 }

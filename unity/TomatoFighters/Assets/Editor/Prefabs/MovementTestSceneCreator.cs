@@ -1,5 +1,6 @@
 using TomatoFighters.Characters;
 using TomatoFighters.Combat;
+using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Enums;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -9,15 +10,16 @@ using UnityEngine.InputSystem;
 namespace TomatoFighters.Editor.Prefabs
 {
     /// <summary>
-    /// Creates a minimal test scene for verifying belt-scroll movement, combo system, and animations.
+    /// Creates a test scene for verifying movement, combo system, animations, and combat.
     /// Run via menu: <b>TomatoFighters &gt; Create Movement Test Scene</b>.
     ///
     /// <para><b>Scene contents:</b></para>
     /// <list type="bullet">
     ///   <item>Orthographic camera (size 7, dark background)</item>
-    ///   <item>20×10 arena with 4 invisible wall colliders</item>
+    ///   <item>20x10 arena with 4 invisible wall colliders</item>
     ///   <item>Dark green ground plane with grid lines for depth perception</item>
-    ///   <item>Player — instantiated from <c>Assets/Prefabs/Player/Player.prefab</c></item>
+    ///   <item>Player — from prefab, with <see cref="PlayerDamageable"/> added for bidirectional damage</item>
+    ///   <item>TestDummy enemy — from prefab, positioned right of center for combat testing</item>
     ///   <item>Controls hint text at top of arena</item>
     /// </list>
     ///
@@ -33,6 +35,7 @@ namespace TomatoFighters.Editor.Prefabs
         private const string SCENE_FOLDER = "Assets/Scenes";
         private const string SCENE_PATH = SCENE_FOLDER + "/MovementTest.unity";
         private const string PREFAB_PATH = "Assets/Prefabs/Player/Player.prefab";
+        private const string DUMMY_PREFAB_PATH = "Assets/Prefabs/Enemies/TestDummy.prefab";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
         private const float ARENA_WIDTH = 20f;
@@ -48,6 +51,7 @@ namespace TomatoFighters.Editor.Prefabs
             CreateArenaBackground();
             CreateArenaWalls();
             CreatePlayerFromPrefab();
+            CreateTestDummyFromPrefab();
             CreateDebugCanvas();
 
             PlayerPrefabCreator.EnsureFolderExists(SCENE_FOLDER);
@@ -133,7 +137,7 @@ namespace TomatoFighters.Editor.Prefabs
             }
 
             var player = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-            player.transform.position = Vector3.zero;
+            player.transform.position = new Vector3(-3f, 0f, 0f);
 
             // InputActionReferences created via InputActionReference.Create() don't survive
             // prefab serialization — wire them on the scene instance directly.
@@ -151,7 +155,43 @@ namespace TomatoFighters.Editor.Prefabs
                 inputSO.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            Debug.Log("[MovementTestScene] Player instantiated from prefab with input actions wired.");
+            // Add PlayerDamageable so enemy attacks can hit the player
+            if (player.GetComponent<PlayerDamageable>() == null)
+                player.AddComponent<PlayerDamageable>();
+
+            // Temp debug HP bar (replaced by T025 HUD)
+            if (player.GetComponent<DebugHealthBar>() == null)
+            {
+                var hpBar = player.AddComponent<DebugHealthBar>();
+                var hbSO = new SerializedObject(hpBar);
+                var fillColorProp = hbSO.FindProperty("fillColor");
+                if (fillColorProp != null)
+                    fillColorProp.colorValue = new Color(0.2f, 0.8f, 0.3f); // Green for player
+                hbSO.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar.");
+        }
+
+        private static void CreateTestDummyFromPrefab()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DUMMY_PREFAB_PATH);
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    "[MovementTestScene] TestDummy prefab not found. " +
+                    "Run 'TomatoFighters > Create TestDummy Prefab' first. Skipping enemy placement.");
+                return;
+            }
+
+            var dummy = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            dummy.transform.position = new Vector3(3f, 0f, 0f);
+
+            // Ensure debug HP bar on scene instance (prefab may already have it)
+            if (dummy.GetComponent<DebugHealthBar>() == null)
+                dummy.AddComponent<DebugHealthBar>();
+
+            Debug.Log("[MovementTestScene] TestDummy enemy placed at (3, 0) with DebugHealthBar.");
         }
 
         private static void BuildInlineFallbackPlayer()
@@ -159,7 +199,7 @@ namespace TomatoFighters.Editor.Prefabs
             var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
 
             var root = new GameObject("Player");
-            root.transform.position = Vector3.zero;
+            root.transform.position = new Vector3(-3f, 0f, 0f);
 
             var rb = root.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
@@ -230,6 +270,16 @@ namespace TomatoFighters.Editor.Prefabs
             }
 
             inputSO.ApplyModifiedPropertiesWithoutUndo();
+
+            root.AddComponent<PlayerDamageable>();
+
+            // Temp debug HP bar
+            var hpBar = root.AddComponent<DebugHealthBar>();
+            var hpBarSO = new SerializedObject(hpBar);
+            var fcProp = hpBarSO.FindProperty("fillColor");
+            if (fcProp != null)
+                fcProp.colorValue = new Color(0.2f, 0.8f, 0.3f);
+            hpBarSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void WireAction(InputActionAsset asset, SerializedObject so,

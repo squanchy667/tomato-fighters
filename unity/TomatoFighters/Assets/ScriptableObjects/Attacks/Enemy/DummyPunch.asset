@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fc11d5ad204a204895bafbe85a46933, type: 3}
+  m_Name: DummyPunch
+  m_EditorClassIdentifier: 
+  attackId: dummy_punch
+  attackName: Dummy Punch
+  damageMultiplier: 0.5
+  knockbackForce: {x: 3, y: 0}
+  launchForce: {x: 0, y: 0}
+  causesWallBounce: 0
+  causesLaunch: 0
+  hitboxId: Punch
+  animationClip: {fileID: 0}
+  hitboxStartFrame: 2
+  hitboxActiveFrames: 3
+  totalFrames: 15
+  animationSpeed: 1
+  telegraphType: 0
+  isOTGCapable: 0
+  isAirAttack: 0
+  hitEffectPrefab: {fileID: 0}
+  swingSound: {fileID: 0}
+  hitSound: {fileID: 0}

@@ -6,6 +6,7 @@
         "TomatoFighters.Characters",
         "TomatoFighters.Shared",
         "TomatoFighters.Roguelite",
+        "TomatoFighters.World",
         "Unity.InputSystem"
     ],
     "includePlatforms": [

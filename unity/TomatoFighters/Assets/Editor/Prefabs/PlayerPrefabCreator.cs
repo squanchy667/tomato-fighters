@@ -1,5 +1,6 @@
 using TomatoFighters.Characters;
 using TomatoFighters.Combat;
+using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Enums;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -9,32 +10,10 @@ using UnityEngine.InputSystem;
 namespace TomatoFighters.Editor.Prefabs
 {
     /// <summary>
-    /// Creates a fully-wired Player prefab with all gameplay and animation components.
+    /// Creates or updates a Player prefab with all gameplay and animation components.
+    /// Safe to re-run — loads existing prefab and updates components in place,
+    /// preserving any manually added children (attack colliders, VFX anchors, etc.).
     /// Run via menu: <b>TomatoFighters &gt; Create Player Prefab</b>.
-    ///
-    /// <para><b>Prefab hierarchy:</b></para>
-    /// <code>
-    /// Player (root)
-    ///   ├── Rigidbody2D (gravity=0, continuous collision, interpolate)
-    ///   ├── BoxCollider2D (0.8×0.6, body collider on ground plane)
-    ///   ├── CharacterMotor (wired to Mystica_MovementConfig)
-    ///   ├── ComboController (wired to Mystica_ComboDefinition + Animator)
-    ///   ├── ComboDebugUI (auto-advances combo windows when no attack anims exist)
-    ///   ├── CharacterAnimationBridge (feeds motor state → Animator)
-    ///   ├── CharacterInputHandler (Move/Jump/Dash/LightAttack/HeavyAttack/Run)
-    ///   ├── Sprite (child)
-    ///   │     ├── SpriteRenderer (idle frame as default sprite)
-    ///   │     └── Animator (TomatoFighter_Controller)
-    ///   └── Shadow (child)
-    ///         └── SpriteRenderer (black 30% alpha, sorting order -1)
-    /// </code>
-    ///
-    /// <para><b>Creates on first run:</b> Mystica_MovementConfig (SPD=1.0 mage tuning)
-    /// and Mystica_ComboDefinition (placeholder L-L-L + H-H chain).</para>
-    ///
-    /// <para><b>Input action note:</b> InputActionReferences created via
-    /// <c>InputActionReference.Create()</c> don't survive prefab serialization.
-    /// The <see cref="MovementTestSceneCreator"/> re-wires them on scene instances.</para>
     /// </summary>
     public static class PlayerPrefabCreator
     {
@@ -46,6 +25,9 @@ namespace TomatoFighters.Editor.Prefabs
         private const string MYSTICA_COMBO_PATH = COMBO_FOLDER + "/Mystica_ComboDefinition.asset";
         private const string CONTROLLER_PATH = "Assets/Animations/TomatoFighter/TomatoFighter_Controller.controller";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
+
+        private const string PLAYER_HURTBOX_LAYER = "PlayerHurtbox";
+        private const string PLAYER_HITBOX_LAYER = "PlayerHitbox";
 
         [MenuItem("TomatoFighters/Create Player Prefab")]
         public static void CreatePlayerPrefab()
@@ -60,11 +42,14 @@ namespace TomatoFighters.Editor.Prefabs
             var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
 
             if (controller == null)
-                Debug.LogWarning("[PlayerPrefabCreator] AnimatorController not found. Run 'Build Animations' first. Prefab will be created without Animator.");
+                Debug.LogWarning("[PlayerPrefabCreator] AnimatorController not found. Run 'Build Animations' first.");
 
-            var prefab = BuildPrefab(config, comboDef, controller, inputActions);
+            bool isNew = AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_PATH) == null;
 
-            Debug.Log($"[PlayerPrefabCreator] Player prefab created at {PREFAB_PATH}");
+            var prefab = SetupPrefab(config, comboDef, controller, inputActions);
+
+            string verb = isNew ? "Created" : "Updated";
+            Debug.Log($"[PlayerPrefabCreator] {verb} Player prefab at {PREFAB_PATH}");
             Selection.activeObject = prefab;
         }
 
@@ -72,27 +57,23 @@ namespace TomatoFighters.Editor.Prefabs
         {
             var existing = AssetDatabase.LoadAssetAtPath<MovementConfig>(MYSTICA_CONFIG_PATH);
             if (existing != null)
-            {
-                Debug.Log("[PlayerPrefabCreator] Using existing Mystica_MovementConfig.");
                 return existing;
-            }
 
             var config = ScriptableObject.CreateInstance<MovementConfig>();
 
-            // Mystica: SPD 1.0 (vs Brutor 0.7), agile mage archetype
-            config.moveSpeed = 8f;              // base speed * 1.0 SPD
+            config.moveSpeed = 8f;
             config.depthSpeed = 5f;
-            config.groundAcceleration = 65f;    // slightly snappier than Brutor
+            config.groundAcceleration = 65f;
             config.airAcceleration = 35f;
-            config.jumpForce = 14f;             // lighter = higher jump
+            config.jumpForce = 14f;
             config.jumpGravity = 38f;
             config.coyoteTime = 0.1f;
             config.jumpBufferTime = 0.12f;
-            config.dashSpeed = 20f;             // faster dash for agile mage
-            config.dashDuration = 0.14f;        // shorter, snappier dash
-            config.dashCooldown = 0.5f;         // lower cooldown
+            config.dashSpeed = 20f;
+            config.dashDuration = 0.14f;
+            config.dashCooldown = 0.5f;
             config.dashHasIFrames = true;
-            config.runSpeedMultiplier = 1.5f;   // mage runs 50% faster than walk
+            config.runSpeedMultiplier = 1.5f;
 
             AssetDatabase.CreateAsset(config, MYSTICA_CONFIG_PATH);
             AssetDatabase.SaveAssets();
@@ -105,82 +86,56 @@ namespace TomatoFighters.Editor.Prefabs
         {
             var existing = AssetDatabase.LoadAssetAtPath<ComboDefinition>(MYSTICA_COMBO_PATH);
             if (existing != null)
-            {
-                Debug.Log("[PlayerPrefabCreator] Using existing Mystica_ComboDefinition.");
                 return existing;
-            }
 
             var def = ScriptableObject.CreateInstance<ComboDefinition>();
             def.defaultComboWindow = 0.5f;
             def.rootLightIndex = 0;
             def.rootHeavyIndex = 3;
 
-            // Placeholder Mystica combo tree — light spell chain + heavy arcane blast
             def.steps = new ComboStep[]
             {
-                // [0] Light 1 — Arcane Bolt
                 new ComboStep
                 {
                     attackType = AttackType.Light,
                     animationTrigger = "Light1",
                     damageMultiplier = 1.0f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = 1,
-                    nextOnHeavy = -1,
-                    canDashCancelOnHit = false,
-                    canJumpCancelOnHit = false,
+                    nextOnLight = 1, nextOnHeavy = -1,
                     isFinisher = false
                 },
-                // [1] Light 2 — Arcane Wave
                 new ComboStep
                 {
                     attackType = AttackType.Light,
                     animationTrigger = "Light2",
                     damageMultiplier = 1.1f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = 2,
-                    nextOnHeavy = -1,
+                    nextOnLight = 2, nextOnHeavy = -1,
                     canDashCancelOnHit = true,
-                    canJumpCancelOnHit = false,
                     isFinisher = false
                 },
-                // [2] Light 3 finisher — Arcane Burst
                 new ComboStep
                 {
                     attackType = AttackType.Light,
                     animationTrigger = "LightFinisher",
                     damageMultiplier = 1.4f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = -1,
-                    nextOnHeavy = -1,
-                    canDashCancelOnHit = false,
-                    canJumpCancelOnHit = false,
+                    nextOnLight = -1, nextOnHeavy = -1,
                     isFinisher = true
                 },
-                // [3] Heavy 1 — Arcane Blast (root heavy)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
                     animationTrigger = "Heavy1",
                     damageMultiplier = 1.8f,
                     comboWindowDuration = 0.6f,
-                    nextOnLight = -1,
-                    nextOnHeavy = 4,
-                    canDashCancelOnHit = true,
-                    canJumpCancelOnHit = true,
+                    nextOnLight = -1, nextOnHeavy = 4,
+                    canDashCancelOnHit = true, canJumpCancelOnHit = true,
                     isFinisher = false
                 },
-                // [4] Heavy 2 finisher — Arcane Nova
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
                     animationTrigger = "HeavyFinisher",
                     damageMultiplier = 2.5f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = -1,
-                    nextOnHeavy = -1,
-                    canDashCancelOnHit = false,
-                    canJumpCancelOnHit = false,
+                    nextOnLight = -1, nextOnHeavy = -1,
                     isFinisher = true
                 },
             };
@@ -192,58 +147,64 @@ namespace TomatoFighters.Editor.Prefabs
             return def;
         }
 
-        private static GameObject BuildPrefab(MovementConfig config, ComboDefinition comboDef,
+        /// <summary>
+        /// Loads the existing prefab for editing, or creates a new root GameObject.
+        /// Ensures all required components and children exist, wires references,
+        /// then saves back. Preserves any manually added children.
+        /// </summary>
+        private static GameObject SetupPrefab(MovementConfig config, ComboDefinition comboDef,
             AnimatorController controller, InputActionAsset inputActions)
         {
-            // Check for existing prefab
-            var existingPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_PATH);
-            if (existingPrefab != null)
-            {
-                if (!EditorUtility.DisplayDialog(
-                    "Overwrite Prefab?",
-                    $"A Player prefab already exists at {PREFAB_PATH}. Overwrite it?",
-                    "Overwrite", "Cancel"))
-                {
-                    return existingPrefab;
-                }
-            }
+            GameObject root;
+            bool isExisting = AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_PATH) != null;
 
-            // -- Root GameObject --
-            var root = new GameObject("Player");
+            if (isExisting)
+                root = PrefabUtility.LoadPrefabContents(PREFAB_PATH);
+            else
+                root = new GameObject("Player");
 
-            // -- Rigidbody2D (no gravity — belt-scroll) --
-            var rb = root.AddComponent<Rigidbody2D>();
+            // -- Layer: root is PlayerHurtbox (enemy attacks detect this) --
+            int hurtboxLayer = LayerMask.NameToLayer(PLAYER_HURTBOX_LAYER);
+            if (hurtboxLayer >= 0)
+                root.layer = hurtboxLayer;
+            else
+                Debug.LogWarning(
+                    $"[PlayerPrefabCreator] Layer '{PLAYER_HURTBOX_LAYER}' not found. " +
+                    "Add it in Edit > Project Settings > Tags and Layers.");
+
+            // -- Rigidbody2D --
+            var rb = EnsureComponent<Rigidbody2D>(root);
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-            // -- BoxCollider2D (body, stays on ground plane) --
-            var col = root.AddComponent<BoxCollider2D>();
-            col.size = new Vector2(0.8f, 0.6f);
-            col.offset = Vector2.zero;
+            // -- BoxCollider2D (standing character proportions) --
+            var col = EnsureComponent<BoxCollider2D>(root);
+            col.size = new Vector2(0.8f, 1.2f);
+            col.offset = new Vector2(0f, 0.6f);
 
-            // -- Sprite child (offset by jumpHeight at runtime) --
-            var spriteChild = new GameObject("Sprite");
-            spriteChild.transform.SetParent(root.transform);
-            spriteChild.transform.localPosition = Vector3.zero;
-            var sr = spriteChild.AddComponent<SpriteRenderer>();
+            // -- Sprite child (preserved if exists) --
+            var spriteChild = FindOrCreateChild(root, "Sprite");
+            var sr = EnsureComponent<SpriteRenderer>(spriteChild);
             sr.sortingOrder = 1;
 
-            // Try to assign the first idle sprite as default
-            var idleSprites = AssetDatabase.LoadAllAssetsAtPath(
-                "Assets/animations/tomato_fighter_animations/Sprites/tomato_fighter_idle.png");
-            foreach (var asset in idleSprites)
+            if (sr.sprite == null)
             {
-                if (asset is Sprite sprite && sprite.name.Contains("_0"))
+                var idleSprites = AssetDatabase.LoadAllAssetsAtPath(
+                    "Assets/animations/tomato_fighter_animations/Sprites/tomato_fighter_idle.png");
+                foreach (var asset in idleSprites)
                 {
-                    sr.sprite = sprite;
-                    break;
+                    if (asset is Sprite sprite && sprite.name.Contains("_0"))
+                    {
+                        sr.sprite = sprite;
+                        break;
+                    }
                 }
             }
 
-            // -- Animator on Sprite child (drives SpriteRenderer) --
-            var animator = spriteChild.AddComponent<Animator>();
+            // -- Animator on Sprite child --
+            var animator = EnsureComponent<Animator>(spriteChild);
             if (controller != null)
             {
                 var animatorSO = new SerializedObject(animator);
@@ -251,17 +212,16 @@ namespace TomatoFighters.Editor.Prefabs
                 animatorSO.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            // -- Shadow child (stays at feet) --
-            var shadowChild = new GameObject("Shadow");
-            shadowChild.transform.SetParent(root.transform);
+            // -- Shadow child (preserved if exists) --
+            var shadowChild = FindOrCreateChild(root, "Shadow");
             shadowChild.transform.localPosition = new Vector3(0f, -0.1f, 0f);
-            var shadowSR = shadowChild.AddComponent<SpriteRenderer>();
-            shadowSR.color = new Color(0f, 0f, 0f, 0.3f);
             shadowChild.transform.localScale = new Vector3(0.9f, 0.2f, 1f);
+            var shadowSR = EnsureComponent<SpriteRenderer>(shadowChild);
+            shadowSR.color = new Color(0f, 0f, 0f, 0.3f);
             shadowSR.sortingOrder = 0;
 
             // -- CharacterMotor --
-            var motor = root.AddComponent<CharacterMotor>();
+            var motor = EnsureComponent<CharacterMotor>(root);
             var motorSO = new SerializedObject(motor);
             motorSO.FindProperty("config").objectReferenceValue = config;
             motorSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Mystica;
@@ -269,7 +229,7 @@ namespace TomatoFighters.Editor.Prefabs
             motorSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- ComboController --
-            var comboController = root.AddComponent<ComboController>();
+            var comboController = EnsureComponent<ComboController>(root);
             var comboSO = new SerializedObject(comboController);
             comboSO.FindProperty("comboDefinition").objectReferenceValue = comboDef;
             comboSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Mystica;
@@ -278,17 +238,17 @@ namespace TomatoFighters.Editor.Prefabs
             comboSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- ComboDebugUI --
-            root.AddComponent<ComboDebugUI>();
+            EnsureComponent<ComboDebugUI>(root);
 
             // -- CharacterAnimationBridge --
-            var animBridge = root.AddComponent<CharacterAnimationBridge>();
+            var animBridge = EnsureComponent<CharacterAnimationBridge>(root);
             var bridgeSO = new SerializedObject(animBridge);
             bridgeSO.FindProperty("animator").objectReferenceValue = animator;
             bridgeSO.FindProperty("motor").objectReferenceValue = motor;
             bridgeSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- CharacterInputHandler --
-            var inputHandler = root.AddComponent<CharacterInputHandler>();
+            var inputHandler = EnsureComponent<CharacterInputHandler>(root);
             var inputSO = new SerializedObject(inputHandler);
             inputSO.FindProperty("motor").objectReferenceValue = motor;
             inputSO.FindProperty("comboController").objectReferenceValue = comboController;
@@ -301,12 +261,11 @@ namespace TomatoFighters.Editor.Prefabs
                 WireInputAction(inputActions, inputSO, "lightAttackAction", "Player/Attack");
                 WireInputAction(inputActions, inputSO, "heavyAttackAction", "Player/Crouch");
 
-                // Run action — may not exist yet in the input actions asset
                 var runAction = inputActions.FindAction("Player/Run");
                 if (runAction != null)
                     WireInputAction(inputActions, inputSO, "runAction", "Player/Run");
                 else
-                    Debug.LogWarning("[PlayerPrefabCreator] 'Player/Run' action not found in InputActions. Add a 'Run' action bound to Left Ctrl in the Player action map.");
+                    Debug.LogWarning("[PlayerPrefabCreator] 'Player/Run' action not found. Add a 'Run' action bound to Left Ctrl.");
             }
             else
             {
@@ -315,11 +274,62 @@ namespace TomatoFighters.Editor.Prefabs
 
             inputSO.ApplyModifiedPropertiesWithoutUndo();
 
-            // Save as prefab
-            var prefab = PrefabUtility.SaveAsPrefabAsset(root, PREFAB_PATH);
-            Object.DestroyImmediate(root);
+            // -- PlayerDamageable (stub for bidirectional damage) --
+            EnsureComponent<PlayerDamageable>(root);
 
-            return prefab;
+            // -- DebugHealthBar (temp HP bar, replaced by T025 HUD) --
+            var healthBar = EnsureComponent<DebugHealthBar>(root);
+            var hbSO = new SerializedObject(healthBar);
+            var fillColorProp = hbSO.FindProperty("fillColor");
+            if (fillColorProp != null)
+                fillColorProp.colorValue = new Color(0.2f, 0.8f, 0.3f); // Green for player
+            hbSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- Clean up missing scripts (e.g. old HitboxDamage refs after move to Shared) --
+            RemoveMissingScripts(root);
+
+            // -- Re-add HitboxDamage from Shared on any Hitbox_* children that lost it --
+            RepairHitboxChildren(root);
+
+            // -- Save --
+            GameObject savedPrefab;
+            if (isExisting)
+            {
+                savedPrefab = PrefabUtility.SaveAsPrefabAsset(root, PREFAB_PATH);
+                PrefabUtility.UnloadPrefabContents(root);
+            }
+            else
+            {
+                savedPrefab = PrefabUtility.SaveAsPrefabAsset(root, PREFAB_PATH);
+                Object.DestroyImmediate(root);
+            }
+
+            return savedPrefab;
+        }
+
+        /// <summary>
+        /// Returns the existing component on the GameObject, or adds one if missing.
+        /// </summary>
+        private static T EnsureComponent<T>(GameObject go) where T : Component
+        {
+            var existing = go.GetComponent<T>();
+            return existing != null ? existing : go.AddComponent<T>();
+        }
+
+        /// <summary>
+        /// Finds a direct child by name, or creates a new empty child if not found.
+        /// Preserves existing children and their sub-hierarchy.
+        /// </summary>
+        private static GameObject FindOrCreateChild(GameObject parent, string childName)
+        {
+            var t = parent.transform.Find(childName);
+            if (t != null)
+                return t.gameObject;
+
+            var child = new GameObject(childName);
+            child.transform.SetParent(parent.transform);
+            child.transform.localPosition = Vector3.zero;
+            return child;
         }
 
         private static void WireInputAction(InputActionAsset asset, SerializedObject so,
@@ -332,6 +342,47 @@ namespace TomatoFighters.Editor.Prefabs
                 return;
             }
             so.FindProperty(propertyName).objectReferenceValue = InputActionReference.Create(action);
+        }
+
+        /// <summary>
+        /// Ensures all Hitbox_* children have the <see cref="HitboxDamage"/> component.
+        /// Repairs hitbox children that lost their script reference after the move to Shared.
+        /// </summary>
+        private static void RepairHitboxChildren(GameObject root)
+        {
+            int hitboxLayer = LayerMask.NameToLayer(PLAYER_HITBOX_LAYER);
+
+            foreach (Transform child in root.transform)
+            {
+                if (!child.name.StartsWith("Hitbox_")) continue;
+
+                if (child.GetComponent<HitboxDamage>() == null)
+                {
+                    child.gameObject.AddComponent<HitboxDamage>();
+                    Debug.Log($"[PlayerPrefabCreator] Re-added HitboxDamage to '{child.name}'.");
+                }
+
+                if (hitboxLayer >= 0 && child.gameObject.layer != hitboxLayer)
+                {
+                    child.gameObject.layer = hitboxLayer;
+                    Debug.Log($"[PlayerPrefabCreator] Set '{child.name}' layer to {PLAYER_HITBOX_LAYER}.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes all MonoBehaviours with missing scripts from a GameObject and its children.
+        /// Prevents "Prefab with a missing script" save errors.
+        /// </summary>
+        private static void RemoveMissingScripts(GameObject root)
+        {
+            var transforms = root.GetComponentsInChildren<Transform>(true);
+            foreach (var t in transforms)
+            {
+                int removed = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
+                if (removed > 0)
+                    Debug.Log($"[PlayerPrefabCreator] Removed {removed} missing script(s) from '{t.name}'.");
+            }
         }
 
         public static void EnsureFolderExists(string path)

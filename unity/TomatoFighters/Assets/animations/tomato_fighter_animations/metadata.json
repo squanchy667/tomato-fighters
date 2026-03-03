@@ -1,83 +1,104 @@
 {
-  "character_name": "tomato_fighter",
-  "generated_at": "2026-03-03T01:06:50.200579+00:00",
-  "generated_by": "Animation Forge v0.1.0",
-  "bg_removal_method": "greenscreen+rembg_u2net",
+  "character_name": "purple_mage",
+  "generated_at": "2026-03-03T15:35:10.740938+00:00",
+  "generated_by": "Animation Forge v0.2.0",
+  "bg_removal_method": "rembg + green_defringe + smoke_removal",
+  "game_profile": {
+    "game_type": "2d_roguelite",
+    "art_style": "ai_generated_hd",
+    "export_target": "unity",
+    "filter_mode": "bilinear"
+  },
   "animations": {
     "idle": {
-      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_idle.png",
-      "frame_w": 464,
-      "frame_h": 688,
-      "cols": 8,
-      "rows": 7,
-      "n_frames": 50,
+      "spritesheet": "Sprites/purple_mage_idle.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 4,
+      "n_frames": 17,
       "fps": 12,
       "loop": true,
       "pivot": [
         0.5,
         0.0
       ],
-      "ppu": 256
+      "ppu": 128
     },
     "walk": {
-      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_walk.png",
-      "frame_w": 464,
-      "frame_h": 688,
-      "cols": 6,
-      "rows": 6,
-      "n_frames": 36,
-      "fps": 14,
+      "spritesheet": "Sprites/purple_mage_walk.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 4,
+      "n_frames": 17,
+      "fps": 12,
       "loop": true,
       "pivot": [
         0.5,
         0.0
       ],
-      "ppu": 256
+      "ppu": 128
     },
     "run": {
-      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_run.png",
-      "frame_w": 464,
-      "frame_h": 688,
-      "cols": 6,
-      "rows": 6,
-      "n_frames": 36,
-      "fps": 16,
+      "spritesheet": "Sprites/purple_mage_run.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 4,
+      "n_frames": 17,
+      "fps": 12,
       "loop": true,
       "pivot": [
         0.5,
         0.0
       ],
-      "ppu": 256
+      "ppu": 128
     },
     "jump": {
-      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_jump.png",
-      "frame_w": 464,
-      "frame_h": 688,
-      "cols": 6,
-      "rows": 6,
-      "n_frames": 31,
-      "fps": 16,
+      "spritesheet": "Sprites/purple_mage_jump.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 2,
+      "n_frames": 9,
+      "fps": 12,
       "loop": false,
       "pivot": [
         0.5,
         0.0
       ],
-      "ppu": 256
+      "ppu": 128
     },
     "land": {
-      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_land.png",
-      "frame_w": 464,
-      "frame_h": 688,
-      "cols": 5,
-      "rows": 4,
-      "n_frames": 20,
-      "fps": 16,
+      "spritesheet": "Sprites/purple_mage_land.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 2,
+      "n_frames": 9,
+      "fps": 12,
       "loop": false,
       "pivot": [
         0.5,
         0.0
       ],
-      "ppu": 256
+      "ppu": 128
+    },
+    "dash": {
+      "spritesheet": "Sprites/purple_mage_dash.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 2,
+      "n_frames": 9,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
     }
   }
 }

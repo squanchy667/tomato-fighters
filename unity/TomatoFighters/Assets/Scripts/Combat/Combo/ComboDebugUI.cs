@@ -35,6 +35,13 @@ namespace TomatoFighters.Combat
         private const int MAX_CHAIN_DISPLAY = 8;
         private readonly List<string> comboChain = new List<string>();
 
+        // Precomputed combo routes for reference panel
+        private readonly List<string> comboRoutes = new List<string>();
+
+        // Last finisher info — persists after state resets to Idle
+        private string lastFinisherText = "";
+        private float lastFinisherTimer;
+
         private void Awake()
         {
             comboController = GetComponent<ComboController>();
@@ -44,6 +51,11 @@ namespace TomatoFighters.Combat
                 baseColor = spriteRenderer.color;
 
             hasAnimator = GetComponent<Animator>() != null;
+        }
+
+        private void Start()
+        {
+            BuildComboRoutes();
         }
 
         private void OnEnable()
@@ -125,12 +137,43 @@ namespace TomatoFighters.Combat
                 y += 20f;
             }
 
+            // Finisher banner — persists 3s after state resets to Idle
+            if (lastFinisherTimer > 0f)
+            {
+                y += 10f;
+                var finisherStyle = new GUIStyle(style) { fontSize = 22 };
+                finisherStyle.normal.textColor = new Color(1f, 0.3f, 0.9f);
+                GUI.Label(new Rect(10, y, 500, 30), lastFinisherText, finisherStyle);
+                y += 30f;
+            }
+
             if (eventTextTimer > 0f)
             {
                 var eventStyle = new GUIStyle(style);
                 eventStyle.fontSize = 24;
                 eventStyle.normal.textColor = Color.yellow;
                 GUI.Label(new Rect(10, y + 10, 400, 40), lastEventText, eventStyle);
+            }
+
+            // Right panel — combo routes reference
+            if (comboRoutes.Count > 0)
+            {
+                float rx = Screen.width - 520;
+                float ry = 10f;
+
+                var headerStyle = new GUIStyle(style) { fontSize = 16 };
+                headerStyle.normal.textColor = Color.cyan;
+                GUI.Label(new Rect(rx, ry, 500, 25), "COMBO ROUTES:", headerStyle);
+                ry += 25f;
+
+                var routeStyle = new GUIStyle(style) { fontSize = 13, fontStyle = FontStyle.Normal };
+                routeStyle.normal.textColor = new Color(0.85f, 0.85f, 0.85f);
+
+                foreach (string route in comboRoutes)
+                {
+                    GUI.Label(new Rect(rx, ry, 500, 20), route, routeStyle);
+                    ry += 18f;
+                }
             }
         }
 
@@ -145,6 +188,14 @@ namespace TomatoFighters.Combat
             string attackName = GetAttackName(stepIndex);
             lastEventText = attackName;
             eventTextTimer = 1f;
+
+            // Clear previous chain and finisher when a new combo starts
+            if (comboController.ComboLength <= 1)
+            {
+                comboChain.Clear();
+                lastFinisherText = "";
+                lastFinisherTimer = 0f;
+            }
 
             if (comboChain.Count >= MAX_CHAIN_DISPLAY)
                 comboChain.RemoveAt(0);
@@ -166,6 +217,9 @@ namespace TomatoFighters.Combat
             lastEventText = $"FINISHER: {finisherName}! ({comboLength} hits)";
             eventTextTimer = 1.5f;
 
+            lastFinisherText = $"FINISHER: {finisherName} ({comboLength} hits)";
+            lastFinisherTimer = 3f;
+
             if (comboChain.Count >= MAX_CHAIN_DISPLAY)
                 comboChain.RemoveAt(0);
             comboChain.Add($"★{finisherName}");
@@ -182,7 +236,6 @@ namespace TomatoFighters.Combat
             autoAdvanceActive = false;
             lastEventText = "Combo dropped";
             eventTextTimer = 0.8f;
-            comboChain.Clear();
 
             Debug.Log("[Combo] Combo dropped");
         }
@@ -190,10 +243,7 @@ namespace TomatoFighters.Combat
         private void OnComboEnded()
         {
             autoAdvanceActive = false;
-            lastEventText = "Combo complete!";
-            eventTextTimer = 1f;
-            comboChain.Clear();
-
+            // Don't overwrite — let the finisher name stay visible
             Debug.Log("[Combo] Combo ended cleanly");
         }
 
@@ -241,6 +291,8 @@ namespace TomatoFighters.Combat
         {
             if (eventTextTimer > 0f)
                 eventTextTimer -= Time.deltaTime;
+            if (lastFinisherTimer > 0f)
+                lastFinisherTimer -= Time.deltaTime;
         }
 
         private string GetAttackName(int stepIndex)
@@ -253,6 +305,61 @@ namespace TomatoFighters.Combat
                 return step.attackData.attackName;
 
             return $"{step.attackType} #{stepIndex}";
+        }
+
+        /// <summary>
+        /// Walks the combo tree and builds all possible routes from root to finisher/dead-end.
+        /// Called once on Start. Handles cycles via visited set.
+        /// </summary>
+        private void BuildComboRoutes()
+        {
+            comboRoutes.Clear();
+            var def = comboController?.Definition;
+            if (def == null) return;
+
+            if (def.IsValidStep(def.rootLightIndex))
+            {
+                TraceRoute(def, def.rootLightIndex,
+                    new List<string>(), new HashSet<int>(), "[L]");
+            }
+
+            if (def.IsValidStep(def.rootHeavyIndex))
+            {
+                TraceRoute(def, def.rootHeavyIndex,
+                    new List<string>(), new HashSet<int>(), "[H]");
+            }
+        }
+
+        private void TraceRoute(ComboDefinition def, int stepIndex,
+            List<string> path, HashSet<int> visited, string inputLabel)
+        {
+            if (!def.IsValidStep(stepIndex) || visited.Contains(stepIndex)) return;
+
+            visited.Add(stepIndex);
+            var step = def.steps[stepIndex];
+
+            string name = GetAttackName(stepIndex);
+            if (step.isFinisher)
+                name = "★" + name;
+
+            path.Add($"{inputLabel} {name}");
+
+            bool isLeaf = step.isFinisher
+                || (!def.IsValidStep(step.nextOnLight) && !def.IsValidStep(step.nextOnHeavy));
+
+            if (isLeaf)
+            {
+                comboRoutes.Add(string.Join("  →  ", path));
+            }
+            else
+            {
+                if (def.IsValidStep(step.nextOnLight))
+                    TraceRoute(def, step.nextOnLight,
+                        new List<string>(path), new HashSet<int>(visited), "[L]");
+                if (def.IsValidStep(step.nextOnHeavy))
+                    TraceRoute(def, step.nextOnHeavy,
+                        new List<string>(path), new HashSet<int>(visited), "[H]");
+            }
         }
     }
 }

@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b130aa0473f07840b228e772226f652, type: 3}
+  m_Name: TestDummy_EnemyData
+  m_EditorClassIdentifier: 
+  maxHealth: 100
+  pressureThreshold: 50
+  stunDuration: 2
+  invulnerabilityDuration: 1
+  knockbackResistance: 0.3
+  movementSpeed: 0
+  attacks:
+  - {fileID: 11400000, guid: 020c9a598aff3474a87a6b9212a54b84, type: 2}

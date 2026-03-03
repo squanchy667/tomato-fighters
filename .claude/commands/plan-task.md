@@ -49,16 +49,15 @@ Ask targeted questions ONE AT A TIME about:
 - **Scope boundaries** — what's in this task vs deferred to later tasks
 - **Developer preferences** — file organization, naming, patterns
 
-### Step 4: Document decisions
-After the conversation, update the task spec with a `## Design Decisions` section containing:
-- Numbered decisions (DD-1, DD-2, etc.)
-- Each with rationale and code snippet where relevant
-- Update the File Plan if decisions changed it
+### Step 4: Write the spec to file (MANDATORY)
+When the developer says they're happy with the plan, or invokes `/save-spec`, you MUST write the spec to disk before doing anything else:
+1. Update the task spec at `tomato-fighters-docs/tasks/phase-{N}/T{XXX}-*.md` with a `## Design Decisions` section containing:
+   - Numbered decisions (DD-1, DD-2, etc.)
+   - Each with rationale and code snippet where relevant
+2. Update the File Plan if decisions changed it
+3. Confirm to the developer: "Spec written to `{file path}`. Start a new session and run `/task-execute TXXX` to execute."
 
-### Step 5: Offer next steps
-- "Ready to execute? I'll run `/task-execute TXXX`"
-- "Want me to update the task spec first?"
-- "Should I generate a code skeleton for review?"
+**Do NOT offer to execute in this session.** The spec is the deliverable of `/plan-task`. Execution happens in a clean session via `/task-execute`.
 
 ## Conversation Rules
 - Be a knowledgeable collaborator, not a yes-machine
