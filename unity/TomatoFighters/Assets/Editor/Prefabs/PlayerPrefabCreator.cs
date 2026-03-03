@@ -159,8 +159,23 @@ namespace TomatoFighters.Editor.Prefabs
 
             inputSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // -- DefenseSystem --
+            var defenseSystem = EnsureComponent<DefenseSystem>(root);
+            var defSO = new SerializedObject(defenseSystem);
+            defSO.FindProperty("motor").objectReferenceValue = motor;
+            defSO.FindProperty("comboController").objectReferenceValue = comboController;
+            if (config.defenseConfig != null)
+                defSO.FindProperty("config").objectReferenceValue = config.defenseConfig;
+            defSO.ApplyModifiedPropertiesWithoutUndo();
+
             // -- PlayerDamageable (stub for bidirectional damage) --
-            EnsureComponent<PlayerDamageable>(root);
+            var playerDamageable = EnsureComponent<PlayerDamageable>(root);
+            var pdSO = new SerializedObject(playerDamageable);
+            pdSO.FindProperty("defenseSystem").objectReferenceValue = defenseSystem;
+            pdSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- HitboxManager.ownerDefenseSystem --
+            // (Deferred to after HitboxManager is created below)
 
             // -- DebugHealthBar (temp HP bar, replaced by T025 HUD) --
             var healthBar = EnsureComponent<DebugHealthBar>(root);
@@ -177,6 +192,7 @@ namespace TomatoFighters.Editor.Prefabs
             var hitboxManager = EnsureComponent<HitboxManager>(root);
             var hmSO = new SerializedObject(hitboxManager);
             hmSO.FindProperty("comboController").objectReferenceValue = comboController;
+            hmSO.FindProperty("ownerDefenseSystem").objectReferenceValue = defenseSystem;
             hmSO.FindProperty("baseAttack").floatValue = config.baseAttack;
             hmSO.FindProperty("useTimerFallback").boolValue = config.useTimerFallback;
             hmSO.FindProperty("fallbackActiveDuration").floatValue = config.fallbackActiveDuration;

@@ -139,13 +139,14 @@ namespace TomatoFighters.World
 
         private void HandleHitDetected(IDamageable target, Vector2 hitPoint)
         {
-            Debug.Log($"[TestDummyEnemy] HandleHitDetected — target={target}, hitPoint={hitPoint}");
-
             if (attackData == null)
             {
                 Debug.LogWarning("[TestDummyEnemy] HandleHitDetected — attackData is null!");
                 return;
             }
+
+            bool isUnstoppable = attackData.telegraphType == TelegraphType.Unstoppable;
+            var response = target.ResolveIncoming(transform.position, isUnstoppable);
 
             float damage = attackData.damageMultiplier * 10f; // Base enemy ATK placeholder
 
@@ -158,8 +159,36 @@ namespace TomatoFighters.World
                 source: CharacterType.Brutor // Enemies don't have a CharacterType; use default
             );
 
-            Debug.Log($"[TestDummyEnemy] Applying {damage:F1} damage to player");
-            target.TakeDamage(packet);
+            switch (response)
+            {
+                case DamageResponse.Hit:
+                    if (!target.IsInvulnerable)
+                    {
+                        target.TakeDamage(packet);
+                    }
+                    break;
+
+                case DamageResponse.Clashed:
+                    if (!target.IsInvulnerable)
+                    {
+                        var clashPacket = new DamagePacket(
+                            type: packet.type,
+                            amount: packet.amount * 0.5f,
+                            isPunishDamage: false,
+                            knockbackForce: packet.knockbackForce * 0.3f,
+                            launchForce: Vector2.zero,
+                            source: packet.source);
+                        target.TakeDamage(clashPacket);
+                    }
+                    break;
+
+                case DamageResponse.Deflected:
+                case DamageResponse.Dodged:
+                    // No damage applied
+                    break;
+            }
+
+            Debug.Log($"[TestDummyEnemy] Hit resolved: {response} ({damage:F1} base damage)");
         }
 
         // ── Virtual Hook Overrides ────────────────────────────────────────

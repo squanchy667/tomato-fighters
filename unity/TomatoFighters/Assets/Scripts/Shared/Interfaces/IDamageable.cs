@@ -1,4 +1,5 @@
 using TomatoFighters.Shared.Data;
+using TomatoFighters.Shared.Enums;
 using UnityEngine;
 
 namespace TomatoFighters.Shared.Interfaces
@@ -9,6 +10,15 @@ namespace TomatoFighters.Shared.Interfaces
     /// </summary>
     public interface IDamageable
     {
+        /// <summary>
+        /// Resolve an incoming attack against this entity's current defense state.
+        /// Called by HitboxManager before deciding whether to apply damage.
+        /// </summary>
+        /// <param name="attackerPosition">World-space position of the attacker.</param>
+        /// <param name="isUnstoppable">Whether the incoming attack has Unstoppable telegraph.</param>
+        /// <returns>How the entity responded: Hit, Deflected, Clashed, or Dodged.</returns>
+        DamageResponse ResolveIncoming(Vector2 attackerPosition, bool isUnstoppable);
+
         /// <summary>Process an incoming damage packet (apply damage, knockback, stun, etc.).</summary>
         void TakeDamage(DamagePacket damage);
 

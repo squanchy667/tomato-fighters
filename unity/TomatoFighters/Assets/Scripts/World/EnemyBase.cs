@@ -18,6 +18,10 @@ namespace TomatoFighters.World
         [Header("Data")]
         [SerializeField] private EnemyData enemyData;
 
+        [Header("Defense")]
+        [Tooltip("Assign a DefenseSystem component (implements IDefenseProvider). Null = no defense.")]
+        [SerializeField] private Component defenseProviderComponent;
+
         /// <summary>Fired when this enemy dies. WaveManager subscribes to track alive count.</summary>
         public event Action OnDied;
 
@@ -27,6 +31,8 @@ namespace TomatoFighters.World
         protected SpriteRenderer Sprite { get; private set; }
         protected Collider2D[] Colliders { get; private set; }
         protected EnemyData Data => enemyData;
+
+        private IDefenseProvider _defenseProvider;
 
         // ── Health ────────────────────────────────────────────────────────
 
@@ -78,11 +84,19 @@ namespace TomatoFighters.World
             Rb = GetComponent<Rigidbody2D>();
             Sprite = GetComponentInChildren<SpriteRenderer>();
             Colliders = GetComponentsInChildren<Collider2D>();
+            _defenseProvider = defenseProviderComponent as IDefenseProvider;
 
             _currentHealth = enemyData.maxHealth;
         }
 
         // ── IDamageable Implementation ────────────────────────────────────
+
+        /// <inheritdoc/>
+        public DamageResponse ResolveIncoming(Vector2 attackerPosition, bool isUnstoppable)
+        {
+            if (_defenseProvider == null) return DamageResponse.Hit;
+            return _defenseProvider.ResolveDefense(attackerPosition, isUnstoppable);
+        }
 
         /// <inheritdoc/>
         public void TakeDamage(DamagePacket damage)

@@ -33,6 +33,7 @@ namespace TomatoFighters.Editor.Prefabs
         public AnimatorController animatorController;
         public InputActionAsset inputActions;
         public HitboxDefinition[] hitboxes;
+        public DefenseConfig defenseConfig;
         public float baseAttack = 10f;
         public bool useTimerFallback = true;
         public float fallbackActiveDuration = 0.3f;
