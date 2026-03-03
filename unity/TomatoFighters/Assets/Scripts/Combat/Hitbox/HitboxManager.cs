@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
@@ -19,6 +20,13 @@ namespace TomatoFighters.Combat
         [Header("References")]
         [SerializeField] private ComboController comboController;
 
+        [Header("Timer Fallback (no Animation Events)")]
+        [Tooltip("Auto-activate hitboxes on combo step start. Disable when animation events are set up.")]
+        [SerializeField] private bool useTimerFallback;
+
+        [Tooltip("How long hitbox stays active per attack in fallback mode.")]
+        [SerializeField] private float fallbackActiveDuration = 0.3f;
+
         [Header("Temporary Damage Shim")]
         [Tooltip("TEMPORARY: Base attack value for damage calculation until stat system is wired.")]
         [SerializeField] private float baseAttack = 10f;
@@ -29,6 +37,7 @@ namespace TomatoFighters.Combat
         // Hitbox child lookup: hitboxId → (GameObject, HitboxDamage)
         private readonly Dictionary<string, HitboxDamage> _hitboxMap = new();
         private HitboxDamage _activeHitbox;
+        private Coroutine _fallbackCoroutine;
 
         private void Awake()
         {
@@ -48,6 +57,9 @@ namespace TomatoFighters.Combat
             {
                 comboController.ComboDropped += DeactivateActiveHitbox;
                 comboController.ComboEnded += DeactivateActiveHitbox;
+
+                if (useTimerFallback)
+                    comboController.AttackStarted += OnAttackStartedFallback;
             }
         }
 
@@ -57,9 +69,38 @@ namespace TomatoFighters.Combat
             {
                 comboController.ComboDropped -= DeactivateActiveHitbox;
                 comboController.ComboEnded -= DeactivateActiveHitbox;
+
+                if (useTimerFallback)
+                    comboController.AttackStarted -= OnAttackStartedFallback;
             }
 
+            StopFallbackCoroutine();
             DeactivateActiveHitbox();
+        }
+
+        // ── Timer Fallback (temporary until animation events are set up) ──
+
+        private void OnAttackStartedFallback(AttackType attackType, int stepIndex)
+        {
+            StopFallbackCoroutine();
+            ActivateHitbox();
+            _fallbackCoroutine = StartCoroutine(FallbackDeactivateAfterDelay());
+        }
+
+        private IEnumerator FallbackDeactivateAfterDelay()
+        {
+            yield return new WaitForSeconds(fallbackActiveDuration);
+            DeactivateActiveHitbox();
+            _fallbackCoroutine = null;
+        }
+
+        private void StopFallbackCoroutine()
+        {
+            if (_fallbackCoroutine != null)
+            {
+                StopCoroutine(_fallbackCoroutine);
+                _fallbackCoroutine = null;
+            }
         }
 
         /// <summary>

@@ -47,6 +47,7 @@ namespace TomatoFighters.Editor.Prefabs
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
+            SetupLayerCollisionMatrix();
             SetupCamera();
             CreateArenaBackground();
             CreateArenaWalls();
@@ -59,6 +60,36 @@ namespace TomatoFighters.Editor.Prefabs
 
             Debug.Log($"[MovementTestScene] Scene created at {SCENE_PATH}");
             Debug.Log("[MovementTestScene] Controls: WASD = move, Space = jump, L-Shift = dash, LMB = light, C = heavy, L-Ctrl = run");
+        }
+
+        private static void SetupLayerCollisionMatrix()
+        {
+            int playerHitbox = LayerMask.NameToLayer("PlayerHitbox");
+            int playerHurtbox = LayerMask.NameToLayer("PlayerHurtbox");
+            int enemyHitbox = LayerMask.NameToLayer("EnemyHitbox");
+            int enemyHurtbox = LayerMask.NameToLayer("EnemyHurtbox");
+
+            if (playerHitbox < 0 || playerHurtbox < 0 || enemyHitbox < 0 || enemyHurtbox < 0)
+            {
+                Debug.LogError(
+                    "[MovementTestScene] Missing physics layers. " +
+                    "Add PlayerHitbox, PlayerHurtbox, EnemyHitbox, EnemyHurtbox in Tags and Layers.");
+                return;
+            }
+
+            // Enable cross-team collisions
+            Physics2D.IgnoreLayerCollision(playerHitbox, enemyHurtbox, false);
+            Physics2D.IgnoreLayerCollision(enemyHitbox, playerHurtbox, false);
+
+            // Disable same-team and self collisions
+            Physics2D.IgnoreLayerCollision(playerHitbox, playerHurtbox, true);
+            Physics2D.IgnoreLayerCollision(enemyHitbox, enemyHurtbox, true);
+            Physics2D.IgnoreLayerCollision(playerHitbox, playerHitbox, true);
+            Physics2D.IgnoreLayerCollision(enemyHitbox, enemyHitbox, true);
+            Physics2D.IgnoreLayerCollision(playerHurtbox, playerHurtbox, true);
+            Physics2D.IgnoreLayerCollision(enemyHurtbox, enemyHurtbox, true);
+
+            Debug.Log("[MovementTestScene] Layer collision matrix configured.");
         }
 
         private static void SetupCamera()
