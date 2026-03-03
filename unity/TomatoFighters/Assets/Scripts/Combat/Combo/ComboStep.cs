@@ -1,4 +1,5 @@
 using System;
+using TomatoFighters.Shared.Data;
 using UnityEngine;
 
 namespace TomatoFighters.Combat
@@ -10,6 +11,9 @@ namespace TomatoFighters.Combat
     [Serializable]
     public struct ComboStep
     {
+        [Tooltip("Attack data ScriptableObject for this step. Provides damage, timing, and effects.")]
+        public AttackData attackData;
+
         [Tooltip("Whether this is a light or heavy attack.")]
         public AttackType attackType;
 

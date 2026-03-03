@@ -40,6 +40,37 @@
 | T012 CameraController | `tasks/phase-1/T012-camera-controller.md` | `Scripts/World/CameraController2D.cs` (pending) |
 | T013 Test Scene | `tasks/phase-1/T013-test-scene.md` | `Scenes/MovementTest.unity` |
 
+## Animation Pipeline → Code Files
+
+| Step | Menu Command | Editor Script | Output |
+|------|-------------|---------------|--------|
+| 1. Import sprites | `TomatoFighters > Import Sprite Sheets` | `Editor/Animation/SpriteSheetImporter.cs` | Sliced sprites in PNG sub-assets |
+| 2. Build anims | `TomatoFighters > Build Animations` | `Editor/Animation/AnimationBuilder.cs` | `.anim` clips + `.controller` in `Animations/TomatoFighter/` |
+| 3. Build prefab | `TomatoFighters > Create Player Prefab` | `Editor/Prefabs/PlayerPrefabCreator.cs` | `Prefabs/Player/Player.prefab` |
+| 4. Build scene | `TomatoFighters > Create Movement Test Scene` | `Editor/Prefabs/MovementTestSceneCreator.cs` | `Scenes/MovementTest.unity` |
+
+| Editor Support Script | Purpose |
+|-----------------------|---------|
+| `Editor/Animation/AnimationForgeMetadata.cs` | Shared metadata.json parser (Newtonsoft.Json, Dictionary-based) |
+
+| Runtime Script | Purpose |
+|----------------|---------|
+| `Scripts/Combat/Animation/CharacterAnimationBridge.cs` | Feeds motor state (idle/walk/run) → Animator |
+| `Scripts/Combat/Animation/TomatoFighterAnimatorParams.cs` | Animator parameter string constants |
+
+### Adding New Animations (data-driven pipeline)
+
+1. Drop new PNG into `Assets/animations/tomato_fighter_animations/Sprites/`
+2. Add entry to `metadata.json` under `"animations"`: set `"loop": true` for locomotion, `"loop": false` for action
+3. Run **Import Sprite Sheets** → **Build Animations** — no code changes needed
+4. Locomotion anims auto-wire with Speed transitions; action anims get trigger parameters
+
+| Source Data | Location |
+|-------------|----------|
+| Sprite sheets (PNG) | `Assets/animations/tomato_fighter_animations/Sprites/` |
+| Animation Forge metadata | `Assets/animations/tomato_fighter_animations/metadata.json` |
+| Controller scaffold (JSON) | `Assets/animations/tomato_fighter_animations/Animator/tomato_fighter_controller.json` |
+
 ## ScriptableObjects → Design Specs
 
 | SO Asset | Code Definition | Design Source (docs repo) |
@@ -49,7 +80,9 @@
 | `Characters/MysticaStats.asset` | `Shared/Data/CharacterBaseStats.cs` | `design-specs/CHARACTER-ARCHETYPES.md` |
 | `Characters/ViperStats.asset` | `Shared/Data/CharacterBaseStats.cs` | `design-specs/CHARACTER-ARCHETYPES.md` |
 | `ComboDefinitions/Brutor_ComboDefinition.asset` | `Combat/Combo/ComboDefinition.cs` | `tasks/phase-1/T004-combo-chain.md` |
+| `ComboDefinitions/Mystica_ComboDefinition.asset` | `Combat/Combo/ComboDefinition.cs` | Placeholder (L-L-L + H-H) |
 | `MovementConfigs/Brutor_MovementConfig.asset` | `Combat/Movement/MovementConfig.cs` | `tasks/phase-1/T002-character-controller.md` |
+| `MovementConfigs/Mystica_MovementConfig.asset` | `Combat/Movement/MovementConfig.cs` | SPD=1.0 mage tuning |
 
 ## Tests → Task Coverage
 

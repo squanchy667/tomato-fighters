@@ -1,0 +1,94 @@
+{
+  "character_name": "tomato_fighter",
+  "animator_controller": "tomato_fighter_AnimatorController",
+  "parameters": [
+    {
+      "name": "Speed",
+      "type": "Float",
+      "default": 0.0
+    },
+    {
+      "name": "IsGrounded",
+      "type": "Bool",
+      "default": true
+    },
+    {
+      "name": "AttackTrigger",
+      "type": "Trigger",
+      "default": null
+    },
+    {
+      "name": "HurtTrigger",
+      "type": "Trigger",
+      "default": null
+    },
+    {
+      "name": "DeathTrigger",
+      "type": "Trigger",
+      "default": null
+    }
+  ],
+  "layers": [
+    {
+      "name": "Base Layer",
+      "states": [
+        {
+          "name": "idle",
+          "motion": "tomato_fighter_idle",
+          "speed": 1.0
+        },
+        {
+          "name": "run",
+          "motion": "tomato_fighter_run",
+          "speed": 1.0
+        },
+        {
+          "name": "walk",
+          "motion": "tomato_fighter_walk",
+          "speed": 1.0
+        }
+      ],
+      "transitions": [
+        {
+          "from": "idle",
+          "to": "walk",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Greater",
+            "threshold": 0.1
+          }
+        },
+        {
+          "from": "walk",
+          "to": "run",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Greater",
+            "threshold": 0.8
+          }
+        },
+        {
+          "from": "walk",
+          "to": "idle",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Less",
+            "threshold": 0.1
+          }
+        },
+        {
+          "from": "run",
+          "to": "walk",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Less",
+            "threshold": 0.8
+          }
+        }
+      ],
+      "default_state": "idle"
+    }
+  ],
+  "generated_by": "Animation Forge v0.1.0",
+  "generated_at": "2026-03-02T23:15:54.736956+00:00"
+}

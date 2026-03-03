@@ -23,6 +23,7 @@ namespace TomatoFighters.Characters
         [SerializeField] private InputActionReference dashAction;
         [SerializeField] private InputActionReference lightAttackAction;
         [SerializeField] private InputActionReference heavyAttackAction;
+        [SerializeField] private InputActionReference runAction;
 
         private void OnEnable()
         {
@@ -34,6 +35,8 @@ namespace TomatoFighters.Characters
                 lightAttackAction.action.performed += OnLightAttack;
             if (heavyAttackAction != null)
                 heavyAttackAction.action.performed += OnHeavyAttack;
+            if (runAction != null)
+                runAction.action.performed += OnRun;
 
             EnableActions();
         }
@@ -48,6 +51,8 @@ namespace TomatoFighters.Characters
                 lightAttackAction.action.performed -= OnLightAttack;
             if (heavyAttackAction != null)
                 heavyAttackAction.action.performed -= OnHeavyAttack;
+            if (runAction != null)
+                runAction.action.performed -= OnRun;
         }
 
         private void Update()
@@ -101,6 +106,12 @@ namespace TomatoFighters.Characters
                 comboController.RequestHeavyAttack();
         }
 
+        private void OnRun(InputAction.CallbackContext ctx)
+        {
+            if (motor != null)
+                motor.RequestRun();
+        }
+
         private void EnableActions()
         {
             moveAction?.action.Enable();
@@ -108,6 +119,7 @@ namespace TomatoFighters.Characters
             dashAction?.action.Enable();
             lightAttackAction?.action.Enable();
             heavyAttackAction?.action.Enable();
+            runAction?.action.Enable();
         }
     }
 }

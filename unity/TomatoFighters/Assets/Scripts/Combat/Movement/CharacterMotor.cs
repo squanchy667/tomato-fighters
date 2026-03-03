@@ -8,7 +8,12 @@ namespace TomatoFighters.Combat
     /// <summary>
     /// Belt-scroll character movement using Rigidbody2D.
     /// Handles XY ground plane movement, simulated jump height with sprite offset,
-    /// and dashing. No physics gravity — jump arc is computed manually.
+    /// dashing, and run mode. No physics gravity — jump arc is computed manually.
+    ///
+    /// <para><b>Run mechanic:</b> Activated by <see cref="RequestRun"/> (Left Ctrl).
+    /// Sticky — stays active after key release. Resets on: zero input,
+    /// attack lock, dash, or jump. Applies <see cref="MovementConfig.runSpeedMultiplier"/>
+    /// to both horizontal and depth speed.</para>
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     public class CharacterMotor : MonoBehaviour
@@ -34,6 +39,7 @@ namespace TomatoFighters.Combat
         private bool dashInvulnerable;
 
         private bool isAttackLocked;
+        private bool isRunning;
 
         // Optional buff integration — wired at runtime, avoids singleton
         private IBuffProvider buffProvider;
@@ -68,6 +74,12 @@ namespace TomatoFighters.Combat
         /// <summary>Current simulated jump height above the ground plane.</summary>
         public float JumpHeight => jumpHeight;
 
+        /// <summary>Whether the character is currently running.</summary>
+        public bool IsRunning => isRunning;
+
+        /// <summary>Current movement input vector (X = horizontal, Y = depth).</summary>
+        public Vector2 MoveInput => moveInput;
+
         private void Awake()
         {
             rb = GetComponent<Rigidbody2D>();
@@ -92,9 +104,20 @@ namespace TomatoFighters.Combat
                 Mathf.Clamp(input.y, -1f, 1f));
         }
 
+        /// <summary>
+        /// Activate run mode. Only takes effect while moving.
+        /// Run is sticky — releasing the run key keeps running until an action resets it.
+        /// </summary>
+        public void RequestRun()
+        {
+            if (moveInput.sqrMagnitude > 0.01f)
+                isRunning = true;
+        }
+
         /// <summary>Request a jump. Buffered if pressed slightly before landing.</summary>
         public void RequestJump()
         {
+            isRunning = false;
             jumpBufferCounter = config.jumpBufferTime;
         }
 
@@ -113,6 +136,7 @@ namespace TomatoFighters.Combat
                 direction = facingRight ? Vector2.right : Vector2.left;
             }
 
+            isRunning = false;
             dashDirection = direction.normalized;
             dashTimeRemaining = config.dashDuration;
             dashCooldownRemaining = config.dashCooldown;
@@ -134,6 +158,7 @@ namespace TomatoFighters.Combat
         public void SetAttackLock(bool locked)
         {
             isAttackLocked = locked;
+            if (locked) isRunning = false;
         }
 
         /// <summary>
@@ -232,9 +257,14 @@ namespace TomatoFighters.Combat
                 return;
             }
 
+            // Reset run when player stops providing movement input
+            if (moveInput.sqrMagnitude < 0.01f)
+                isRunning = false;
+
             float speedMultiplier = buffProvider?.GetSpeedMultiplier() ?? 1f;
-            float targetX = moveInput.x * config.moveSpeed * speedMultiplier;
-            float targetY = moveInput.y * config.depthSpeed * speedMultiplier;
+            float runMultiplier = isRunning ? config.runSpeedMultiplier : 1f;
+            float targetX = moveInput.x * config.moveSpeed * runMultiplier * speedMultiplier;
+            float targetY = moveInput.y * config.depthSpeed * runMultiplier * speedMultiplier;
 
             float accel = IsGrounded ? config.groundAcceleration : config.airAcceleration;
             float dt = Time.fixedDeltaTime;

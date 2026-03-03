@@ -1,3 +1,4 @@
+using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 
 namespace TomatoFighters.Shared.Interfaces

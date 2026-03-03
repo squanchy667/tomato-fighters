@@ -61,5 +61,11 @@ namespace TomatoFighters.Combat
         /// <summary>Whether dashing grants invincibility frames.</summary>
         [Tooltip("Whether dashing grants invincibility frames")]
         public bool dashHasIFrames = true;
+
+        [Header("Run")]
+
+        /// <summary>Speed multiplier applied when the character is running.</summary>
+        [Tooltip("Speed multiplier applied when the character is running")]
+        public float runSpeedMultiplier = 1.6f;
     }
 }
