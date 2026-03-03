@@ -30,6 +30,7 @@ namespace TomatoFighters.Shared.Components
                 return;
             }
 
+            Debug.Log($"[DebugHealthBar] Found IDamageable on '{name}' — HP: {_damageable.CurrentHealth}/{_damageable.MaxHealth}");
             BuildBar();
         }
 

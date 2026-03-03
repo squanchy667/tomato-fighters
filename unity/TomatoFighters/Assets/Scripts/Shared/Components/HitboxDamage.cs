@@ -24,17 +24,34 @@ namespace TomatoFighters.Shared.Components
 
         private void OnEnable()
         {
-            // Fresh set at the start of each swing — tracks by IDamageable
-            // to prevent double-damage from entities with multiple colliders
             _hitThisActivation.Clear();
+            Debug.Log($"[HitboxDamage] '{name}' ENABLED — layer={gameObject.layer}, subscribers={(OnHitDetected != null ? OnHitDetected.GetInvocationList().Length : 0)}");
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            var target = other.GetComponentInParent<IDamageable>();
-            if (target == null) return;
-            if (!_hitThisActivation.Add(target)) return;
+            Debug.Log($"[HitboxDamage] '{name}' OnTriggerEnter2D with '{other.name}' (layer={other.gameObject.layer})");
+            ProcessTrigger(other);
+        }
 
+        // Fallback: OnTriggerEnter2D may not fire when a disabled trigger is
+        // re-enabled while already overlapping. Stay fires on subsequent frames.
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            ProcessTrigger(other);
+        }
+
+        private void ProcessTrigger(Collider2D other)
+        {
+            var target = other.GetComponentInParent<IDamageable>();
+            if (target == null)
+            {
+                Debug.Log($"[HitboxDamage] '{name}' — no IDamageable on '{other.name}' or parents");
+                return;
+            }
+            if (!_hitThisActivation.Add(target)) return; // Already hit this activation
+
+            Debug.Log($"[HitboxDamage] '{name}' HIT '{other.name}' → firing OnHitDetected (subscribers={(OnHitDetected != null ? OnHitDetected.GetInvocationList().Length : 0)})");
             OnHitDetected?.Invoke(target, other.ClosestPoint(transform.position));
         }
     }

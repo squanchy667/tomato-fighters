@@ -50,6 +50,11 @@ namespace TomatoFighters.World
             {
                 hitbox.OnHitDetected += HandleHitDetected;
                 hitbox.gameObject.SetActive(false);
+                Debug.Log($"[TestDummyEnemy] Awake — hitbox='{hitbox.name}', attackData={(attackData != null ? attackData.attackName : "NULL")}");
+            }
+            else
+            {
+                Debug.LogError("[TestDummyEnemy] Awake — hitbox is NULL! Enemy attacks won't work.");
             }
         }
 
@@ -119,6 +124,7 @@ namespace TomatoFighters.World
             _isAttacking = true;
             Sprite.color = new Color(1f, 0.2f, 0f); // Bright red-orange during swing
             hitbox.gameObject.SetActive(true);
+            Debug.Log($"[TestDummyEnemy] Hitbox ENABLED — '{hitbox.name}', layer={hitbox.gameObject.layer}");
 
             yield return new WaitForSeconds(attackActiveDuration);
 
@@ -133,7 +139,13 @@ namespace TomatoFighters.World
 
         private void HandleHitDetected(IDamageable target, Vector2 hitPoint)
         {
-            if (attackData == null) return;
+            Debug.Log($"[TestDummyEnemy] HandleHitDetected — target={target}, hitPoint={hitPoint}");
+
+            if (attackData == null)
+            {
+                Debug.LogWarning("[TestDummyEnemy] HandleHitDetected — attackData is null!");
+                return;
+            }
 
             float damage = attackData.damageMultiplier * 10f; // Base enemy ATK placeholder
 
@@ -146,6 +158,7 @@ namespace TomatoFighters.World
                 source: CharacterType.Brutor // Enemies don't have a CharacterType; use default
             );
 
+            Debug.Log($"[TestDummyEnemy] Applying {damage:F1} damage to player");
             target.TakeDamage(packet);
         }
 

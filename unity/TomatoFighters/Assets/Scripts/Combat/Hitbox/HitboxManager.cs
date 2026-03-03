@@ -82,6 +82,7 @@ namespace TomatoFighters.Combat
 
         private void OnAttackStartedFallback(AttackType attackType, int stepIndex)
         {
+            Debug.Log($"[HitboxManager] FALLBACK: AttackStarted({attackType}, step={stepIndex})");
             StopFallbackCoroutine();
             ActivateHitbox();
             _fallbackCoroutine = StartCoroutine(FallbackDeactivateAfterDelay());
@@ -140,6 +141,7 @@ namespace TomatoFighters.Combat
 
             _activeHitbox = hitbox;
             hitbox.gameObject.SetActive(true);
+            Debug.Log($"[HitboxManager] Activated hitbox '{hitbox.name}' (id='{attackData.hitboxId}', attack='{attackData.attackName}')");
         }
 
         /// <summary>
@@ -202,7 +204,11 @@ namespace TomatoFighters.Combat
 
                 // Hitbox children start disabled
                 child.gameObject.SetActive(false);
+
+                Debug.Log($"[HitboxManager] Cached hitbox '{hitboxId}' → {child.name} (layer={child.gameObject.layer})");
             }
+
+            Debug.Log($"[HitboxManager] CacheHitboxChildren done — {_hitboxMap.Count} hitboxes cached on '{gameObject.name}'");
         }
 
         // ── TEMPORARY DAMAGE SHIM (T016 replaces this with DefenseSystem) ────
@@ -214,8 +220,15 @@ namespace TomatoFighters.Combat
         /// </summary>
         private void HandleHitDetected(IDamageable target, Vector2 hitPoint)
         {
+            Debug.Log($"[HitboxManager] HandleHitDetected called — target={target}, hitPoint={hitPoint}");
+
             var attackData = GetCurrentAttackData();
-            if (attackData == null) return;
+            if (attackData == null)
+            {
+                Debug.LogWarning($"[HitboxManager] HandleHitDetected — GetCurrentAttackData() returned null! " +
+                    $"State={comboController?.CurrentState}, StepIndex={comboController?.CurrentStepIndex}");
+                return;
+            }
 
             var characterType = comboController != null
                 ? comboController.CharacterType
@@ -227,7 +240,12 @@ namespace TomatoFighters.Combat
             if (!target.IsInvulnerable)
             {
                 var packet = BuildDamagePacket(attackData);
+                Debug.Log($"[HitboxManager] Applying {packet.amount:F1} damage to target (invulnerable={target.IsInvulnerable})");
                 target.TakeDamage(packet);
+            }
+            else
+            {
+                Debug.Log($"[HitboxManager] Target is invulnerable — skipping damage");
             }
 
             // Forward hit-confirm to combo system (enables cancel windows)

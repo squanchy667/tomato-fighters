@@ -87,9 +87,14 @@ namespace TomatoFighters.World
         /// <inheritdoc/>
         public void TakeDamage(DamagePacket damage)
         {
-            if (_isDead || _isInvulnerable) return;
+            if (_isDead || _isInvulnerable)
+            {
+                Debug.Log($"[EnemyBase] TakeDamage BLOCKED — dead={_isDead}, invulnerable={_isInvulnerable}");
+                return;
+            }
 
             _currentHealth -= damage.amount;
+            Debug.Log($"[EnemyBase] TakeDamage: {damage.amount:F1} dmg → HP: {_currentHealth:F1}/{enemyData.maxHealth}");
 
             // Pressure fills faster on punish hits
             float pressureAmount = damage.amount * (damage.isPunishDamage ? 2f : 1f);
