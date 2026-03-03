@@ -19,6 +19,7 @@ MonoBehaviour:
   launchForce: {x: 0, y: 0}
   causesWallBounce: 1
   causesLaunch: 0
+  hitboxId: Lunge
   animationClip: {fileID: 0}
   hitboxStartFrame: 4
   hitboxActiveFrames: 5

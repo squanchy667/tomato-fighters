@@ -13,51 +13,56 @@ MonoBehaviour:
   m_Name: Mystica_ComboDefinition
   m_EditorClassIdentifier: 
   steps:
-  - attackType: 0
-    animationTrigger: Light1
+  - attackData: {fileID: 11400000, guid: 8869d805a7811224dae98a6a8eae336f, type: 2}
+    attackType: 0
+    animationTrigger: attack_light_1
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 1
     nextOnHeavy: -1
     canDashCancelOnHit: 0
-    canJumpCancelOnHit: 0
+    canJumpCancelOnHit: 1
     isFinisher: 0
-  - attackType: 0
-    animationTrigger: Light2
-    damageMultiplier: 1.1
+  - attackData: {fileID: 11400000, guid: fb8d7c4ddc9827e4f9a7090c4d552381, type: 2}
+    attackType: 0
+    animationTrigger: attack_light_2
+    damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 2
     nextOnHeavy: -1
-    canDashCancelOnHit: 1
-    canJumpCancelOnHit: 0
-    isFinisher: 0
-  - attackType: 0
-    animationTrigger: LightFinisher
-    damageMultiplier: 1.4
-    comboWindowDuration: 0
-    nextOnLight: -1
-    nextOnHeavy: -1
     canDashCancelOnHit: 0
-    canJumpCancelOnHit: 0
-    isFinisher: 1
-  - attackType: 1
-    animationTrigger: Heavy1
-    damageMultiplier: 1.8
-    comboWindowDuration: 0.6
-    nextOnLight: -1
-    nextOnHeavy: 4
-    canDashCancelOnHit: 1
     canJumpCancelOnHit: 1
     isFinisher: 0
-  - attackType: 1
-    animationTrigger: HeavyFinisher
-    damageMultiplier: 2.5
+  - attackData: {fileID: 11400000, guid: c37fb706219c1eb48b3dc3bb9fd82325, type: 2}
+    attackType: 0
+    animationTrigger: finisher_light
+    damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
     nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 1
+  - attackData: {fileID: 11400000, guid: b7ad1b2763066254b87851226e1aa59c, type: 2}
+    attackType: 1
+    animationTrigger: attack_heavy_1
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: 4
     canDashCancelOnHit: 0
-    canJumpCancelOnHit: 0
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: 6559130046352bf45b8cdf47e0e3f368, type: 2}
+    attackType: 1
+    animationTrigger: finisher_heavy
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
     isFinisher: 1
   rootLightIndex: 0
   rootHeavyIndex: 3
-  defaultComboWindow: 0.5
+  defaultComboWindow: 0.4

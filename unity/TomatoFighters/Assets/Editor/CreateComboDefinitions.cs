@@ -6,9 +6,9 @@ using UnityEngine;
 namespace TomatoFighters.Editor
 {
     /// <summary>
-    /// Creates ComboDefinition and ComboInteractionConfig assets for all characters.
-    /// Brutor's ComboDefinition already exists from T004 — only his interaction config is created.
-    /// Run once via menu: <b>Tools &gt; TomatoFighters &gt; Create Combo Definitions</b>.
+    /// Creates or updates ComboDefinition and ComboInteractionConfig assets for all characters.
+    /// Safe to re-run — overwrites existing assets in place (preserves GUIDs and prefab references).
+    /// Run via menu: <b>Tools &gt; TomatoFighters &gt; Create Combo Definitions</b>.
     /// Depends on attack assets existing (run Create All Character Attacks first).
     /// </summary>
     public static class CreateComboDefinitions
@@ -17,12 +17,17 @@ namespace TomatoFighters.Editor
         private const string CONFIG_FOLDER = "Assets/ScriptableObjects/ComboInteractionConfigs";
         private const string ATTACKS_FOLDER = "Assets/ScriptableObjects/Attacks";
 
+        private static bool hadErrors;
+
         [MenuItem("Tools/TomatoFighters/Create Combo Definitions")]
         public static void Execute()
         {
+            hadErrors = false;
+
             EnsureFolderExists(COMBO_FOLDER);
             EnsureFolderExists(CONFIG_FOLDER);
 
+            CreateBrutorCombo();
             CreateSlasherCombo();
             CreateMysticaCombo();
             CreateViperCombo();
@@ -72,8 +77,89 @@ namespace TomatoFighters.Editor
             });
 
             AssetDatabase.SaveAssets();
+            WirePlayerPrefab();
+            AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[CreateComboDefinitions] Done. Created combo definitions and interaction configs.");
+
+            if (hadErrors)
+            {
+                Debug.LogError(
+                    "[CreateComboDefinitions] Finished WITH ERRORS — some AttackData refs are missing! " +
+                    "Run 'Tools > TomatoFighters > Create All Character Attacks' first, then re-run this.");
+            }
+            else
+            {
+                Debug.Log("[CreateComboDefinitions] Done. All combo definitions and interaction configs are up to date.");
+            }
+        }
+
+        // ── Brutor (7 steps) ─────────────────────────────────────────────
+        //
+        // Index 0: L1 ShieldBash1     → nextL=1, nextH=3
+        // Index 1: L2 ShieldBash2     → nextL=2, nextH=-1
+        // Index 2: L3 Sweep Finisher  → isFinisher
+        // Index 3: Launcher (L1→H)    → nextH=4
+        // Index 4: LauncherSlam       → isFinisher
+        // Index 5: H1 OverheadSlam    → nextH=6
+        // Index 6: H2 GroundPound     → isFinisher
+
+        private static void CreateBrutorCombo()
+        {
+            string path = $"{COMBO_FOLDER}/Brutor_ComboDefinition.asset";
+            string af = $"{ATTACKS_FOLDER}/Brutor";
+
+            var def = LoadOrCreate<ComboDefinition>(path);
+            def.rootLightIndex = 0;
+            def.rootHeavyIndex = 5;
+            def.defaultComboWindow = 0.3f;
+
+            def.steps = new ComboStep[]
+            {
+                // 0: L1 Shield Bash 1
+                MakeStep(
+                    LoadAttack(af, "BrutorShieldBash1"), AttackType.Light,
+                    "attack_light_1", nextL: 1, nextH: 3,
+                    dashCancel: true, jumpCancel: false),
+
+                // 1: L2 Shield Bash 2
+                MakeStep(
+                    LoadAttack(af, "BrutorShieldBash2"), AttackType.Light,
+                    "attack_light_2", nextL: 2, nextH: -1,
+                    dashCancel: true, jumpCancel: false),
+
+                // 2: L3 Shield Sweep Finisher
+                MakeStep(
+                    LoadAttack(af, "BrutorSweep"), AttackType.Light,
+                    "finisher_light", isFinisher: true,
+                    dashCancel: true, jumpCancel: true),
+
+                // 3: Uppercut Launcher (L1→H branch)
+                MakeStep(
+                    LoadAttack(af, "BrutorLauncher"), AttackType.Heavy,
+                    "attack_branch_heavy", nextL: -1, nextH: 4,
+                    dashCancel: false, jumpCancel: false),
+
+                // 4: Air Slam (Launcher follow-up finisher)
+                MakeStep(
+                    LoadAttack(af, "BrutorLauncherSlam"), AttackType.Heavy,
+                    "finisher_heavy", isFinisher: true,
+                    dashCancel: true, jumpCancel: true),
+
+                // 5: H1 Overhead Slam
+                MakeStep(
+                    LoadAttack(af, "BrutorOverheadSlam"), AttackType.Heavy,
+                    "attack_heavy_1", nextL: -1, nextH: 6,
+                    dashCancel: true, jumpCancel: false),
+
+                // 6: H2 Ground Pound Finisher
+                MakeStep(
+                    LoadAttack(af, "BrutorGroundPound"), AttackType.Heavy,
+                    "finisher_heavy_2", isFinisher: true,
+                    dashCancel: true, jumpCancel: true),
+            };
+
+            SaveAsset(def, path);
+            Debug.Log($"[CreateComboDefinitions] Brutor_ComboDefinition (7 steps) at {path}");
         }
 
         // ── Slasher (8 steps) ──────────────────────────────────────────────
@@ -90,15 +176,9 @@ namespace TomatoFighters.Editor
         private static void CreateSlasherCombo()
         {
             string path = $"{COMBO_FOLDER}/Slasher_ComboDefinition.asset";
-            if (AssetDatabase.LoadAssetAtPath<ComboDefinition>(path) != null)
-            {
-                Debug.Log("[CreateComboDefinitions] Slasher_ComboDefinition already exists, skipping.");
-                return;
-            }
-
             string af = $"{ATTACKS_FOLDER}/Slasher";
 
-            var def = ScriptableObject.CreateInstance<ComboDefinition>();
+            var def = LoadOrCreate<ComboDefinition>(path);
             def.rootLightIndex = 0;
             def.rootHeavyIndex = 5;
             def.defaultComboWindow = 0.25f;
@@ -154,8 +234,8 @@ namespace TomatoFighters.Editor
                     dashCancel: true, jumpCancel: true),
             };
 
-            AssetDatabase.CreateAsset(def, path);
-            Debug.Log($"[CreateComboDefinitions] Created Slasher_ComboDefinition (8 steps) at {path}");
+            SaveAsset(def, path);
+            Debug.Log($"[CreateComboDefinitions] Slasher_ComboDefinition (8 steps) at {path}");
         }
 
         // ── Mystica (5 steps) ──────────────────────────────────────────────
@@ -169,15 +249,9 @@ namespace TomatoFighters.Editor
         private static void CreateMysticaCombo()
         {
             string path = $"{COMBO_FOLDER}/Mystica_ComboDefinition.asset";
-            if (AssetDatabase.LoadAssetAtPath<ComboDefinition>(path) != null)
-            {
-                Debug.Log("[CreateComboDefinitions] Mystica_ComboDefinition already exists, skipping.");
-                return;
-            }
-
             string af = $"{ATTACKS_FOLDER}/Mystica";
 
-            var def = ScriptableObject.CreateInstance<ComboDefinition>();
+            var def = LoadOrCreate<ComboDefinition>(path);
             def.rootLightIndex = 0;
             def.rootHeavyIndex = 3;
             def.defaultComboWindow = 0.4f;
@@ -215,8 +289,8 @@ namespace TomatoFighters.Editor
                     dashCancel: true, jumpCancel: true),
             };
 
-            AssetDatabase.CreateAsset(def, path);
-            Debug.Log($"[CreateComboDefinitions] Created Mystica_ComboDefinition (5 steps) at {path}");
+            SaveAsset(def, path);
+            Debug.Log($"[CreateComboDefinitions] Mystica_ComboDefinition (5 steps) at {path}");
         }
 
         // ── Viper (6 steps) ────────────────────────────────────────────────
@@ -231,15 +305,9 @@ namespace TomatoFighters.Editor
         private static void CreateViperCombo()
         {
             string path = $"{COMBO_FOLDER}/Viper_ComboDefinition.asset";
-            if (AssetDatabase.LoadAssetAtPath<ComboDefinition>(path) != null)
-            {
-                Debug.Log("[CreateComboDefinitions] Viper_ComboDefinition already exists, skipping.");
-                return;
-            }
-
             string af = $"{ATTACKS_FOLDER}/Viper";
 
-            var def = ScriptableObject.CreateInstance<ComboDefinition>();
+            var def = LoadOrCreate<ComboDefinition>(path);
             def.rootLightIndex = 0;
             def.rootHeavyIndex = 4;
             def.defaultComboWindow = 0.3f;
@@ -283,8 +351,8 @@ namespace TomatoFighters.Editor
                     dashCancel: true, jumpCancel: false),
             };
 
-            AssetDatabase.CreateAsset(def, path);
-            Debug.Log($"[CreateComboDefinitions] Created Viper_ComboDefinition (6 steps) at {path}");
+            SaveAsset(def, path);
+            Debug.Log($"[CreateComboDefinitions] Viper_ComboDefinition (6 steps) at {path}");
         }
 
         // ── Helpers ────────────────────────────────────────────────────────
@@ -316,11 +384,41 @@ namespace TomatoFighters.Editor
             var attack = AssetDatabase.LoadAssetAtPath<AttackData>(path);
             if (attack == null)
             {
-                Debug.LogWarning(
-                    $"[CreateComboDefinitions] AttackData not found at {path}. " +
-                    "Run 'Create All Character Attacks' first.");
+                hadErrors = true;
+                Debug.LogError(
+                    $"[CreateComboDefinitions] AttackData not found at {path}! " +
+                    "Run 'Tools > TomatoFighters > Create All Character Attacks' FIRST.");
             }
             return attack;
+        }
+
+        /// <summary>
+        /// Loads an existing asset at the path (preserving its GUID) or creates a new instance.
+        /// </summary>
+        private static T LoadOrCreate<T>(string path) where T : ScriptableObject
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (existing != null)
+            {
+                Debug.Log($"[CreateComboDefinitions] Updating existing asset at {path}");
+                return existing;
+            }
+            return ScriptableObject.CreateInstance<T>();
+        }
+
+        /// <summary>
+        /// If the asset is new (not yet on disk), creates it. If it already existed, marks it dirty so changes are saved.
+        /// </summary>
+        private static void SaveAsset(ScriptableObject asset, string path)
+        {
+            if (!AssetDatabase.Contains(asset))
+            {
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            else
+            {
+                EditorUtility.SetDirty(asset);
+            }
         }
 
         private struct InteractionParams
@@ -354,6 +452,65 @@ namespace TomatoFighters.Editor
 
             AssetDatabase.CreateAsset(config, path);
             Debug.Log($"[CreateComboDefinitions] Created {fileName} at {path}");
+        }
+
+        /// <summary>
+        /// Finds the Player prefab, reads which ComboDefinition is assigned,
+        /// and wires the matching ComboInteractionConfig via SerializedObject
+        /// so the prefab reference is saved correctly.
+        /// </summary>
+        private static void WirePlayerPrefab()
+        {
+            const string prefabPath = "Assets/Prefabs/Player/Player.prefab";
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+            if (prefab == null)
+            {
+                Debug.LogWarning($"[CreateComboDefinitions] Player prefab not found at {prefabPath}, skipping auto-wire.");
+                return;
+            }
+
+            var controller = prefab.GetComponent<ComboController>();
+            if (controller == null)
+            {
+                Debug.LogWarning("[CreateComboDefinitions] No ComboController on Player prefab, skipping auto-wire.");
+                return;
+            }
+
+            // Use SerializedObject to read/write private [SerializeField] fields on the prefab
+            var so = new SerializedObject(controller);
+            var defProp = so.FindProperty("comboDefinition");
+            var configProp = so.FindProperty("interactionConfig");
+
+            if (defProp.objectReferenceValue == null)
+            {
+                Debug.LogWarning("[CreateComboDefinitions] No ComboDefinition assigned on Player prefab. Assign one first.");
+                return;
+            }
+
+            // Extract character name from definition asset name (e.g. "Mystica_ComboDefinition" → "Mystica")
+            string defName = defProp.objectReferenceValue.name;
+            string characterPrefix = defName.Split('_')[0];
+
+            string configPath = $"{CONFIG_FOLDER}/{characterPrefix}_ComboInteractionConfig.asset";
+            var config = AssetDatabase.LoadAssetAtPath<ComboInteractionConfig>(configPath);
+
+            if (config == null)
+            {
+                Debug.LogError(
+                    $"[CreateComboDefinitions] Could not find {configPath} to match {defName}!");
+                return;
+            }
+
+            if (configProp.objectReferenceValue == config)
+            {
+                Debug.Log($"[CreateComboDefinitions] Player prefab already has {config.name} assigned.");
+                return;
+            }
+
+            configProp.objectReferenceValue = config;
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(prefab);
+            Debug.Log($"[CreateComboDefinitions] Wired {config.name} to Player prefab (matched from {defName}).");
         }
 
         private static void EnsureFolderExists(string path)
