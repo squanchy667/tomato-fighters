@@ -1,6 +1,7 @@
 using System.IO;
 using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
+using TomatoFighters.Shared.Enums;
 using TomatoFighters.World;
 using UnityEditor;
 using UnityEngine;
@@ -240,6 +241,17 @@ namespace TomatoFighters.Editor.Prefabs
                 hitboxProp.objectReferenceValue = hitboxDmg;
 
             dummySO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- DebugHealthBar (temp HP bar, replaced by T025 HUD) --
+            var healthBar = EnsureComponent<DebugHealthBar>(root);
+            var hbSO = new SerializedObject(healthBar);
+            var offsetProp = hbSO.FindProperty("offset");
+            if (offsetProp != null)
+                offsetProp.vector3Value = new Vector3(0f, 1.2f, 0f);
+            var fillColorProp = hbSO.FindProperty("fillColor");
+            if (fillColorProp != null)
+                fillColorProp.colorValue = new Color(1f, 0.3f, 0.2f); // Red for enemies
+            hbSO.ApplyModifiedPropertiesWithoutUndo();
 
             // Also wire the EnemyData attacks array to include this attack
             var dataSO = new SerializedObject(enemyData);

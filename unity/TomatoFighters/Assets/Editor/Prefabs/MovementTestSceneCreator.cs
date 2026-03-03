@@ -1,5 +1,6 @@
 using TomatoFighters.Characters;
 using TomatoFighters.Combat;
+using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Enums;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -158,7 +159,18 @@ namespace TomatoFighters.Editor.Prefabs
             if (player.GetComponent<PlayerDamageable>() == null)
                 player.AddComponent<PlayerDamageable>();
 
-            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable.");
+            // Temp debug HP bar (replaced by T025 HUD)
+            if (player.GetComponent<DebugHealthBar>() == null)
+            {
+                var hpBar = player.AddComponent<DebugHealthBar>();
+                var hbSO = new SerializedObject(hpBar);
+                var fillColorProp = hbSO.FindProperty("fillColor");
+                if (fillColorProp != null)
+                    fillColorProp.colorValue = new Color(0.2f, 0.8f, 0.3f); // Green for player
+                hbSO.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar.");
         }
 
         private static void CreateTestDummyFromPrefab()
@@ -175,7 +187,11 @@ namespace TomatoFighters.Editor.Prefabs
             var dummy = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             dummy.transform.position = new Vector3(3f, 0f, 0f);
 
-            Debug.Log("[MovementTestScene] TestDummy enemy placed at (3, 0).");
+            // Ensure debug HP bar on scene instance (prefab may already have it)
+            if (dummy.GetComponent<DebugHealthBar>() == null)
+                dummy.AddComponent<DebugHealthBar>();
+
+            Debug.Log("[MovementTestScene] TestDummy enemy placed at (3, 0) with DebugHealthBar.");
         }
 
         private static void BuildInlineFallbackPlayer()
@@ -256,6 +272,14 @@ namespace TomatoFighters.Editor.Prefabs
             inputSO.ApplyModifiedPropertiesWithoutUndo();
 
             root.AddComponent<PlayerDamageable>();
+
+            // Temp debug HP bar
+            var hpBar = root.AddComponent<DebugHealthBar>();
+            var hpBarSO = new SerializedObject(hpBar);
+            var fcProp = hpBarSO.FindProperty("fillColor");
+            if (fcProp != null)
+                fcProp.colorValue = new Color(0.2f, 0.8f, 0.3f);
+            hpBarSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void WireAction(InputActionAsset asset, SerializedObject so,

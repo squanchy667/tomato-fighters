@@ -1,5 +1,6 @@
 using TomatoFighters.Characters;
 using TomatoFighters.Combat;
+using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Enums;
 using UnityEditor;
 using UnityEditor.Animations;
@@ -24,6 +25,9 @@ namespace TomatoFighters.Editor.Prefabs
         private const string MYSTICA_COMBO_PATH = COMBO_FOLDER + "/Mystica_ComboDefinition.asset";
         private const string CONTROLLER_PATH = "Assets/Animations/TomatoFighter/TomatoFighter_Controller.controller";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
+
+        private const string PLAYER_HURTBOX_LAYER = "PlayerHurtbox";
+        private const string PLAYER_HITBOX_LAYER = "PlayerHitbox";
 
         [MenuItem("TomatoFighters/Create Player Prefab")]
         public static void CreatePlayerPrefab()
@@ -159,6 +163,15 @@ namespace TomatoFighters.Editor.Prefabs
             else
                 root = new GameObject("Player");
 
+            // -- Layer: root is PlayerHurtbox (enemy attacks detect this) --
+            int hurtboxLayer = LayerMask.NameToLayer(PLAYER_HURTBOX_LAYER);
+            if (hurtboxLayer >= 0)
+                root.layer = hurtboxLayer;
+            else
+                Debug.LogWarning(
+                    $"[PlayerPrefabCreator] Layer '{PLAYER_HURTBOX_LAYER}' not found. " +
+                    "Add it in Edit > Project Settings > Tags and Layers.");
+
             // -- Rigidbody2D --
             var rb = EnsureComponent<Rigidbody2D>(root);
             rb.gravityScale = 0f;
@@ -166,10 +179,10 @@ namespace TomatoFighters.Editor.Prefabs
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-            // -- BoxCollider2D --
+            // -- BoxCollider2D (standing character proportions) --
             var col = EnsureComponent<BoxCollider2D>(root);
-            col.size = new Vector2(0.8f, 0.6f);
-            col.offset = Vector2.zero;
+            col.size = new Vector2(0.8f, 1.2f);
+            col.offset = new Vector2(0f, 0.6f);
 
             // -- Sprite child (preserved if exists) --
             var spriteChild = FindOrCreateChild(root, "Sprite");
@@ -261,6 +274,23 @@ namespace TomatoFighters.Editor.Prefabs
 
             inputSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // -- PlayerDamageable (stub for bidirectional damage) --
+            EnsureComponent<PlayerDamageable>(root);
+
+            // -- DebugHealthBar (temp HP bar, replaced by T025 HUD) --
+            var healthBar = EnsureComponent<DebugHealthBar>(root);
+            var hbSO = new SerializedObject(healthBar);
+            var fillColorProp = hbSO.FindProperty("fillColor");
+            if (fillColorProp != null)
+                fillColorProp.colorValue = new Color(0.2f, 0.8f, 0.3f); // Green for player
+            hbSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- Clean up missing scripts (e.g. old HitboxDamage refs after move to Shared) --
+            RemoveMissingScripts(root);
+
+            // -- Re-add HitboxDamage from Shared on any Hitbox_* children that lost it --
+            RepairHitboxChildren(root);
+
             // -- Save --
             GameObject savedPrefab;
             if (isExisting)
@@ -312,6 +342,47 @@ namespace TomatoFighters.Editor.Prefabs
                 return;
             }
             so.FindProperty(propertyName).objectReferenceValue = InputActionReference.Create(action);
+        }
+
+        /// <summary>
+        /// Ensures all Hitbox_* children have the <see cref="HitboxDamage"/> component.
+        /// Repairs hitbox children that lost their script reference after the move to Shared.
+        /// </summary>
+        private static void RepairHitboxChildren(GameObject root)
+        {
+            int hitboxLayer = LayerMask.NameToLayer(PLAYER_HITBOX_LAYER);
+
+            foreach (Transform child in root.transform)
+            {
+                if (!child.name.StartsWith("Hitbox_")) continue;
+
+                if (child.GetComponent<HitboxDamage>() == null)
+                {
+                    child.gameObject.AddComponent<HitboxDamage>();
+                    Debug.Log($"[PlayerPrefabCreator] Re-added HitboxDamage to '{child.name}'.");
+                }
+
+                if (hitboxLayer >= 0 && child.gameObject.layer != hitboxLayer)
+                {
+                    child.gameObject.layer = hitboxLayer;
+                    Debug.Log($"[PlayerPrefabCreator] Set '{child.name}' layer to {PLAYER_HITBOX_LAYER}.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Removes all MonoBehaviours with missing scripts from a GameObject and its children.
+        /// Prevents "Prefab with a missing script" save errors.
+        /// </summary>
+        private static void RemoveMissingScripts(GameObject root)
+        {
+            var transforms = root.GetComponentsInChildren<Transform>(true);
+            foreach (var t in transforms)
+            {
+                int removed = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
+                if (removed > 0)
+                    Debug.Log($"[PlayerPrefabCreator] Removed {removed} missing script(s) from '{t.name}'.");
+            }
         }
 
         public static void EnsureFolderExists(string path)
