@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Interfaces;

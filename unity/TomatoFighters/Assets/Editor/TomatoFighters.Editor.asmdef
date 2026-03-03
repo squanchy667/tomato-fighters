@@ -5,6 +5,7 @@
         "TomatoFighters.Combat",
         "TomatoFighters.Characters",
         "TomatoFighters.Shared",
+        "TomatoFighters.World",
         "Unity.InputSystem"
     ],
     "includePlatforms": [

@@ -1,4 +1,6 @@
 using TomatoFighters.Combat;
+using TomatoFighters.Editor.Prefabs;
+using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
 using UnityEditor;
 using UnityEngine;
@@ -93,6 +95,13 @@ namespace TomatoFighters.Editor
             col.offset = new Vector2(offsetX, offsetY);
 
             go.AddComponent<HitboxDamage>();
+
+            // Debug visual — red square approximating circle diameter
+            float diameter = radius * 2f;
+            TestDummyPrefabCreator.AddHitboxDebugVisual(
+                go, new Vector2(diameter, diameter), new Vector2(offsetX, offsetY),
+                TestDummyPrefabCreator.GetOrCreateWhiteSquareSprite());
+
             go.SetActive(false);
 
             Debug.Log($"[SetupMystica] Created '{name}' — Circle r={radius}, offset=({offsetX}, {offsetY})");
@@ -119,6 +128,12 @@ namespace TomatoFighters.Editor
             col.offset = new Vector2(offsetX, offsetY);
 
             go.AddComponent<HitboxDamage>();
+
+            // Debug visual — red rect matching collider area
+            TestDummyPrefabCreator.AddHitboxDebugVisual(
+                go, new Vector2(sizeX, sizeY), new Vector2(offsetX, offsetY),
+                TestDummyPrefabCreator.GetOrCreateWhiteSquareSprite());
+
             go.SetActive(false);
 
             Debug.Log($"[SetupMystica] Created '{name}' — Box ({sizeX}x{sizeY}), offset=({offsetX}, {offsetY})");

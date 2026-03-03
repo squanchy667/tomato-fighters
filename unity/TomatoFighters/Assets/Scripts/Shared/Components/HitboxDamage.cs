@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using TomatoFighters.Shared.Interfaces;
 using UnityEngine;
 
-namespace TomatoFighters.Combat
+namespace TomatoFighters.Shared.Components
 {
     /// <summary>
     /// Placed on each hitbox child GameObject (e.g. Hitbox_Jab, Hitbox_Sweep).
