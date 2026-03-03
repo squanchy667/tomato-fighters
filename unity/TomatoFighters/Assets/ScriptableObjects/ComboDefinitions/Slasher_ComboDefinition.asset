@@ -1,0 +1,98 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 798c53644da14344ea3491efd62a039d, type: 3}
+  m_Name: Slasher_ComboDefinition
+  m_EditorClassIdentifier: 
+  steps:
+  - attackData: {fileID: 11400000, guid: c2ea5078ead30a54f933b5b5bbeb5c55, type: 2}
+    attackType: 0
+    animationTrigger: attack_light_1
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: ac3fd95c4cd67d94d9e7ae14c404e494, type: 2}
+    attackType: 0
+    animationTrigger: attack_light_2
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 2
+    nextOnHeavy: 4
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: 805e6876b0dd120488bb21139c6670e3, type: 2}
+    attackType: 0
+    animationTrigger: attack_light_3
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 3
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: 89e484d8bfacdbc44a08d446d76e8424, type: 2}
+    attackType: 0
+    animationTrigger: finisher_light
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 1
+  - attackData: {fileID: 11400000, guid: f9c13ed04c86ad948817caea9b293a95, type: 2}
+    attackType: 1
+    animationTrigger: attack_branch_heavy
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: 9c52e4a9939abde4f99d4f8a3f8afbbb, type: 2}
+    attackType: 1
+    animationTrigger: attack_heavy_1
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 7
+    nextOnHeavy: 6
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: 5449b904f18ab9e4cba0ddbda64a0dd4, type: 2}
+    attackType: 1
+    animationTrigger: finisher_heavy
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 1
+  - attackData: {fileID: 11400000, guid: 09461a76058535a49a3efe073f2a5f43, type: 2}
+    attackType: 0
+    animationTrigger: attack_branch_light
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  rootLightIndex: 0
+  rootHeavyIndex: 5
+  defaultComboWindow: 0.25

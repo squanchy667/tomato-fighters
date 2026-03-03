@@ -46,6 +46,16 @@
           "name": "run",
           "motion": "tomato_fighter_run",
           "speed": 1.0
+        },
+        {
+          "name": "jump",
+          "motion": "tomato_fighter_jump",
+          "speed": 1.0
+        },
+        {
+          "name": "land",
+          "motion": "tomato_fighter_land",
+          "speed": 1.0
         }
       ],
       "transitions": [
@@ -84,11 +94,17 @@
             "mode": "Less",
             "threshold": 0.8
           }
+        },
+        {
+          "from": "land",
+          "to": "idle",
+          "has_exit_time": true,
+          "exit_time": 1.0
         }
       ],
       "default_state": "idle"
     }
   ],
   "generated_by": "Animation Forge v0.1.0",
-  "generated_at": "2026-03-03T00:38:26.968835+00:00"
+  "generated_at": "2026-03-03T01:06:50.199999+00:00"
 }

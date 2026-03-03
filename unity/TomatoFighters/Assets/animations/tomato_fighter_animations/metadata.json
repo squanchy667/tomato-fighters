@@ -1,6 +1,6 @@
 {
   "character_name": "tomato_fighter",
-  "generated_at": "2026-03-03T00:38:26.969454+00:00",
+  "generated_at": "2026-03-03T01:06:50.200579+00:00",
   "generated_by": "Animation Forge v0.1.0",
   "bg_removal_method": "greenscreen+rembg_u2net",
   "animations": {
@@ -23,9 +23,9 @@
       "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_walk.png",
       "frame_w": 464,
       "frame_h": 688,
-      "cols": 8,
-      "rows": 7,
-      "n_frames": 50,
+      "cols": 6,
+      "rows": 6,
+      "n_frames": 36,
       "fps": 14,
       "loop": true,
       "pivot": [
@@ -38,11 +38,41 @@
       "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_run.png",
       "frame_w": 464,
       "frame_h": 688,
-      "cols": 8,
-      "rows": 7,
-      "n_frames": 50,
+      "cols": 6,
+      "rows": 6,
+      "n_frames": 36,
       "fps": 16,
       "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 256
+    },
+    "jump": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_jump.png",
+      "frame_w": 464,
+      "frame_h": 688,
+      "cols": 6,
+      "rows": 6,
+      "n_frames": 31,
+      "fps": 16,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 256
+    },
+    "land": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato_fighter/export/Sprites/tomato_fighter_land.png",
+      "frame_w": 464,
+      "frame_h": 688,
+      "cols": 5,
+      "rows": 4,
+      "n_frames": 20,
+      "fps": 16,
+      "loop": false,
       "pivot": [
         0.5,
         0.0

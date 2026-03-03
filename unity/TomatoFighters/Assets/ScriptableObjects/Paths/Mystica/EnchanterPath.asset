@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: EnchanterPath
+  m_EditorClassIdentifier: 
+  pathType: 7
+  character: 2
+  description: "Stat buffs and elemental infusion. Empower allies, infuse attacks
+    with the dominant ritual family. T3: Arcane Overdrive \u2014 double all buffs."
+  tier1Bonuses:
+    healthBonus: 0
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.1
+    manaBonus: 20
+    manaRegenBonus: 2
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier1AbilityId: Enchanter_Empower
+  tier2Bonuses:
+    healthBonus: 15
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.1
+    manaBonus: 30
+    manaRegenBonus: 3
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier2AbilityId: Enchanter_ElementalInfusion
+  tier3Bonuses:
+    healthBonus: 25
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.2
+    manaBonus: 40
+    manaRegenBonus: 4
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier3AbilityId: Enchanter_ArcaneOverdrive

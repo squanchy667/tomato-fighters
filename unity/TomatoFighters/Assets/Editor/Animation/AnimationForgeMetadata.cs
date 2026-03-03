@@ -60,6 +60,7 @@ namespace TomatoFighters.Editor.Animation
                 return null;
             }
 
+            Debug.Log($"[AnimationForgeMetadata] Done — loaded '{root.characterName}' with {root.animations.Count} animations.");
             return root;
         }
 

@@ -57,7 +57,7 @@ namespace TomatoFighters.Editor.Animation
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[SpriteSheetImporter] Configured {count}/{metadata.animations.Count} sprite sheets.");
+            Debug.Log($"[SpriteSheetImporter] Done — configured {count}/{metadata.animations.Count} sprite sheets.");
         }
 
         /// <summary>

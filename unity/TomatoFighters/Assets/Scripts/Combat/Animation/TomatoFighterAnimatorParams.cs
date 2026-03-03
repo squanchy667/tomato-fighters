@@ -49,5 +49,7 @@ namespace TomatoFighters.Combat
         public const string STATE_IDLE = "idle";
         public const string STATE_WALK = "walk";
         public const string STATE_RUN = "run";
+        public const string STATE_JUMP = "jump";
+        public const string STATE_LAND = "land";
     }
 }

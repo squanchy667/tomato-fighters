@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: TrapperPath
+  m_EditorClassIdentifier: 
+  pathType: 10
+  character: 3
+  description: "Crowd control and pressure building. Harpoon immobilizes, Trap Net
+    snares. T3: Anchor Chain \u2014 pulls all enemies in radius and debuffs them."
+  tier1Bonuses:
+    healthBonus: 20
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.1
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0.2
+  tier1AbilityId: Trapper_HarpoonShot
+  tier2Bonuses:
+    healthBonus: 30
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.2
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0.3
+  tier2AbilityId: Trapper_TrapNet
+  tier3Bonuses:
+    healthBonus: 40
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.2
+    manaBonus: 15
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0.5
+  tier3AbilityId: Trapper_AnchorChain

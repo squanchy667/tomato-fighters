@@ -55,6 +55,9 @@ namespace TomatoFighters.Editor.Animation
         private const float RUN_THRESHOLD = 0.9f;
         private const float TRANSITION_DURATION = 0.05f;
 
+        // Airborne animations get IsGrounded-driven transitions instead of triggers
+        private static readonly HashSet<string> AIRBORNE_NAMES = new HashSet<string> { "jump", "land" };
+
         [MenuItem("TomatoFighters/Build Animations")]
         public static void BuildAnimations()
         {
@@ -82,24 +85,27 @@ namespace TomatoFighters.Editor.Animation
                 return;
             }
 
-            // Split into locomotion (loop=true) and action (loop=false)
+            // Split into locomotion (loop=true), airborne (jump/land), and action (loop=false)
             var locomotion = new Dictionary<string, AnimationClip>();
+            var airborne = new Dictionary<string, AnimationClip>();
             var actions = new Dictionary<string, AnimationClip>();
 
             foreach (var kvp in clips)
             {
-                if (metadata.animations[kvp.Key].loop)
+                if (AIRBORNE_NAMES.Contains(kvp.Key))
+                    airborne[kvp.Key] = kvp.Value;
+                else if (metadata.animations[kvp.Key].loop)
                     locomotion[kvp.Key] = kvp.Value;
                 else
                     actions[kvp.Key] = kvp.Value;
             }
 
             // Build the controller
-            BuildController(locomotion, actions);
+            BuildController(locomotion, actions, airborne);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[AnimationBuilder] Created {clips.Count} clips ({locomotion.Count} locomotion, {actions.Count} action) at {OUTPUT_FOLDER}");
+            Debug.Log($"[AnimationBuilder] Done — created {clips.Count} clips ({locomotion.Count} locomotion, {airborne.Count} airborne, {actions.Count} action) at {OUTPUT_FOLDER}");
         }
 
         /// <summary>Creates a single .anim clip from a sliced sprite sheet.</summary>
@@ -161,7 +167,8 @@ namespace TomatoFighters.Editor.Animation
         /// </summary>
         private static void BuildController(
             Dictionary<string, AnimationClip> locomotion,
-            Dictionary<string, AnimationClip> actions)
+            Dictionary<string, AnimationClip> actions,
+            Dictionary<string, AnimationClip> airborne)
         {
             // Delete existing controller to start clean
             if (AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH) != null)
@@ -249,11 +256,75 @@ namespace TomatoFighters.Editor.Animation
                 }
             }
 
+            // --- Airborne states (jump/land) — IsGrounded-driven ---
+            WireAirborneStates(rootSM, airborne, locoStates);
+
             EditorUtility.SetDirty(controller);
 
             int locoCount = locoStates.Count;
             int actionCount = actions.Count;
-            Debug.Log($"[AnimationBuilder] Controller built: {locoCount} locomotion states, {actionCount} action states.");
+            int airborneCount = airborne.Count;
+            Debug.Log($"[AnimationBuilder] Controller built: {locoCount} locomotion, {airborneCount} airborne, {actionCount} action states.");
+        }
+
+        /// <summary>
+        /// Wires IsGrounded-based transitions for jump and land states.
+        /// Each locomotion state → jump (IsGrounded=false), jump → land (IsGrounded=true),
+        /// land → idle (exit time).
+        /// </summary>
+        private static void WireAirborneStates(
+            AnimatorStateMachine rootSM,
+            Dictionary<string, AnimationClip> airborne,
+            Dictionary<string, AnimatorState> locoStates)
+        {
+            if (!airborne.ContainsKey("jump")) return;
+
+            string groundedParam = TomatoFighterAnimatorParams.ISGROUNDED;
+
+            // Create jump state
+            var jumpState = rootSM.AddState("jump", new Vector3(450, -100, 0));
+            jumpState.motion = airborne["jump"];
+
+            // Each locomotion state → jump when IsGrounded becomes false
+            foreach (var kvp in locoStates)
+            {
+                var t = kvp.Value.AddTransition(jumpState);
+                t.hasExitTime = false;
+                t.duration = TRANSITION_DURATION;
+                t.AddCondition(AnimatorConditionMode.IfNot, 0, groundedParam);
+            }
+
+            if (airborne.ContainsKey("land"))
+            {
+                var landState = rootSM.AddState("land", new Vector3(450, -20, 0));
+                landState.motion = airborne["land"];
+
+                // jump → land when IsGrounded becomes true
+                var jumpToLand = jumpState.AddTransition(landState);
+                jumpToLand.hasExitTime = false;
+                jumpToLand.duration = TRANSITION_DURATION;
+                jumpToLand.AddCondition(AnimatorConditionMode.If, 0, groundedParam);
+
+                // land → idle after clip finishes
+                if (locoStates.ContainsKey("idle"))
+                {
+                    var landToIdle = landState.AddTransition(locoStates["idle"]);
+                    landToIdle.hasExitTime = true;
+                    landToIdle.exitTime = 1f;
+                    landToIdle.duration = TRANSITION_DURATION;
+                }
+            }
+            else
+            {
+                // No land clip — jump → idle when grounded
+                if (locoStates.ContainsKey("idle"))
+                {
+                    var jumpToIdle = jumpState.AddTransition(locoStates["idle"]);
+                    jumpToIdle.hasExitTime = false;
+                    jumpToIdle.duration = TRANSITION_DURATION;
+                    jumpToIdle.AddCondition(AnimatorConditionMode.If, 0, groundedParam);
+                }
+            }
         }
 
         /// <summary>

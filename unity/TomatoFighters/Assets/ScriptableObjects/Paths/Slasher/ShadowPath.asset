@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: ShadowPath
+  m_EditorClassIdentifier: 
+  pathType: 5
+  character: 1
+  description: "Evasion and i-frame extensions. Dash charges, afterimage baits, backstabs.
+    T3: Thousand Cuts \u2014 teleport through 6 enemies with guaranteed crits."
+  tier1Bonuses:
+    healthBonus: 0
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.2
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0.05
+    stunRateBonus: 0
+  tier1AbilityId: Shadow_PhaseDash
+  tier2Bonuses:
+    healthBonus: 10
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.3
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0.08
+    stunRateBonus: 0
+  tier2AbilityId: Shadow_Afterimage
+  tier3Bonuses:
+    healthBonus: 20
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.4
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0.12
+    stunRateBonus: 0
+  tier3AbilityId: Shadow_ThousandCuts

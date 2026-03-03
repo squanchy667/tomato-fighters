@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace TomatoFighters.Combat
@@ -29,6 +30,10 @@ namespace TomatoFighters.Combat
 
         private string lastEventText = "";
         private float eventTextTimer;
+
+        // Combo chain history
+        private const int MAX_CHAIN_DISPLAY = 8;
+        private readonly List<string> comboChain = new List<string>();
 
         private void Awake()
         {
@@ -93,13 +98,31 @@ namespace TomatoFighters.Combat
             if (comboController.Definition != null && comboController.CurrentStepIndex >= 0)
             {
                 var step = comboController.Definition.steps[comboController.CurrentStepIndex];
-                GUI.Label(new Rect(10, y, 400, 30), $"Attack: {step.attackType} (x{step.damageMultiplier:F1})", style);
+
+                string attackName = step.attackData != null
+                    ? step.attackData.attackName
+                    : $"{step.attackType} #{comboController.CurrentStepIndex}";
+
+                GUI.Label(new Rect(10, y, 400, 30), $"Attack: {attackName} (x{step.damageMultiplier:F1})", style);
                 y += 25f;
 
                 string branches = $"Next: L={step.nextOnLight} H={step.nextOnHeavy}";
                 if (step.isFinisher) branches = "FINISHER";
                 GUI.Label(new Rect(10, y, 400, 30), branches, style);
                 y += 25f;
+            }
+
+            // Combo chain history
+            if (comboChain.Count > 0)
+            {
+                y += 10f;
+                var chainStyle = new GUIStyle(style) { fontSize = 14 };
+                chainStyle.normal.textColor = new Color(0.7f, 0.9f, 1f);
+
+                GUI.Label(new Rect(10, y, 400, 25), "Chain:", chainStyle);
+                y += 20f;
+                GUI.Label(new Rect(10, y, 600, 25), string.Join(" → ", comboChain), chainStyle);
+                y += 20f;
             }
 
             if (eventTextTimer > 0f)
@@ -118,28 +141,40 @@ namespace TomatoFighters.Combat
                 : new Color(1f, 0.5f, 0.1f); // orange flash for heavy
 
             flashTimer = FLASH_DURATION;
-            lastEventText = $"{type} #{stepIndex}";
+
+            string attackName = GetAttackName(stepIndex);
+            lastEventText = attackName;
             eventTextTimer = 1f;
+
+            if (comboChain.Count >= MAX_CHAIN_DISPLAY)
+                comboChain.RemoveAt(0);
+            comboChain.Add(attackName);
 
             // Start auto-advance timer to simulate animation event
             autoAdvanceTimer = AUTO_ADVANCE_DELAY;
             autoAdvanceActive = true;
 
-            Debug.Log($"[Combo] {type} attack — step {stepIndex}, chain {comboController.ComboLength}");
+            Debug.Log($"[Combo] {attackName} — step {stepIndex}, chain {comboController.ComboLength}");
         }
 
         private void OnFinisherStarted(int comboLength)
         {
             flashColor = new Color(1f, 0.2f, 0.8f); // pink flash for finisher
             flashTimer = FINISHER_FLASH_DURATION;
-            lastEventText = $"FINISHER! ({comboLength} hits)";
+
+            string finisherName = GetAttackName(comboController.CurrentStepIndex);
+            lastEventText = $"FINISHER: {finisherName}! ({comboLength} hits)";
             eventTextTimer = 1.5f;
+
+            if (comboChain.Count >= MAX_CHAIN_DISPLAY)
+                comboChain.RemoveAt(0);
+            comboChain.Add($"★{finisherName}");
 
             // Auto-end finisher after a short delay
             autoAdvanceTimer = AUTO_FINISHER_DELAY;
             autoAdvanceActive = true;
 
-            Debug.Log($"[Combo] FINISHER after {comboLength} hits!");
+            Debug.Log($"[Combo] FINISHER: {finisherName} after {comboLength} hits!");
         }
 
         private void OnComboDropped()
@@ -147,6 +182,7 @@ namespace TomatoFighters.Combat
             autoAdvanceActive = false;
             lastEventText = "Combo dropped";
             eventTextTimer = 0.8f;
+            comboChain.Clear();
 
             Debug.Log("[Combo] Combo dropped");
         }
@@ -156,6 +192,7 @@ namespace TomatoFighters.Combat
             autoAdvanceActive = false;
             lastEventText = "Combo complete!";
             eventTextTimer = 1f;
+            comboChain.Clear();
 
             Debug.Log("[Combo] Combo ended cleanly");
         }
@@ -204,6 +241,18 @@ namespace TomatoFighters.Combat
         {
             if (eventTextTimer > 0f)
                 eventTextTimer -= Time.deltaTime;
+        }
+
+        private string GetAttackName(int stepIndex)
+        {
+            if (comboController.Definition == null || !comboController.Definition.IsValidStep(stepIndex))
+                return $"Step {stepIndex}";
+
+            var step = comboController.Definition.steps[stepIndex];
+            if (step.attackData != null && !string.IsNullOrEmpty(step.attackData.attackName))
+                return step.attackData.attackName;
+
+            return $"{step.attackType} #{stepIndex}";
         }
     }
 }

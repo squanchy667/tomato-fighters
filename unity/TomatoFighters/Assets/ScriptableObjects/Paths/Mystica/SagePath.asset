@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: SagePath
+  m_EditorClassIdentifier: 
+  pathType: 6
+  character: 2
+  description: "Sustain healing and revival. Mending Aura regenerates ally HP. T3:
+    Resurrection \u2014 revive a downed ally once per run."
+  tier1Bonuses:
+    healthBonus: 30
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 20
+    manaRegenBonus: 2
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier1AbilityId: Sage_MendingAura
+  tier2Bonuses:
+    healthBonus: 40
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 30
+    manaRegenBonus: 3
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier2AbilityId: Sage_PurifyingBurst
+  tier3Bonuses:
+    healthBonus: 50
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 40
+    manaRegenBonus: 4
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier3AbilityId: Sage_Resurrection

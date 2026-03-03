@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: MarksmanPath
+  m_EditorClassIdentifier: 
+  pathType: 9
+  character: 3
+  description: "Raw ranged DPS and crit stacking. Piercing shots, Rapid Fire bursts.
+    T3: Killshot \u2014 800% RATK sniper shot that continues through all enemies
+    on kill."
+  tier1Bonuses:
+    healthBonus: 0
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0.3
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0.05
+    stunRateBonus: 0
+  tier1AbilityId: Marksman_PiercingShots
+  tier2Bonuses:
+    healthBonus: 10
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0.4
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0.08
+    stunRateBonus: 0
+  tier2AbilityId: Marksman_RapidFire
+  tier3Bonuses:
+    healthBonus: 0
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0.5
+    throwableAttackBonus: 0
+    speedBonus: 0.1
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0.12
+    stunRateBonus: 0
+  tier3AbilityId: Marksman_Killshot
