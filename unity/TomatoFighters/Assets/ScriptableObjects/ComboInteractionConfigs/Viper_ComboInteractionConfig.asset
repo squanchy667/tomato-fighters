@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0aa5144c0512c9144b67406470779fb4, type: 3}
+  m_Name: Viper_ComboInteractionConfig
+  m_EditorClassIdentifier: 
+  cancelPriority: 0
+  dashCancelResetsCombo: 1
+  jumpCancelResetsCombo: 0
+  resetOnStagger: 1
+  resetOnDeath: 1
+  lockMovementDuringAttack: 0
+  lockMovementDuringFinisher: 1

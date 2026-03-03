@@ -9,17 +9,30 @@ using UnityEngine.InputSystem;
 namespace TomatoFighters.Editor.Prefabs
 {
     /// <summary>
-    /// Creates a minimal test scene for verifying belt-scroll movement and combo system.
-    /// Run via menu: TomatoFighters > Create Movement Test Scene.
+    /// Creates a minimal test scene for verifying belt-scroll movement, combo system, and animations.
+    /// Run via menu: <b>TomatoFighters &gt; Create Movement Test Scene</b>.
+    ///
+    /// <para><b>Scene contents:</b></para>
+    /// <list type="bullet">
+    ///   <item>Orthographic camera (size 7, dark background)</item>
+    ///   <item>20×10 arena with 4 invisible wall colliders</item>
+    ///   <item>Dark green ground plane with grid lines for depth perception</item>
+    ///   <item>Player — instantiated from <c>Assets/Prefabs/Player/Player.prefab</c></item>
+    ///   <item>Controls hint text at top of arena</item>
+    /// </list>
+    ///
+    /// <para><b>Input wiring:</b> InputActionReferences don't survive prefab serialization,
+    /// so this script re-wires them on the scene instance after instantiation:
+    /// Move=WASD, Jump=Space, Dash=L-Shift, Light=LMB, Heavy=C, Run=L-Ctrl.</para>
+    ///
+    /// <para><b>Fallback:</b> If the prefab doesn't exist, builds the player inline
+    /// (without Animator or CharacterAnimationBridge). Run <c>Create Player Prefab</c> first.</para>
     /// </summary>
     public static class MovementTestSceneCreator
     {
         private const string SCENE_FOLDER = "Assets/Scenes";
         private const string SCENE_PATH = SCENE_FOLDER + "/MovementTest.unity";
-        private const string CONFIG_FOLDER = "Assets/ScriptableObjects/MovementConfigs";
-        private const string CONFIG_PATH = CONFIG_FOLDER + "/Brutor_MovementConfig.asset";
-        private const string COMBO_FOLDER = "Assets/ScriptableObjects/ComboDefinitions";
-        private const string COMBO_PATH = COMBO_FOLDER + "/Brutor_ComboDefinition.asset";
+        private const string PREFAB_PATH = "Assets/Prefabs/Player/Player.prefab";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
         private const float ARENA_WIDTH = 20f;
@@ -29,31 +42,19 @@ namespace TomatoFighters.Editor.Prefabs
         [MenuItem("TomatoFighters/Create Movement Test Scene")]
         public static void CreateTestScene()
         {
-            // Create a new empty scene
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
-            // Setup camera
             SetupCamera();
-
-            // Create arena
             CreateArenaBackground();
             CreateArenaWalls();
-
-            // Create player
-            var config = CreateOrLoadMovementConfig();
-            var comboDef = CreateOrLoadComboDefinition();
-            var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
-            CreatePlayer(config, comboDef, inputActions);
-
-            // Create debug UI
+            CreatePlayerFromPrefab();
             CreateDebugCanvas();
 
-            // Save scene
-            PlayerPrefabCreator_EnsureFolderExists(SCENE_FOLDER);
+            PlayerPrefabCreator.EnsureFolderExists(SCENE_FOLDER);
             EditorSceneManager.SaveScene(scene, SCENE_PATH);
 
             Debug.Log($"[MovementTestScene] Scene created at {SCENE_PATH}");
-            Debug.Log("[MovementTestScene] Controls: WASD = move, Space = jump, Left Shift = dash, J = light attack, K = heavy attack");
+            Debug.Log("[MovementTestScene] Controls: WASD = move, Space = jump, L-Shift = dash, LMB = light, C = heavy, L-Ctrl = run");
         }
 
         private static void SetupCamera()
@@ -70,16 +71,14 @@ namespace TomatoFighters.Editor.Prefabs
 
         private static void CreateArenaBackground()
         {
-            // Ground plane visual
             var ground = new GameObject("Ground");
             var sr = ground.AddComponent<SpriteRenderer>();
             sr.sprite = CreateRectSprite();
-            sr.color = new Color(0.25f, 0.3f, 0.2f); // dark green
+            sr.color = new Color(0.25f, 0.3f, 0.2f);
             ground.transform.localScale = new Vector3(ARENA_WIDTH, ARENA_HEIGHT, 1f);
             ground.transform.position = Vector3.zero;
             sr.sortingOrder = -10;
 
-            // Grid lines for depth perception
             for (int i = -4; i <= 4; i++)
             {
                 var line = new GameObject($"GridLine_H_{i}");
@@ -97,22 +96,18 @@ namespace TomatoFighters.Editor.Prefabs
         {
             var walls = new GameObject("Walls");
 
-            // Left wall
             CreateWall("Wall_Left", walls.transform,
                 new Vector3(-ARENA_WIDTH / 2f - WALL_THICKNESS / 2f, 0f, 0f),
                 new Vector2(WALL_THICKNESS, ARENA_HEIGHT + WALL_THICKNESS * 2));
 
-            // Right wall
             CreateWall("Wall_Right", walls.transform,
                 new Vector3(ARENA_WIDTH / 2f + WALL_THICKNESS / 2f, 0f, 0f),
                 new Vector2(WALL_THICKNESS, ARENA_HEIGHT + WALL_THICKNESS * 2));
 
-            // Top wall
             CreateWall("Wall_Top", walls.transform,
                 new Vector3(0f, ARENA_HEIGHT / 2f + WALL_THICKNESS / 2f, 0f),
                 new Vector2(ARENA_WIDTH + WALL_THICKNESS * 2, WALL_THICKNESS));
 
-            // Bottom wall
             CreateWall("Wall_Bottom", walls.transform,
                 new Vector3(0f, -ARENA_HEIGHT / 2f - WALL_THICKNESS / 2f, 0f),
                 new Vector2(ARENA_WIDTH + WALL_THICKNESS * 2, WALL_THICKNESS));
@@ -127,34 +122,64 @@ namespace TomatoFighters.Editor.Prefabs
             col.size = size;
         }
 
-        private static void CreatePlayer(MovementConfig config, ComboDefinition comboDef, InputActionAsset inputActions)
+        private static void CreatePlayerFromPrefab()
         {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_PATH);
+            if (prefab == null)
+            {
+                Debug.LogWarning("[MovementTestScene] Player prefab not found. Run 'Create Player Prefab' first. Building inline fallback.");
+                BuildInlineFallbackPlayer();
+                return;
+            }
+
+            var player = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            player.transform.position = Vector3.zero;
+
+            // InputActionReferences created via InputActionReference.Create() don't survive
+            // prefab serialization — wire them on the scene instance directly.
+            var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
+            var inputHandler = player.GetComponent<CharacterInputHandler>();
+            if (inputActions != null && inputHandler != null)
+            {
+                var inputSO = new SerializedObject(inputHandler);
+                WireAction(inputActions, inputSO, "moveAction", "Player/Move");
+                WireAction(inputActions, inputSO, "jumpAction", "Player/Jump");
+                WireAction(inputActions, inputSO, "dashAction", "Player/Sprint");
+                WireAction(inputActions, inputSO, "lightAttackAction", "Player/Attack");
+                WireAction(inputActions, inputSO, "heavyAttackAction", "Player/Crouch");
+                WireAction(inputActions, inputSO, "runAction", "Player/Run");
+                inputSO.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Debug.Log("[MovementTestScene] Player instantiated from prefab with input actions wired.");
+        }
+
+        private static void BuildInlineFallbackPlayer()
+        {
+            var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
+
             var root = new GameObject("Player");
             root.transform.position = Vector3.zero;
 
-            // Rigidbody2D — no gravity (belt-scroll)
             var rb = root.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
 
-            // Body collider (stays on ground plane)
             var col = root.AddComponent<BoxCollider2D>();
             col.size = new Vector2(0.8f, 0.6f);
             col.offset = Vector2.zero;
 
-            // Sprite child (offset by jumpHeight at runtime)
             var spriteChild = new GameObject("Sprite");
             spriteChild.transform.SetParent(root.transform);
             spriteChild.transform.localPosition = Vector3.zero;
             var sr = spriteChild.AddComponent<SpriteRenderer>();
             sr.sprite = CreateRectSprite();
-            sr.color = new Color(0.85f, 0.2f, 0.2f); // tomato red
+            sr.color = new Color(0.85f, 0.2f, 0.2f);
             spriteChild.transform.localScale = new Vector3(0.8f, 1.2f, 1f);
             sr.sortingOrder = 1;
 
-            // Shadow child (stays at feet)
             var shadowChild = new GameObject("Shadow");
             shadowChild.transform.SetParent(root.transform);
             shadowChild.transform.localPosition = new Vector3(0f, -0.1f, 0f);
@@ -164,25 +189,29 @@ namespace TomatoFighters.Editor.Prefabs
             shadowChild.transform.localScale = new Vector3(0.9f, 0.2f, 1f);
             shadowSR.sortingOrder = 0;
 
-            // CharacterMotor
+            // Load Mystica config, fall back to any available config
+            var config = AssetDatabase.LoadAssetAtPath<MovementConfig>("Assets/ScriptableObjects/MovementConfigs/Mystica_MovementConfig.asset")
+                      ?? AssetDatabase.LoadAssetAtPath<MovementConfig>("Assets/ScriptableObjects/MovementConfigs/Brutor_MovementConfig.asset");
+
+            var comboDef = AssetDatabase.LoadAssetAtPath<ComboDefinition>("Assets/ScriptableObjects/ComboDefinitions/Mystica_ComboDefinition.asset")
+                        ?? AssetDatabase.LoadAssetAtPath<ComboDefinition>("Assets/ScriptableObjects/ComboDefinitions/Brutor_ComboDefinition.asset");
+
             var motor = root.AddComponent<CharacterMotor>();
             var motorSO = new SerializedObject(motor);
             motorSO.FindProperty("config").objectReferenceValue = config;
-            motorSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Brutor;
+            motorSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Mystica;
             motorSO.FindProperty("spriteTransform").objectReferenceValue = spriteChild.transform;
             motorSO.ApplyModifiedPropertiesWithoutUndo();
 
-            // ComboController
             var comboController = root.AddComponent<ComboController>();
             var comboSO = new SerializedObject(comboController);
             comboSO.FindProperty("comboDefinition").objectReferenceValue = comboDef;
-            comboSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Brutor;
+            comboSO.FindProperty("characterType").enumValueIndex = (int)CharacterType.Mystica;
+            comboSO.FindProperty("motor").objectReferenceValue = motor;
             comboSO.ApplyModifiedPropertiesWithoutUndo();
 
-            // ComboDebugUI — visual feedback for combo testing
             root.AddComponent<ComboDebugUI>();
 
-            // CharacterInputHandler with input action wiring
             var inputHandler = root.AddComponent<CharacterInputHandler>();
             var inputSO = new SerializedObject(inputHandler);
             inputSO.FindProperty("motor").objectReferenceValue = motor;
@@ -190,47 +219,32 @@ namespace TomatoFighters.Editor.Prefabs
 
             if (inputActions != null)
             {
-                var playerMap = inputActions.FindActionMap("Player");
-                if (playerMap != null)
-                {
-                    var moveRef = FindActionReference(inputActions, "Player/Move");
-                    var jumpRef = FindActionReference(inputActions, "Player/Jump");
-                    var dashRef = FindActionReference(inputActions, "Player/Sprint"); // Sprint = Dash for testing
-                    var lightRef = FindActionReference(inputActions, "Player/Attack"); // LMB = Light attack
-                    var heavyRef = FindActionReference(inputActions, "Player/Crouch"); // C = Heavy attack for testing
+                WireAction(inputActions, inputSO, "moveAction", "Player/Move");
+                WireAction(inputActions, inputSO, "jumpAction", "Player/Jump");
+                WireAction(inputActions, inputSO, "dashAction", "Player/Sprint");
+                WireAction(inputActions, inputSO, "lightAttackAction", "Player/Attack");
+                WireAction(inputActions, inputSO, "heavyAttackAction", "Player/Crouch");
 
-                    if (moveRef != null) inputSO.FindProperty("moveAction").objectReferenceValue = moveRef;
-                    if (jumpRef != null) inputSO.FindProperty("jumpAction").objectReferenceValue = jumpRef;
-                    if (dashRef != null) inputSO.FindProperty("dashAction").objectReferenceValue = dashRef;
-                    if (lightRef != null) inputSO.FindProperty("lightAttackAction").objectReferenceValue = lightRef;
-                    if (heavyRef != null) inputSO.FindProperty("heavyAttackAction").objectReferenceValue = heavyRef;
-                }
-            }
-            else
-            {
-                Debug.LogWarning("[MovementTestScene] InputSystem_Actions.inputactions not found at " + INPUT_ACTIONS_PATH);
+                if (inputActions.FindAction("Player/Run") != null)
+                    WireAction(inputActions, inputSO, "runAction", "Player/Run");
             }
 
             inputSO.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static InputActionReference FindActionReference(InputActionAsset asset, string actionPath)
+        private static void WireAction(InputActionAsset asset, SerializedObject so,
+            string propertyName, string actionPath)
         {
             var action = asset.FindAction(actionPath);
-            if (action == null)
-            {
-                Debug.LogWarning($"[MovementTestScene] Input action '{actionPath}' not found.");
-                return null;
-            }
-            return InputActionReference.Create(action);
+            if (action == null) return;
+            so.FindProperty(propertyName).objectReferenceValue = InputActionReference.Create(action);
         }
 
         private static void CreateDebugCanvas()
         {
-            // Simple world-space text showing controls
             var textGO = new GameObject("ControlsHint");
             var tm = textGO.AddComponent<TextMesh>();
-            tm.text = "WASD: Move | Space: Jump | L-Shift: Dash | LMB: Light | C: Heavy";
+            tm.text = "WASD: Move | Space: Jump | L-Shift: Dash | LMB: Light | C: Heavy | L-Ctrl: Run";
             tm.fontSize = 24;
             tm.characterSize = 0.15f;
             tm.anchor = TextAnchor.UpperCenter;
@@ -239,135 +253,6 @@ namespace TomatoFighters.Editor.Prefabs
             textGO.transform.position = new Vector3(0f, ARENA_HEIGHT / 2f - 0.5f, 0f);
         }
 
-        private static ComboDefinition CreateOrLoadComboDefinition()
-        {
-            var existing = AssetDatabase.LoadAssetAtPath<ComboDefinition>(COMBO_PATH);
-            if (existing != null) return existing;
-
-            PlayerPrefabCreator_EnsureFolderExists(COMBO_FOLDER);
-
-            var def = ScriptableObject.CreateInstance<ComboDefinition>();
-            def.defaultComboWindow = 0.8f;
-            def.rootLightIndex = 0;
-            def.rootHeavyIndex = 5;
-
-            // Brutor combo tree: slow but powerful
-            // L1 → L2 → L3 (finisher sweep) or L2 → H (slam finisher)
-            // H1 → H2 (finisher ground pound)
-            // L1 → H (launcher, branches to H finisher)
-            def.steps = new ComboStep[]
-            {
-                // [0] Light 1
-                new ComboStep
-                {
-                    attackType = AttackType.Light,
-                    animationTrigger = "Light1",
-                    damageMultiplier = 1.0f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = 1,
-                    nextOnHeavy = 3,
-                    isFinisher = false
-                },
-                // [1] Light 2
-                new ComboStep
-                {
-                    attackType = AttackType.Light,
-                    animationTrigger = "Light2",
-                    damageMultiplier = 1.0f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = 2,
-                    nextOnHeavy = 4,
-                    isFinisher = false
-                },
-                // [2] Light 3 finisher (sweep)
-                new ComboStep
-                {
-                    attackType = AttackType.Light,
-                    animationTrigger = "LightFinisher",
-                    damageMultiplier = 1.5f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = -1,
-                    nextOnHeavy = -1,
-                    isFinisher = true
-                },
-                // [3] L→H launcher
-                new ComboStep
-                {
-                    attackType = AttackType.Heavy,
-                    animationTrigger = "Launcher",
-                    damageMultiplier = 1.3f,
-                    comboWindowDuration = 0.5f,
-                    nextOnLight = -1,
-                    nextOnHeavy = 4,
-                    isFinisher = false
-                },
-                // [4] Heavy finisher (slam)
-                new ComboStep
-                {
-                    attackType = AttackType.Heavy,
-                    animationTrigger = "HeavySlam",
-                    damageMultiplier = 2.0f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = -1,
-                    nextOnHeavy = -1,
-                    isFinisher = true
-                },
-                // [5] Heavy 1 (root heavy)
-                new ComboStep
-                {
-                    attackType = AttackType.Heavy,
-                    animationTrigger = "Heavy1",
-                    damageMultiplier = 1.5f,
-                    comboWindowDuration = 0.5f,
-                    nextOnLight = -1,
-                    nextOnHeavy = 6,
-                    isFinisher = false
-                },
-                // [6] Heavy 2 finisher (ground pound)
-                new ComboStep
-                {
-                    attackType = AttackType.Heavy,
-                    animationTrigger = "HeavyFinisher",
-                    damageMultiplier = 2.2f,
-                    comboWindowDuration = 0f,
-                    nextOnLight = -1,
-                    nextOnHeavy = -1,
-                    isFinisher = true
-                },
-            };
-
-            AssetDatabase.CreateAsset(def, COMBO_PATH);
-            AssetDatabase.SaveAssets();
-            return def;
-        }
-
-        private static MovementConfig CreateOrLoadMovementConfig()
-        {
-            var existing = AssetDatabase.LoadAssetAtPath<MovementConfig>(CONFIG_PATH);
-            if (existing != null) return existing;
-
-            PlayerPrefabCreator_EnsureFolderExists(CONFIG_FOLDER);
-
-            var config = ScriptableObject.CreateInstance<MovementConfig>();
-            config.moveSpeed = 5.6f;
-            config.depthSpeed = 3.5f;
-            config.groundAcceleration = 60f;
-            config.airAcceleration = 30f;
-            config.jumpForce = 12f;
-            config.jumpGravity = 35f;
-            config.coyoteTime = 0.1f;
-            config.jumpBufferTime = 0.12f;
-            config.dashSpeed = 16f;
-            config.dashDuration = 0.18f;
-            config.dashCooldown = 0.7f;
-            config.dashHasIFrames = true;
-
-            AssetDatabase.CreateAsset(config, CONFIG_PATH);
-            AssetDatabase.SaveAssets();
-            return config;
-        }
-
-        /// <summary>Creates a simple 1x1 white pixel sprite for shapes.</summary>
         private static Sprite CreateRectSprite()
         {
             var tex = new Texture2D(4, 4);
@@ -376,20 +261,6 @@ namespace TomatoFighters.Editor.Prefabs
             tex.SetPixels(pixels);
             tex.Apply();
             return Sprite.Create(tex, new Rect(0, 0, 4, 4), new Vector2(0.5f, 0.5f), 4);
-        }
-
-        private static void PlayerPrefabCreator_EnsureFolderExists(string path)
-        {
-            if (AssetDatabase.IsValidFolder(path)) return;
-            var parts = path.Split('/');
-            var current = parts[0];
-            for (int i = 1; i < parts.Length; i++)
-            {
-                var next = current + "/" + parts[i];
-                if (!AssetDatabase.IsValidFolder(next))
-                    AssetDatabase.CreateFolder(current, parts[i]);
-                current = next;
-            }
         }
     }
 }

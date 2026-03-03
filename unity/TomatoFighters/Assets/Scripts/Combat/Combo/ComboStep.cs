@@ -1,4 +1,5 @@
 using System;
+using TomatoFighters.Shared.Data;
 using UnityEngine;
 
 namespace TomatoFighters.Combat
@@ -10,6 +11,9 @@ namespace TomatoFighters.Combat
     [Serializable]
     public struct ComboStep
     {
+        [Tooltip("Attack data ScriptableObject for this step. Provides damage, timing, and effects.")]
+        public AttackData attackData;
+
         [Tooltip("Whether this is a light or heavy attack.")]
         public AttackType attackType;
 
@@ -27,6 +31,12 @@ namespace TomatoFighters.Combat
 
         [Tooltip("Index of next step on heavy input. -1 = no branch.")]
         public int nextOnHeavy;
+
+        [Tooltip("If true AND hit confirmed, player can cancel into dash.")]
+        public bool canDashCancelOnHit;
+
+        [Tooltip("If true AND hit confirmed, player can cancel into jump.")]
+        public bool canJumpCancelOnHit;
 
         [Tooltip("Whether this step is a combo finisher with bonus effects.")]
         public bool isFinisher;

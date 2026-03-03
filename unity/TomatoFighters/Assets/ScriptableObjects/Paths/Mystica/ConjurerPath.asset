@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: ConjurerPath
+  m_EditorClassIdentifier: 
+  pathType: 8
+  character: 2
+  description: "Summon minions and deploy totems. Build an army to compensate for
+    low HP. T3: Summon Golem \u2014 massive tank that protects Mystica."
+  tier1Bonuses:
+    healthBonus: 20
+    defenseBonus: 0
+    attackBonus: 0.1
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 20
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier1AbilityId: Conjurer_SummonSproutling
+  tier2Bonuses:
+    healthBonus: 30
+    defenseBonus: 0
+    attackBonus: 0.2
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 30
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier2AbilityId: Conjurer_DeployTotem
+  tier3Bonuses:
+    healthBonus: 40
+    defenseBonus: 0
+    attackBonus: 0.3
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 40
+    manaRegenBonus: 2
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier3AbilityId: Conjurer_SummonGolem

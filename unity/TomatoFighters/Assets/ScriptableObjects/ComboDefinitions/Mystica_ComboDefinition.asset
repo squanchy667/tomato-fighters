@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 798c53644da14344ea3491efd62a039d, type: 3}
+  m_Name: Mystica_ComboDefinition
+  m_EditorClassIdentifier: 
+  steps:
+  - attackType: 0
+    animationTrigger: Light1
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 0
+    canJumpCancelOnHit: 0
+    isFinisher: 0
+  - attackType: 0
+    animationTrigger: Light2
+    damageMultiplier: 1.1
+    comboWindowDuration: 0
+    nextOnLight: 2
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 0
+    isFinisher: 0
+  - attackType: 0
+    animationTrigger: LightFinisher
+    damageMultiplier: 1.4
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 0
+    canJumpCancelOnHit: 0
+    isFinisher: 1
+  - attackType: 1
+    animationTrigger: Heavy1
+    damageMultiplier: 1.8
+    comboWindowDuration: 0.6
+    nextOnLight: -1
+    nextOnHeavy: 4
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 1
+    isFinisher: 0
+  - attackType: 1
+    animationTrigger: HeavyFinisher
+    damageMultiplier: 2.5
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 0
+    canJumpCancelOnHit: 0
+    isFinisher: 1
+  rootLightIndex: 0
+  rootHeavyIndex: 3
+  defaultComboWindow: 0.5

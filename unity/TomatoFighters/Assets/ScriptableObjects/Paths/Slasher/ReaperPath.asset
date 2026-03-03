@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: ReaperPath
+  m_EditorClassIdentifier: 
+  pathType: 4
+  character: 1
+  description: "Cleave and crowd clearing. All attacks hit in a wider arc. T3: Whirlwind
+    \u2014 4-second AOE spin that launches all nearby enemies."
+  tier1Bonuses:
+    healthBonus: 15
+    defenseBonus: 0
+    attackBonus: 0.2
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier1AbilityId: Reaper_CleavingStrikes
+  tier2Bonuses:
+    healthBonus: 20
+    defenseBonus: 0
+    attackBonus: 0.3
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.1
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier2AbilityId: Reaper_ChainSlash
+  tier3Bonuses:
+    healthBonus: 30
+    defenseBonus: 0
+    attackBonus: 0.4
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0.2
+    manaBonus: 0
+    manaRegenBonus: 0
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier3AbilityId: Reaper_Whirlwind

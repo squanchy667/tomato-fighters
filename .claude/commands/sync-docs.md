@@ -33,6 +33,12 @@ Check consistency across all docs WITHOUT making changes. Report discrepancies:
 3. **SUMMARY.md completeness** — Walk all `.md` files in the docs repo. Flag any not listed in SUMMARY.md.
 4. **Dump files** — Check `tasks/phase-{N}/dumps/` for any active dump files. Report them (someone may need to `/fetch`).
 5. **Changelog freshness** — Compare the latest changelog entry date against the latest git commit date. Flag if changelog is stale.
+6. **Spec vs implementation deviations** — For DONE tasks, compare the spec's File Plan, Description, and Acceptance Criteria against what actually exists in code. Flag:
+   - Files that exist in code but aren't in the spec's File Plan
+   - Files in the spec's File Plan that don't exist in code
+   - Acceptance criteria that appear unmet (e.g., spec says "standalone InputBufferSystem" but no such file exists)
+   - Architectural deviations (e.g., spec says "platformer with gravity" but code uses belt-scroll)
+   Report these as **DEVIATIONS** requiring human decision — do NOT auto-fix them.
 
 Output format:
 ```
@@ -43,6 +49,11 @@ Status Consistency:
   ✅ T001: spec=DONE, board=DONE, files=23/23 — consistent
   ⚠️ T002: spec=PENDING, board=PENDING, files=0/1 — consistent but not started
   ❌ T005: spec=DONE, board=PENDING — MISMATCH (board not updated)
+
+Spec vs Implementation Deviations:
+  ⚠️ T002: spec lists Combat/CharacterController2D.cs, code has Characters/CharacterMotor.cs + 4 others
+  ⚠️ T003: spec requires standalone InputBufferSystem.cs, code embeds buffering in ComboStateMachine
+  → These deviations require human review. Run /plan-task TXXX to reconcile.
 
 SUMMARY.md:
   ✅ 45 files listed, 45 exist
@@ -59,6 +70,10 @@ Changelog:
 
 ### Mode: `status`
 Update task statuses in `tomato-fighters-docs/TASK_BOARD.md`:
+
+**CRITICAL — This mode updates the `[STATUS]` tag and task-level status fields ONLY. It must NEVER modify:**
+- Task descriptions, file lists, or acceptance criteria text in TASK_BOARD.md
+- The content of any acceptance criterion (only the `[STATUS]` tag in the heading)
 
 1. Read `TASK_BOARD.md` and parse all task entries (format: `### TXXX: Title [STATUS]`)
 2. For each task, determine the correct status:
@@ -79,16 +94,29 @@ Update task statuses in `tomato-fighters-docs/TASK_BOARD.md`:
 
 3. Update the `[STATUS]` tag in TASK_BOARD.md for any changes
 4. **Cross-check:** If a task spec has `| **Status** | DONE |` but TASK_BOARD.md says `[PENDING]`, update the board to match the spec (spec is source of truth for completed tasks)
+5. **If code files don't match the spec's File Plan or Description**, report the deviation but do NOT rewrite the task description, files list, or acceptance criteria in TASK_BOARD.md
 
 ---
 
 ### Mode: `tasks`
-Update individual task spec metadata:
+Update individual task spec **metadata only** (status field, completion date, branch name):
 
+**CRITICAL — This mode updates METADATA ONLY. It must NEVER modify:**
+- Task descriptions or objectives
+- Acceptance criteria (neither the text nor the checked/unchecked state)
+- File plans
+- Requirements sections
+- Implementation notes or design decisions
+- Any content that defines WHAT should be built or HOW
+
+**If the implementation differs from the spec** (different files, changed architecture, dropped or added requirements), the sync must **FLAG the deviation in its output report** — NOT silently rewrite the spec to match the code. The spec is the requirements contract; the code is what was delivered. Deviations need human review and explicit approval before specs are updated.
+
+Steps:
 1. For each task spec in `tasks/phase-{N}/T{XXX}-*.md`:
    - Check if its files exist in the code repo
-   - If all files exist and TASK_BOARD.md says DONE → update spec status to `DONE ({date})`
+   - If all files exist and TASK_BOARD.md says DONE → update **only** the metadata table: `| **Status** | DONE |`, `| **Completed** | {date} |`, `| **Branch** | {branch} |`
    - If spec already says DONE, don't change it
+   - If the code files don't match the spec's File Plan, **report the deviation** but do NOT update the spec content
 2. Cross-reference: if the spec says DONE but TASK_BOARD.md doesn't, flag for `status` mode to fix
 
 ---
@@ -229,3 +257,4 @@ Committed: [Sync] Update docs: validated T001 DONE, no changes needed
 - **Dump files are transient:** Report them but don't modify them (that's `/fetch`'s job)
 - **Always commit after changes:** Docs repo changes should be committed and pushed immediately
 - **Changelog is append-only:** Never modify existing entries, only add new ones
+- **Never rewrite task requirements:** Sync updates statuses and metadata ONLY. If code doesn't match the spec, report it as a deviation in the output. Only the task owner or a human can authorize changes to descriptions, acceptance criteria, file plans, or requirements. The spec defines what SHOULD be built — the sync must never retroactively rewrite specs to match what WAS built.

@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: deffe4233268b624aaf5ef5818cf2fc7, type: 3}
+  m_Name: ArcanistPath
+  m_EditorClassIdentifier: 
+  pathType: 11
+  character: 3
+  description: "Mana as a weapon. Charge for devastating Mana Blasts. High risk/reward.
+    T3: Mana Overload \u2014 instant 100% charge with 2x damage for 10 seconds."
+  tier1Bonuses:
+    healthBonus: 0
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 30
+    manaRegenBonus: 3
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier1AbilityId: Arcanist_ManaCharge
+  tier2Bonuses:
+    healthBonus: 0
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0.2
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 40
+    manaRegenBonus: 4
+    critChanceBonus: 0
+    stunRateBonus: 0
+  tier2AbilityId: Arcanist_ManaBlast
+  tier3Bonuses:
+    healthBonus: 0
+    defenseBonus: 0
+    attackBonus: 0
+    rangedAttackBonus: 0.3
+    throwableAttackBonus: 0
+    speedBonus: 0
+    manaBonus: 50
+    manaRegenBonus: 5
+    critChanceBonus: 0.05
+    stunRateBonus: 0
+  tier3AbilityId: Arcanist_ManaOverload

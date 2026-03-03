@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4fc11d5ad204a204895bafbe85a46933, type: 3}
+  m_Name: MysticaStrike2
+  m_EditorClassIdentifier: 
+  attackId: mystica_strike_2
+  attackName: Magic Burst 2
+  damageMultiplier: 0.8
+  knockbackForce: {x: 2, y: 0.3}
+  launchForce: {x: 0, y: 0}
+  causesWallBounce: 0
+  causesLaunch: 0
+  animationClip: {fileID: 0}
+  hitboxStartFrame: 3
+  hitboxActiveFrames: 4
+  totalFrames: 18
+  animationSpeed: 1
+  telegraphType: 0
+  isOTGCapable: 0
+  isAirAttack: 0
+  hitEffectPrefab: {fileID: 0}
+  swingSound: {fileID: 0}
+  hitSound: {fileID: 0}

@@ -79,6 +79,81 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 
 Use the `agent-tailor` agent to create new specialized agents when needed.
 
+## Directory Structure
+
+> For docs↔code cross-references, see `.claude/CROSS_REFERENCE.md`
+
+```
+tomato-fighters/                              ← Code repo root
+├── .claude/
+│   ├── CLAUDE.md                             ← This file
+│   ├── CROSS_REFERENCE.md                    ← Docs↔code navigation map
+│   ├── TOOLKIT.md
+│   ├── agents/                               (20 agents)
+│   │   ├── shared-contracts.md               ← Cross-pillar interfaces
+│   │   ├── combat-agent.md                   ← Dev 1 pillar
+│   │   ├── roguelite-agent.md                ← Dev 2 pillar
+│   │   ├── world-agent.md                    ← Dev 3 pillar
+│   │   ├── so-architect.md                   ← ScriptableObject design
+│   │   ├── ability-agent.md                  ← Path ability impl
+│   │   ├── integration-agent.md              ← Cross-pillar integration
+│   │   ├── balance-agent.md                  ← Tuning & balance
+│   │   └── (12 meta agents: task-*, phase-*, quality-gate, etc.)
+│   ├── commands/                             (13 commands)
+│   │   ├── do-task.md, task-execute.md       ← Task execution
+│   │   ├── execute-phase.md, build-app.md    ← Orchestration
+│   │   ├── check-pillar.md                   ← Pillar boundary check
+│   │   ├── sync-docs.md                      ← Docs repo sync
+│   │   ├── plan-task.md, merge-task.md       ← Task workflow
+│   │   └── dump.md, fetch.md                 ← Session handoff
+│   └── skills/                               (4 skills)
+│       ├── game-architecture/SKILL.md        ← 3-pillar rules
+│       ├── context-handoff/SKILL.md
+│       ├── token-budgeting/SKILL.md
+│       └── workspace/SKILL.md
+├── unity/TomatoFighters/Assets/
+│   ├── Scripts/
+│   │   ├── Shared/                           ← ALL devs — cross-pillar contracts
+│   │   │   ├── Interfaces/                   (6 interfaces: ICombatEvents, IBuffProvider, etc.)
+│   │   │   ├── Enums/                        (11 enums: CharacterType, PathType, StatType, etc.)
+│   │   │   └── Data/                         (6 data: CharacterBaseStats, DamagePacket, AttackData, etc.)
+│   │   ├── Combat/                           ← Dev 1 pillar
+│   │   │   ├── Combo/                        (ComboController, ComboStateMachine, ComboDefinition, etc.)
+│   │   │   └── Movement/                     (CharacterMotor, MovementStateMachine, MovementConfig)
+│   │   ├── Characters/                       (CharacterInputHandler)
+│   │   ├── Paths/                            (CharacterStatCalculator, FinalStats, StatModifierInput)
+│   │   ├── Roguelite/                        ← Dev 2 pillar (pending)
+│   │   └── World/                            ← Dev 3 pillar (pending)
+│   ├── ScriptableObjects/
+│   │   ├── Characters/                       (BrutorStats, SlasherStats, MysticaStats, ViperStats)
+│   │   ├── ComboDefinitions/                 (Brutor_ComboDefinition)
+│   │   └── MovementConfigs/                  (Brutor_MovementConfig)
+│   ├── Scenes/                               (MovementTest, SampleScene)
+│   ├── Prefabs/Player/                       (Player.prefab)
+│   ├── Editor/Prefabs/                       (scene/prefab generators)
+│   └── Tests/EditMode/Combat/                (ComboStateMachine, MovementStateMachine tests)
+└── tomato-fighters-docs/                     ← Synced docs copy (subset)
+    ├── SUMMARY.md, TASK_BOARD.md
+    └── tasks/phase-1/                        (T001–T003)
+```
+
+### Sibling Docs Repo
+
+```
+../tomato-fighters-docs/                      ← Docs repo (GitBook)
+├── TASK_BOARD.md                             ← Master: 60 tasks, 6 phases
+├── PLAN.md                                   ← Architecture vision
+├── TASK_LOGBOOK.md                           ← Execution history
+├── development-agents.md                     ← Agent strategy
+├── architecture/                             (system-overview, interface-contracts, data-flow)
+├── developer/                                (setup, standards, dev1/dev2/dev3 guides)
+├── design-specs/                             (CHARACTER-ARCHETYPES, PROJECT-TALAMH-CHARACTERIZATION)
+├── product/                                  (features, roadmap)
+├── resources/                                (tech-stack, changelog, known-issues)
+├── testing/                                  (test-plan)
+└── tasks/phase-1/                            (T001–T013 detailed specs)
+```
+
 ## Getting Started (Partners)
 
 1. Clone the repo and open in Unity 2022 LTS

@@ -1,0 +1,78 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 798c53644da14344ea3491efd62a039d, type: 3}
+  m_Name: Viper_ComboDefinition
+  m_EditorClassIdentifier: 
+  steps:
+  - attackData: {fileID: 11400000, guid: f9ba63622c3565c49a1248c5aca67a0a, type: 2}
+    attackType: 0
+    animationTrigger: attack_light_1
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 0
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: 59b3a3b57c9f06343af56d79ddf37272, type: 2}
+    attackType: 0
+    animationTrigger: attack_light_2
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: 2
+    nextOnHeavy: 3
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 0
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: 8f29ed8cba1e1a44cbed8aedd9da4eb3, type: 2}
+    attackType: 0
+    animationTrigger: finisher_light
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 0
+    isFinisher: 1
+  - attackData: {fileID: 11400000, guid: 8cf643cdb2daf91469f7271ff8b4e499, type: 2}
+    attackType: 1
+    animationTrigger: attack_branch_heavy
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 0
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: fe2a17779c9c2fb4abcaf2f127ce00f3, type: 2}
+    attackType: 1
+    animationTrigger: attack_heavy_1
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: 5
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 0
+    isFinisher: 0
+  - attackData: {fileID: 11400000, guid: aa7a665fdb866724fb1981ff30727d9f, type: 2}
+    attackType: 1
+    animationTrigger: finisher_heavy
+    damageMultiplier: 1
+    comboWindowDuration: 0
+    nextOnLight: -1
+    nextOnHeavy: -1
+    canDashCancelOnHit: 1
+    canJumpCancelOnHit: 0
+    isFinisher: 1
+  rootLightIndex: 0
+  rootHeavyIndex: 4
+  defaultComboWindow: 0.3

@@ -6,6 +6,7 @@ namespace TomatoFighters.Characters
 {
     /// <summary>
     /// Reads Unity Input System actions and drives the CharacterMotor and ComboController.
+    /// Routes dash/jump inputs through the combo cancel system when a combo is active.
     /// Wire InputActionReferences in the inspector from the project's InputActions asset.
     /// </summary>
     public class CharacterInputHandler : MonoBehaviour
@@ -22,6 +23,7 @@ namespace TomatoFighters.Characters
         [SerializeField] private InputActionReference dashAction;
         [SerializeField] private InputActionReference lightAttackAction;
         [SerializeField] private InputActionReference heavyAttackAction;
+        [SerializeField] private InputActionReference runAction;
 
         private void OnEnable()
         {
@@ -33,6 +35,8 @@ namespace TomatoFighters.Characters
                 lightAttackAction.action.performed += OnLightAttack;
             if (heavyAttackAction != null)
                 heavyAttackAction.action.performed += OnHeavyAttack;
+            if (runAction != null)
+                runAction.action.performed += OnRun;
 
             EnableActions();
         }
@@ -47,6 +51,8 @@ namespace TomatoFighters.Characters
                 lightAttackAction.action.performed -= OnLightAttack;
             if (heavyAttackAction != null)
                 heavyAttackAction.action.performed -= OnHeavyAttack;
+            if (runAction != null)
+                runAction.action.performed -= OnRun;
         }
 
         private void Update()
@@ -59,6 +65,13 @@ namespace TomatoFighters.Characters
 
         private void OnJump(InputAction.CallbackContext ctx)
         {
+            // During active combo: attempt cancel or buffer the input
+            if (comboController != null && comboController.IsComboActive)
+            {
+                comboController.TryJumpCancel();
+                return; // never fall through to raw jump during combo
+            }
+
             if (motor != null)
                 motor.RequestJump();
         }
@@ -67,26 +80,36 @@ namespace TomatoFighters.Characters
         {
             if (motor == null) return;
 
-            // Use current move input as dash direction
             Vector2 dashDir = Vector2.zero;
             if (moveAction != null)
                 dashDir = moveAction.action.ReadValue<Vector2>();
+
+            // During active combo: attempt cancel or buffer the input
+            if (comboController != null && comboController.IsComboActive)
+            {
+                comboController.TryDashCancel(dashDir);
+                return; // never fall through to raw dash during combo
+            }
 
             motor.RequestDash(dashDir);
         }
 
         private void OnLightAttack(InputAction.CallbackContext ctx)
         {
-            Debug.Log("[Input] Light attack (LMB) detected");
             if (comboController != null)
                 comboController.RequestLightAttack();
         }
 
         private void OnHeavyAttack(InputAction.CallbackContext ctx)
         {
-            Debug.Log("[Input] Heavy attack (E) detected");
             if (comboController != null)
                 comboController.RequestHeavyAttack();
+        }
+
+        private void OnRun(InputAction.CallbackContext ctx)
+        {
+            if (motor != null)
+                motor.RequestRun();
         }
 
         private void EnableActions()
@@ -96,6 +119,7 @@ namespace TomatoFighters.Characters
             dashAction?.action.Enable();
             lightAttackAction?.action.Enable();
             heavyAttackAction?.action.Enable();
+            runAction?.action.Enable();
         }
     }
 }
