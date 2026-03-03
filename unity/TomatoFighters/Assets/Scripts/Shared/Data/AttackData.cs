@@ -45,6 +45,10 @@ namespace TomatoFighters.Shared.Data
 
         [Header("Animation & Timing")]
 
+        [Tooltip("ID of the child hitbox GameObject to activate (e.g. 'Jab', 'Sweep'). " +
+                 "HitboxManager looks up 'Hitbox_{hitboxId}' in player children.")]
+        public string hitboxId;
+
         [Tooltip("Animation clip this attack plays. Can be null for placeholder.")]
         public AnimationClip animationClip;
 
