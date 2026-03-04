@@ -39,5 +39,11 @@ namespace TomatoFighters.Shared.Interfaces
 
         /// <summary>Get all currently active path abilities for combat execution.</summary>
         List<PathAbility> GetActivePathAbilities();
+
+        /// <summary>
+        /// Gravity multiplier for the juggle system (base 1.0).
+        /// Gale element rituals reduce this to extend airtime (e.g. 0.7 = 30% slower fall).
+        /// </summary>
+        float GetJuggleGravityMultiplier();
     }
 }

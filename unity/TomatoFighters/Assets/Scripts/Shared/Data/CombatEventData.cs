@@ -241,4 +241,32 @@ namespace TomatoFighters.Shared.Data
             this.recoveredPosition = recoveredPosition;
         }
     }
+
+    /// <summary>Data for a wall bounce during knockback.</summary>
+    public readonly struct WallBounceEventData
+    {
+        public readonly Vector2 bouncePosition;
+        public readonly float damage;
+        public readonly Vector2 reflectedVelocity;
+
+        public WallBounceEventData(Vector2 bouncePosition, float damage, Vector2 reflectedVelocity)
+        {
+            this.bouncePosition = bouncePosition;
+            this.damage = damage;
+            this.reflectedVelocity = reflectedVelocity;
+        }
+    }
+
+    /// <summary>Data for when an entity lands from airborne state.</summary>
+    public readonly struct JuggleLandEventData
+    {
+        public readonly Vector2 landPosition;
+        public readonly Enums.JuggleState landedIntoState;
+
+        public JuggleLandEventData(Vector2 landPosition, Enums.JuggleState landedIntoState)
+        {
+            this.landPosition = landPosition;
+            this.landedIntoState = landedIntoState;
+        }
+    }
 }

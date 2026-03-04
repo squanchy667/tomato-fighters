@@ -39,6 +39,7 @@ namespace TomatoFighters.World
         protected EnemyData Data => enemyData;
 
         private IDefenseProvider _defenseProvider;
+        private IJuggleTarget _juggleTarget;
 
         /// <summary>The entity's defense provider, if any. Subclasses use this to open clash windows.</summary>
         protected IDefenseProvider DefenseProvider => _defenseProvider;
@@ -99,6 +100,12 @@ namespace TomatoFighters.World
             Sprite = GetComponentInChildren<SpriteRenderer>();
             Colliders = GetComponentsInChildren<Collider2D>();
             _defenseProvider = defenseProviderComponent as IDefenseProvider;
+            _juggleTarget = GetComponent<IJuggleTarget>();
+
+            if (_juggleTarget != null)
+            {
+                _juggleTarget.OnWallBounced += HandleWallBounce;
+            }
 
             _currentHealth = enemyData.maxHealth;
         }
@@ -157,13 +164,21 @@ namespace TomatoFighters.World
         public void ApplyKnockback(Vector2 force)
         {
             if (_isDead) return;
+            if (force == Vector2.zero) return;
 
             Vector2 reducedForce = force * (1f - enemyData.knockbackResistance);
             Rb.AddForce(reducedForce, ForceMode2D.Impulse);
 
-            if (_knockbackCoroutine != null)
-                StopCoroutine(_knockbackCoroutine);
-            _knockbackCoroutine = StartCoroutine(KnockbackRecovery());
+            // Notify juggle system for wall bounce tracking
+            _juggleTarget?.NotifyKnockback(reducedForce);
+
+            // Only run knockback recovery if juggle system isn't managing state
+            if (_juggleTarget == null)
+            {
+                if (_knockbackCoroutine != null)
+                    StopCoroutine(_knockbackCoroutine);
+                _knockbackCoroutine = StartCoroutine(KnockbackRecovery());
+            }
         }
 
         private IEnumerator KnockbackRecovery()
@@ -177,9 +192,20 @@ namespace TomatoFighters.World
         public void ApplyLaunch(Vector2 force)
         {
             if (_isDead) return;
+            if (force == Vector2.zero) return;
 
             Vector2 reducedForce = force * (1f - enemyData.knockbackResistance);
-            Rb.AddForce(reducedForce, ForceMode2D.Impulse);
+
+            if (_juggleTarget != null)
+            {
+                // Delegate to juggle system — it handles simulated height and horizontal force
+                _juggleTarget.Launch(reducedForce);
+            }
+            else
+            {
+                // Fallback: apply as physics impulse (pre-juggle behavior)
+                Rb.AddForce(reducedForce, ForceMode2D.Impulse);
+            }
         }
 
         // ── Stun / Recovery ───────────────────────────────────────────────
@@ -201,8 +227,16 @@ namespace TomatoFighters.World
 
             StunRecovered?.Invoke(new StunRecoveredEventData(transform.position));
 
-            // Post-stun invulnerability blink
-            yield return InvulnerabilityBlink();
+            // Defer invulnerability blink until landing if currently airborne
+            if (_juggleTarget != null && _juggleTarget.IsAirborne)
+            {
+                _juggleTarget.RequestInvulnerabilityOnLanding(
+                    () => StartCoroutine(InvulnerabilityBlink()));
+            }
+            else
+            {
+                yield return InvulnerabilityBlink();
+            }
         }
 
         private IEnumerator InvulnerabilityBlink()
@@ -251,6 +285,29 @@ namespace TomatoFighters.World
             Destroy(gameObject, 1f);
         }
 
+        // ── Wall Bounce ──────────────────────────────────────────────────
+
+        /// <summary>
+        /// Handles wall bounce damage from IJuggleTarget. Applies minor damage
+        /// directly to health — no knockback, no pressure fill.
+        /// </summary>
+        private void HandleWallBounce(Vector2 bouncePosition, float damage)
+        {
+            if (_isDead || _isInvulnerable) return;
+            if (damage <= 0f) return;
+
+            _currentHealth -= damage;
+            Debug.Log($"[EnemyBase] Wall bounce damage: {damage:F1} → HP: {_currentHealth:F1}/{enemyData.maxHealth}");
+
+            OnWallBounce(bouncePosition, damage);
+
+            if (_currentHealth <= 0f)
+            {
+                _currentHealth = 0f;
+                Die();
+            }
+        }
+
         // ── Virtual Hooks ─────────────────────────────────────────────────
 
         /// <summary>Called after damage is applied but before death check.</summary>
@@ -264,5 +321,8 @@ namespace TomatoFighters.World
 
         /// <summary>Called when stun ends and recovery begins (before invulnerability blink).</summary>
         protected virtual void OnRecovery() { }
+
+        /// <summary>Called when a wall bounce deals minor damage. Override for visual effects.</summary>
+        protected virtual void OnWallBounce(Vector2 position, float damage) { }
     }
 }
