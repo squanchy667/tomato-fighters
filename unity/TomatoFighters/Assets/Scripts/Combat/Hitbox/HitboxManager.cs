@@ -33,6 +33,10 @@ namespace TomatoFighters.Combat
         [Tooltip("Base attack value for damage calculation until stat system is wired.")]
         [SerializeField] private float baseAttack = 10f;
 
+        [Tooltip("Pressure fill rate multiplier until stat system is wired. " +
+                 "Maps to PRS stat: Slasher=1.5, Brutor=1.0, Viper=0.8, Mystica=0.5.")]
+        [SerializeField] private float stunRate = 1.0f;
+
         /// <summary>Fired when a hit is detected and processed. Downstream systems can subscribe.</summary>
         public event Action<HitDetectionData> OnHitProcessed;
 
@@ -375,17 +379,19 @@ namespace TomatoFighters.Combat
         /// Builds a DamagePacket from the current AttackData.
         /// Uses baseAttack as a temporary stand-in until the stat system is wired.
         /// </summary>
-        private DamagePacket BuildDamagePacket(AttackData attackData)
+        private DamagePacket BuildDamagePacket(AttackData attackData, bool isPunish = false)
         {
             float damage = baseAttack * attackData.damageMultiplier;
+            float stunFill = damage * stunRate * (isPunish ? 2f : 1f);
 
             return new DamagePacket(
                 type: DamageType.Physical,
                 amount: damage,
-                isPunishDamage: false,
+                isPunishDamage: isPunish,
                 knockbackForce: attackData.knockbackForce,
                 launchForce: attackData.launchForce,
-                source: comboController != null ? comboController.CharacterType : CharacterType.Brutor
+                source: comboController != null ? comboController.CharacterType : CharacterType.Brutor,
+                stunFillAmount: stunFill
             );
         }
     }

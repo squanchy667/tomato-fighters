@@ -88,7 +88,7 @@ namespace TomatoFighters.Combat
         /// <inheritdoc/>
         public void AddStun(float amount)
         {
-            // Stub — player stun not implemented yet
+            // TODO: Player stun — requires input lock, combo cancel, defense reset, UI. Separate task.
         }
 
         /// <inheritdoc/>
