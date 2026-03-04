@@ -8,43 +8,38 @@ using UnityEngine;
 namespace TomatoFighters.Editor.Animation
 {
     /// <summary>
-    /// <b>Animation Pipeline — Step 2 of 2 (Editor).</b>
-    /// Creates <c>.anim</c> clips from sliced sprite sheets and builds an <c>AnimatorController</c>.
-    /// Fully data-driven — reads all animations from metadata.json with no hardcoded names.
-    /// Run via menu: <b>TomatoFighters &gt; Build Animations</b>.
+    /// <b>Animation Pipeline — Step 2 (Editor).</b>
+    /// Creates <c>.anim</c> clips from sliced sprite sheets, builds a shared
+    /// <c>BaseCharacter_Controller</c>, and generates per-character
+    /// <c>AnimatorOverrideController</c>s with character-specific clip mappings.
     ///
-    /// <para><b>Prerequisites:</b> Run <see cref="SpriteSheetImporter"/> (Step 1) first to
-    /// generate the sliced sprite assets this step consumes.</para>
+    /// <para><b>Architecture (DD-1):</b> All 4 characters share the same state machine
+    /// (same states, same transitions, same parameters). Only animation clips differ.
+    /// The base controller uses Mystica's clips as the template (DD-5).
+    /// Override controllers replace clips per character.</para>
     ///
-    /// <para><b>Output:</b> <c>Assets/Animations/TomatoFighter/</c> —
-    /// <c>.anim</c> clips + <c>TomatoFighter_Controller.controller</c>.</para>
+    /// <para><b>Canonical states:</b> The base controller has locomotion (idle/walk/run),
+    /// airborne (jump/land), action (dash), 10 attack slots (attack_1–attack_10),
+    /// defense (block/guard), and reaction (hurt/death) states.</para>
     ///
-    /// <para><b>Animation categories (determined by <c>loop</c> field in metadata):</b></para>
-    /// <list type="bullet">
-    ///   <item><b>Locomotion</b> (<c>loop: true</c>) — idle, walk, run.
-    ///     Wired as states with <c>Speed</c> float transitions.
-    ///     idle↔walk at 0.1, walk↔run at 0.9, run→idle direct.
-    ///     Driven at runtime by <see cref="TomatoFighters.Combat.CharacterAnimationBridge"/>.</item>
-    ///   <item><b>Action</b> (<c>loop: false</c>) — attacks, hurt, death, etc.
-    ///     Each gets a trigger parameter (<c>{animName}Trigger</c>) and a state that plays once,
-    ///     then transitions back to idle via Exit Time.
-    ///     Driven at runtime by <see cref="TomatoFighters.Combat.ComboController"/>.</item>
-    /// </list>
+    /// <para><b>Placeholder clips (DD-2):</b> When a canonical state has no matching
+    /// animation in metadata.json, a single-frame placeholder clip is generated from
+    /// the character's idle sprite. ERROR is logged for unmapped metadata animations;
+    /// WARNING for canonical states with no matching animation.</para>
     ///
-    /// <para><b>Adding new animations:</b> Drop PNG + update metadata.json.
-    /// Looping anims auto-become locomotion states; non-looping become action triggers.
-    /// Re-run Import Sprite Sheets, then Build Animations.</para>
-    ///
-    /// <para><b>Binding path:</b> Curves target <c>""</c> (empty) because the Animator
-    /// and SpriteRenderer share the same Sprite child GameObject.</para>
+    /// <para><b>Pipeline usage:</b></para>
+    /// <code>
+    /// TomatoFighters > Import Sprite Sheets > All Characters    // Step 1
+    /// TomatoFighters > Build Animations > All Characters         // Step 2 (this)
+    /// TomatoFighters > Stamp Animation Events                    // Step 3
+    /// </code>
     /// </summary>
     /// <seealso cref="AnimationForgeMetadata"/>
     /// <seealso cref="SpriteSheetImporter"/>
-    /// <seealso cref="TomatoFighters.Combat.TomatoFighterAnimatorParams"/>
-    /// <seealso cref="TomatoFighters.Combat.CharacterAnimationBridge"/>
+    /// <seealso cref="TomatoFighterAnimatorParams"/>
     public static class AnimationBuilder
     {
-        private const string DEFAULT_OUTPUT_FOLDER = "Assets/Animations/TomatoFighter";
+        private const string BASE_OUTPUT_FOLDER = "Assets/Animations/Base";
 
         // Locomotion state layout — order matters for Speed threshold wiring
         private static readonly string[] LOCOMOTION_ORDER = { "idle", "walk", "run" };
@@ -54,61 +49,94 @@ namespace TomatoFighters.Editor.Animation
         private const float RUN_THRESHOLD = 0.9f;
         private const float TRANSITION_DURATION = 0.05f;
 
-        // Airborne animations get IsGrounded-driven transitions instead of triggers
-        private static readonly HashSet<string> AIRBORNE_NAMES = new HashSet<string> { "jump", "land" };
+        // Trigger name mapping for special states (non-standard naming)
+        private static readonly Dictionary<string, string> TRIGGER_OVERRIDES = new Dictionary<string, string>
+        {
+            ["hurt"] = TomatoFighterAnimatorParams.HURTTRIGGER,
+            ["death"] = TomatoFighterAnimatorParams.DEATHTRIGGER,
+            ["block"] = TomatoFighterAnimatorParams.BLOCKTRIGGER,
+            ["guard"] = TomatoFighterAnimatorParams.GUARDTRIGGER,
+        };
+
+        // ── Menu Items ──
 
         [MenuItem("TomatoFighters/Build Animations/All Characters")]
         public static void BuildAllAnimations()
         {
+            // Step 1: Build clips for all characters
+            var allCharacterClips = new Dictionary<string, Dictionary<string, AnimationClip>>();
+
             foreach (var kvp in AnimationForgeMetadata.Characters)
             {
-                Debug.Log($"[AnimationBuilder] Building {kvp.Key}...");
-                BuildAnimations(kvp.Value.sourceFolder, kvp.Value.outputFolder);
+                string charName = kvp.Key;
+                Debug.Log($"[AnimationBuilder] Building clips for {charName}...");
+                var clips = BuildCharacterClips(kvp.Value.sourceFolder, kvp.Value.outputFolder);
+                if (clips != null && clips.Count > 0)
+                    allCharacterClips[charName] = clips;
             }
+
+            // Step 2: Build base controller using Mystica's clips (DD-5)
+            Dictionary<string, AnimationClip> mysticaClips = null;
+            allCharacterClips.TryGetValue("Mystica", out mysticaClips);
+
+            string mysticaSourceFolder = AnimationForgeMetadata.Characters["Mystica"].sourceFolder;
+            var mysticaMetadata = AnimationForgeMetadata.Load(mysticaSourceFolder);
+
+            BuildBaseController(mysticaClips, mysticaMetadata);
+
+            // Step 3: Build override controllers for each character
+            foreach (var kvp in AnimationForgeMetadata.Characters)
+            {
+                string charName = kvp.Key;
+                Dictionary<string, AnimationClip> clips = null;
+                allCharacterClips.TryGetValue(charName, out clips);
+
+                var metadata = AnimationForgeMetadata.Load(kvp.Value.sourceFolder);
+                BuildOverrideController(charName, kvp.Value.outputFolder, clips, metadata);
+            }
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+            Debug.Log("[AnimationBuilder] Done — base controller + 4 override controllers built.");
         }
 
         [MenuItem("TomatoFighters/Build Animations/Mystica")]
-        public static void BuildMysticaAnimations()
-        {
-            var config = AnimationForgeMetadata.Characters["Mystica"];
-            BuildAnimations(config.sourceFolder, config.outputFolder);
-        }
+        public static void BuildMysticaAnimations() => BuildSingleCharacter("Mystica");
 
         [MenuItem("TomatoFighters/Build Animations/Slasher")]
-        public static void BuildSlasherAnimations()
-        {
-            var config = AnimationForgeMetadata.Characters["Slasher"];
-            BuildAnimations(config.sourceFolder, config.outputFolder);
-        }
+        public static void BuildSlasherAnimations() => BuildSingleCharacter("Slasher");
 
         [MenuItem("TomatoFighters/Build Animations/Brutor")]
-        public static void BuildBrutorAnimations()
-        {
-            var config = AnimationForgeMetadata.Characters["Brutor"];
-            BuildAnimations(config.sourceFolder, config.outputFolder);
-        }
+        public static void BuildBrutorAnimations() => BuildSingleCharacter("Brutor");
 
         [MenuItem("TomatoFighters/Build Animations/Viper")]
-        public static void BuildViperAnimations()
+        public static void BuildViperAnimations() => BuildSingleCharacter("Viper");
+
+        /// <summary>Builds clips for a single character and rebuilds base + all overrides.</summary>
+        private static void BuildSingleCharacter(string characterName)
         {
-            var config = AnimationForgeMetadata.Characters["Viper"];
-            BuildAnimations(config.sourceFolder, config.outputFolder);
+            // Rebuild everything to keep base + overrides in sync
+            BuildAllAnimations();
         }
 
+        // ── Clip Building ──
+
         /// <summary>
-        /// Builds animation clips and controller from any source folder into any output folder.
+        /// Builds animation clips for a single character from their metadata.json.
+        /// Returns a dictionary of animation name → clip. Also generates placeholder clips
+        /// for any canonical states not found in metadata.
         /// </summary>
-        public static void BuildAnimations(string sourceFolder, string outputFolder)
+        public static Dictionary<string, AnimationClip> BuildCharacterClips(string sourceFolder, string outputFolder)
         {
             var metadata = AnimationForgeMetadata.Load(sourceFolder);
-            if (metadata == null) return;
+            if (metadata == null) return null;
 
             EnsureFolderExists(outputFolder);
 
             string spritesFolder = $"{sourceFolder}/Sprites";
-
-            // Create clips for ALL animations
             var clips = new Dictionary<string, AnimationClip>();
+
+            // Create clips for ALL animations in metadata
             foreach (var kvp in metadata.animations)
             {
                 string animName = kvp.Key;
@@ -122,33 +150,25 @@ namespace TomatoFighters.Editor.Animation
 
             if (clips.Count == 0)
             {
-                Debug.LogError("[AnimationBuilder] No clips created. Ensure sprite sheets are imported and sliced.");
-                return;
+                Debug.LogError($"[AnimationBuilder] No clips created for {metadata.characterName}. Ensure sprite sheets are imported.");
+                return null;
             }
 
-            // Split into locomotion (loop=true), airborne (jump/land), and action (loop=false)
-            var locomotion = new Dictionary<string, AnimationClip>();
-            var airborne = new Dictionary<string, AnimationClip>();
-            var actions = new Dictionary<string, AnimationClip>();
+            // Generate placeholder clips for canonical states without real art
+            GeneratePlaceholderClips(metadata.characterName, clips, spritesFolder, outputFolder, metadata);
 
-            foreach (var kvp in clips)
-            {
-                if (AIRBORNE_NAMES.Contains(kvp.Key))
-                    airborne[kvp.Key] = kvp.Value;
-                else if (metadata.animations[kvp.Key].loop)
-                    locomotion[kvp.Key] = kvp.Value;
-                else
-                    actions[kvp.Key] = kvp.Value;
-            }
+            Debug.Log($"[AnimationBuilder] {metadata.characterName}: {clips.Count} total clips built.");
+            return clips;
+        }
 
-            // Build the controller — derive name from output folder (last segment)
-            string folderName = outputFolder.Substring(outputFolder.LastIndexOf('/') + 1);
-            string controllerPath = $"{outputFolder}/{folderName}_Controller.controller";
-            BuildController(locomotion, actions, airborne, controllerPath);
-
-            AssetDatabase.SaveAssets();
-            AssetDatabase.Refresh();
-            Debug.Log($"[AnimationBuilder] Done — created {clips.Count} clips ({locomotion.Count} locomotion, {airborne.Count} airborne, {actions.Count} action) at {outputFolder}");
+        /// <summary>
+        /// Builds animation clips and a standalone controller (legacy path).
+        /// Kept for backward compatibility with per-character builds.
+        /// </summary>
+        public static void BuildAnimations(string sourceFolder, string outputFolder)
+        {
+            // Delegate to the new pipeline
+            BuildAllAnimations();
         }
 
         /// <summary>Creates a single .anim clip from a sliced sprite sheet.</summary>
@@ -207,15 +227,129 @@ namespace TomatoFighters.Editor.Animation
         }
 
         /// <summary>
-        /// Builds the AnimatorController with locomotion states (Speed-driven)
-        /// and action states (trigger-driven, return to idle on exit).
+        /// Generates single-frame placeholder clips for canonical states that lack real art.
+        /// Uses the character's idle sprite sheet first frame as the placeholder image.
         /// </summary>
-        private static void BuildController(
-            Dictionary<string, AnimationClip> locomotion,
-            Dictionary<string, AnimationClip> actions,
-            Dictionary<string, AnimationClip> airborne,
-            string controllerPath)
+        private static void GeneratePlaceholderClips(
+            string characterName,
+            Dictionary<string, AnimationClip> existingClips,
+            string spritesFolder,
+            string outputFolder,
+            AnimationForgeMetadata.MetadataRoot metadata)
         {
+            // Find the character display name for this internal name
+            string charKey = AnimationForgeMetadata.Characters
+                .FirstOrDefault(c => c.Value.outputFolder == outputFolder).Key;
+
+            // Determine which canonical states need placeholders
+            var neededStates = new List<string>();
+
+            // Attack slots for this character
+            if (charKey != null && AnimationForgeMetadata.AttackSlotMappings.ContainsKey(charKey))
+            {
+                foreach (var slot in AnimationForgeMetadata.AttackSlotMappings[charKey].Keys)
+                {
+                    if (!existingClips.ContainsKey(slot))
+                        neededStates.Add(slot);
+                }
+            }
+
+            // Defense and reaction states
+            foreach (var state in AnimationForgeMetadata.DefenseStates)
+            {
+                if (!existingClips.ContainsKey(state))
+                    neededStates.Add(state);
+            }
+            foreach (var state in AnimationForgeMetadata.ReactionStates)
+            {
+                if (!existingClips.ContainsKey(state))
+                    neededStates.Add(state);
+            }
+            // Dash
+            if (!existingClips.ContainsKey("dash"))
+                neededStates.Add("dash");
+
+            if (neededStates.Count == 0) return;
+
+            // Load the first idle sprite as the placeholder image
+            string idleSheetPath = AnimationForgeMetadata.GetSheetPath(spritesFolder, characterName, "idle");
+            var idleSprites = AssetDatabase.LoadAllAssetsAtPath(idleSheetPath)
+                .OfType<Sprite>()
+                .OrderBy(s => s.name)
+                .ToArray();
+
+            if (idleSprites.Length == 0)
+            {
+                Debug.LogError($"[AnimationBuilder] Cannot create placeholders for {characterName}: no idle sprites at {idleSheetPath}");
+                return;
+            }
+
+            Sprite placeholderSprite = idleSprites[0];
+            int fps = metadata.animations.ContainsKey("idle") ? metadata.animations["idle"].fps : 12;
+
+            foreach (string stateName in neededStates)
+            {
+                bool isGuard = stateName == "guard";
+                var clip = CreatePlaceholderClip(characterName, stateName, placeholderSprite, fps, isGuard);
+                if (clip != null)
+                {
+                    string clipPath = $"{outputFolder}/{characterName}_{stateName}_placeholder.anim";
+                    var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+                    if (existing != null)
+                        AssetDatabase.DeleteAsset(clipPath);
+
+                    AssetDatabase.CreateAsset(clip, clipPath);
+                    existingClips[stateName] = clip;
+                }
+            }
+
+            Debug.Log($"[AnimationBuilder] {characterName}: generated {neededStates.Count} placeholder clips.");
+        }
+
+        /// <summary>Creates a single-frame placeholder animation clip.</summary>
+        private static AnimationClip CreatePlaceholderClip(
+            string characterName, string stateName, Sprite sprite, int fps, bool loop)
+        {
+            var clip = new AnimationClip();
+            clip.name = $"{characterName}_{stateName}_placeholder";
+            clip.frameRate = fps;
+
+            var keyframes = new ObjectReferenceKeyframe[]
+            {
+                new ObjectReferenceKeyframe { time = 0f, value = sprite }
+            };
+
+            var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
+            AnimationUtility.SetObjectReferenceCurve(clip, binding, keyframes);
+
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = loop;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+
+            return clip;
+        }
+
+        // ── Base Controller ──
+
+        /// <summary>
+        /// Builds the shared base AnimatorController with all canonical states.
+        /// Uses Mystica's clips as the template (DD-5). States with no Mystica clip
+        /// get a placeholder. All 4 characters share this state machine via overrides.
+        /// </summary>
+        private static void BuildBaseController(
+            Dictionary<string, AnimationClip> mysticaClips,
+            AnimationForgeMetadata.MetadataRoot mysticaMetadata)
+        {
+            EnsureFolderExists(BASE_OUTPUT_FOLDER);
+            string controllerPath = $"{BASE_OUTPUT_FOLDER}/BaseCharacter_Controller.controller";
+
+            // Validate Mystica's metadata
+            if (mysticaMetadata != null)
+            {
+                string mysticaKey = "Mystica";
+                AnimationForgeMetadata.ValidateMetadata(mysticaKey, mysticaMetadata);
+            }
+
             // Delete existing controller to start clean
             if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath) != null)
                 AssetDatabase.DeleteAsset(controllerPath);
@@ -239,8 +373,25 @@ namespace TomatoFighters.Editor.Animation
             }
             controller.parameters = parameters;
 
+            // Classify Mystica clips
+            var locomotion = new Dictionary<string, AnimationClip>();
+            var airborne = new Dictionary<string, AnimationClip>();
+            var actionClips = new Dictionary<string, AnimationClip>();
+
+            if (mysticaClips != null)
+            {
+                foreach (var kvp in mysticaClips)
+                {
+                    if (AnimationForgeMetadata.LocomotionStates.Contains(kvp.Key))
+                        locomotion[kvp.Key] = kvp.Value;
+                    else if (AnimationForgeMetadata.AirborneStates.Contains(kvp.Key))
+                        airborne[kvp.Key] = kvp.Value;
+                    else
+                        actionClips[kvp.Key] = kvp.Value;
+                }
+            }
+
             // --- Locomotion states ---
-            // Place them in the order defined by LOCOMOTION_ORDER for consistent layout
             var locoStates = new Dictionary<string, AnimatorState>();
             float yOffset = 0f;
 
@@ -254,46 +405,52 @@ namespace TomatoFighters.Editor.Animation
                 yOffset += 80f;
             }
 
-            // Add any locomotion anims not in the predefined order (future-proofing)
-            foreach (var kvp in locomotion)
-            {
-                if (locoStates.ContainsKey(kvp.Key)) continue;
-
-                var state = rootSM.AddState(kvp.Key, new Vector3(300, yOffset, 0));
-                state.motion = kvp.Value;
-                locoStates[kvp.Key] = state;
-                yOffset += 80f;
-            }
-
-            // Set idle as default if it exists
             if (locoStates.ContainsKey("idle"))
                 rootSM.defaultState = locoStates["idle"];
 
-            // Wire locomotion transitions: idle ↔ walk ↔ run
             WireLocomotionTransitions(locoStates);
 
-            // --- Action states ---
-            // Each gets a trigger parameter and a state that returns to idle on exit
+            // --- Airborne states ---
+            WireAirborneStates(rootSM, airborne, locoStates);
+
+            // --- Action states (all trigger-driven) ---
             var idleState = locoStates.ContainsKey("idle") ? locoStates["idle"] : null;
             float actionY = 0f;
 
-            foreach (var kvp in actions)
+            // Collect all action state names: dash + attack slots + defense + reaction
+            var allActionStates = new List<string>();
+            allActionStates.Add("dash");
+            allActionStates.AddRange(AnimationForgeMetadata.AttackSlots);
+            allActionStates.AddRange(AnimationForgeMetadata.DefenseStates);
+            allActionStates.AddRange(AnimationForgeMetadata.ReactionStates);
+
+            foreach (string stateName in allActionStates)
             {
-                string triggerName = kvp.Key + "Trigger";
+                // Determine trigger name
+                string triggerName;
+                if (TRIGGER_OVERRIDES.ContainsKey(stateName))
+                    triggerName = TRIGGER_OVERRIDES[stateName];
+                else
+                    triggerName = stateName + "Trigger";
+
                 controller.AddParameter(triggerName, AnimatorControllerParameterType.Trigger);
 
-                var state = rootSM.AddState(kvp.Key, new Vector3(600, actionY, 0));
-                state.motion = kvp.Value;
-                actionY += 80f;
+                var state = rootSM.AddState(stateName, new Vector3(600, actionY, 0));
+                actionY += 60f;
 
-                // Any state → action state (via trigger)
+                // Assign clip from Mystica (real or placeholder)
+                if (actionClips.ContainsKey(stateName))
+                    state.motion = actionClips[stateName];
+
+                // AnyState → action (via trigger)
                 var triggerTransition = rootSM.AddAnyStateTransition(state);
                 triggerTransition.hasExitTime = false;
                 triggerTransition.duration = 0f;
                 triggerTransition.AddCondition(AnimatorConditionMode.If, 0, triggerName);
 
-                // Action state → idle (via exit time, plays clip once)
-                if (idleState != null)
+                // Guard loops until interrupted; all others → idle via exit time
+                bool isLooping = stateName == "guard";
+                if (!isLooping && idleState != null)
                 {
                     var exitTransition = state.AddTransition(idleState);
                     exitTransition.hasExitTime = true;
@@ -302,21 +459,115 @@ namespace TomatoFighters.Editor.Animation
                 }
             }
 
-            // --- Airborne states (jump/land) — IsGrounded-driven ---
-            WireAirborneStates(rootSM, airborne, locoStates);
-
             EditorUtility.SetDirty(controller);
+            Debug.Log($"[AnimationBuilder] Base controller built at {controllerPath}: " +
+                      $"{locoStates.Count} locomotion, {airborne.Count} airborne, " +
+                      $"{allActionStates.Count} action states.");
+        }
 
-            int locoCount = locoStates.Count;
-            int actionCount = actions.Count;
-            int airborneCount = airborne.Count;
-            Debug.Log($"[AnimationBuilder] Controller built: {locoCount} locomotion, {airborneCount} airborne, {actionCount} action states.");
+        // ── Override Controllers ──
+
+        /// <summary>
+        /// Builds an AnimatorOverrideController for a single character.
+        /// Maps base controller clips to character-specific clips where available.
+        /// </summary>
+        private static void BuildOverrideController(
+            string characterName,
+            string outputFolder,
+            Dictionary<string, AnimationClip> characterClips,
+            AnimationForgeMetadata.MetadataRoot metadata)
+        {
+            EnsureFolderExists(outputFolder);
+
+            // Validate metadata
+            if (metadata != null)
+                AnimationForgeMetadata.ValidateMetadata(characterName, metadata);
+
+            string baseControllerPath = $"{BASE_OUTPUT_FOLDER}/BaseCharacter_Controller.controller";
+            var baseController = AssetDatabase.LoadAssetAtPath<AnimatorController>(baseControllerPath);
+            if (baseController == null)
+            {
+                Debug.LogError($"[AnimationBuilder] Base controller not found at {baseControllerPath}. Build all animations first.");
+                return;
+            }
+
+            string overridePath = $"{outputFolder}/{characterName}_Override.overrideController";
+
+            // Delete existing override to start clean
+            if (AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(overridePath) != null)
+                AssetDatabase.DeleteAsset(overridePath);
+
+            var overrideController = new AnimatorOverrideController(baseController);
+            overrideController.name = $"{characterName}_Override";
+
+            if (characterClips != null && characterClips.Count > 0)
+            {
+                // Get all clip overrides from the base controller
+                var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+                overrideController.GetOverrides(overrides);
+
+                // Build a lookup from clip name suffix to character clip
+                // Base clips are named like "purple_mage_{stateName}" or "purple_mage_{stateName}_placeholder"
+                // Character clips are named like "{charInternalName}_{stateName}" or "{charInternalName}_{stateName}_placeholder"
+                var charClipsByState = new Dictionary<string, AnimationClip>();
+                foreach (var kvp in characterClips)
+                {
+                    charClipsByState[kvp.Key] = kvp.Value;
+                }
+
+                // Replace base clips with character clips where states match
+                for (int i = 0; i < overrides.Count; i++)
+                {
+                    var baseClip = overrides[i].Key;
+                    if (baseClip == null) continue;
+
+                    // Extract state name from base clip name
+                    string stateName = ExtractStateName(baseClip.name);
+                    if (stateName != null && charClipsByState.ContainsKey(stateName))
+                    {
+                        overrides[i] = new KeyValuePair<AnimationClip, AnimationClip>(
+                            baseClip, charClipsByState[stateName]);
+                    }
+                }
+
+                overrideController.ApplyOverrides(overrides);
+            }
+
+            AssetDatabase.CreateAsset(overrideController, overridePath);
+            EditorUtility.SetDirty(overrideController);
+
+            Debug.Log($"[AnimationBuilder] Override controller built for {characterName} at {overridePath}.");
         }
 
         /// <summary>
+        /// Extracts the canonical state name from a clip asset name.
+        /// E.g., "purple_mage_idle" → "idle", "purple_mage_attack_1_placeholder" → "attack_1"
+        /// </summary>
+        private static string ExtractStateName(string clipName)
+        {
+            // Remove "_placeholder" suffix if present
+            string name = clipName;
+            if (name.EndsWith("_placeholder"))
+                name = name.Substring(0, name.Length - "_placeholder".Length);
+
+            // Try matching against all canonical states (longest match first to handle attack_10 before attack_1)
+            var sortedStates = AnimationForgeMetadata.AllCanonicalStates
+                .OrderByDescending(s => s.Length)
+                .ToList();
+
+            foreach (string state in sortedStates)
+            {
+                if (name.EndsWith("_" + state))
+                    return state;
+            }
+
+            return null;
+        }
+
+        // ── Transition Wiring ──
+
+        /// <summary>
         /// Wires IsGrounded-based transitions for jump and land states.
-        /// Each locomotion state → jump (IsGrounded=false), jump → land (IsGrounded=true),
-        /// land → idle (exit time).
         /// </summary>
         private static void WireAirborneStates(
             AnimatorStateMachine rootSM,
@@ -327,11 +578,9 @@ namespace TomatoFighters.Editor.Animation
 
             string groundedParam = TomatoFighterAnimatorParams.ISGROUNDED;
 
-            // Create jump state
             var jumpState = rootSM.AddState("jump", new Vector3(450, -100, 0));
             jumpState.motion = airborne["jump"];
 
-            // Each locomotion state → jump when IsGrounded becomes false
             foreach (var kvp in locoStates)
             {
                 var t = kvp.Value.AddTransition(jumpState);
@@ -345,13 +594,11 @@ namespace TomatoFighters.Editor.Animation
                 var landState = rootSM.AddState("land", new Vector3(450, -20, 0));
                 landState.motion = airborne["land"];
 
-                // jump → land when IsGrounded becomes true
                 var jumpToLand = jumpState.AddTransition(landState);
                 jumpToLand.hasExitTime = false;
                 jumpToLand.duration = TRANSITION_DURATION;
                 jumpToLand.AddCondition(AnimatorConditionMode.If, 0, groundedParam);
 
-                // land → idle after clip finishes
                 if (locoStates.ContainsKey("idle"))
                 {
                     var landToIdle = landState.AddTransition(locoStates["idle"]);
@@ -362,7 +609,6 @@ namespace TomatoFighters.Editor.Animation
             }
             else
             {
-                // No land clip — jump → idle when grounded
                 if (locoStates.ContainsKey("idle"))
                 {
                     var jumpToIdle = jumpState.AddTransition(locoStates["idle"]);
@@ -374,14 +620,12 @@ namespace TomatoFighters.Editor.Animation
         }
 
         /// <summary>
-        /// Wires Speed-based transitions between known locomotion states.
-        /// idle ↔ walk at WALK_THRESHOLD, walk ↔ run at RUN_THRESHOLD, run → idle direct.
+        /// Wires Speed-based transitions between locomotion states.
         /// </summary>
         private static void WireLocomotionTransitions(Dictionary<string, AnimatorState> states)
         {
             string speedParam = TomatoFighterAnimatorParams.SPEED;
 
-            // idle ↔ walk
             if (states.ContainsKey("idle") && states.ContainsKey("walk"))
             {
                 var t = states["idle"].AddTransition(states["walk"]);
@@ -395,7 +639,6 @@ namespace TomatoFighters.Editor.Animation
                 t.AddCondition(AnimatorConditionMode.Less, WALK_THRESHOLD, speedParam);
             }
 
-            // walk ↔ run
             if (states.ContainsKey("walk") && states.ContainsKey("run"))
             {
                 var t = states["walk"].AddTransition(states["run"]);
@@ -409,7 +652,6 @@ namespace TomatoFighters.Editor.Animation
                 t.AddCondition(AnimatorConditionMode.Less, RUN_THRESHOLD, speedParam);
             }
 
-            // run → idle (direct path for when run resets: stop, attack, dash, jump)
             if (states.ContainsKey("run") && states.ContainsKey("idle"))
             {
                 var t = states["run"].AddTransition(states["idle"]);
@@ -418,6 +660,8 @@ namespace TomatoFighters.Editor.Animation
                 t.AddCondition(AnimatorConditionMode.Less, WALK_THRESHOLD, speedParam);
             }
         }
+
+        // ── Utility ──
 
         private static void EnsureFolderExists(string path)
         {

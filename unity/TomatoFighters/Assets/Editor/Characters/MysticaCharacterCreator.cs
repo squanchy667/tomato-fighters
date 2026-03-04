@@ -28,7 +28,7 @@ namespace TomatoFighters.Editor.Characters
         private const string MYSTICA_DEFENSE_PATH = DEFENSE_CONFIG_FOLDER + "/Mystica_DefenseConfig.asset";
         private const string PASSIVE_CONFIG_FOLDER = "Assets/ScriptableObjects/Passives";
         private const string PASSIVE_CONFIG_PATH = PASSIVE_CONFIG_FOLDER + "/PassiveConfig.asset";
-        private const string CONTROLLER_PATH = "Assets/Animations/Mystica/Mystica_Controller.controller";
+        private const string CONTROLLER_PATH = "Assets/Animations/Mystica/Mystica_Override.overrideController";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
         [MenuItem("TomatoFighters/Characters/Create Mystica")]
@@ -47,11 +47,11 @@ namespace TomatoFighters.Editor.Characters
             var passiveConfig = CreateOrLoadPassiveConfig();
             WireAttackDataIntoComboSteps(comboDef);
 
-            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH);
+            var controller = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(CONTROLLER_PATH);
             var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
 
             if (controller == null)
-                Debug.LogWarning("[MysticaCreator] AnimatorController not found. Run 'Build Animations' first.");
+                Debug.LogWarning("[MysticaCreator] Override controller not found. Run 'Build Animations > All Characters' first.");
 
             var config = new CharacterPrefabConfig
             {

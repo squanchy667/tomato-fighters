@@ -28,7 +28,7 @@ namespace TomatoFighters.Editor.Characters
         private const string SLASHER_DEFENSE_PATH = DEFENSE_CONFIG_FOLDER + "/Slasher_DefenseConfig.asset";
         private const string PASSIVE_CONFIG_FOLDER = "Assets/ScriptableObjects/Passives";
         private const string PASSIVE_CONFIG_PATH = PASSIVE_CONFIG_FOLDER + "/PassiveConfig.asset";
-        private const string CONTROLLER_PATH = "Assets/Animations/Slasher/Slasher_Controller.controller";
+        private const string CONTROLLER_PATH = "Assets/Animations/Slasher/Slasher_Override.overrideController";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
         [MenuItem("TomatoFighters/Characters/Create Slasher")]
@@ -47,11 +47,11 @@ namespace TomatoFighters.Editor.Characters
             var passiveConfig = CreateOrLoadPassiveConfig();
             WireAttackDataIntoComboSteps(comboDef);
 
-            var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH);
+            var controller = AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(CONTROLLER_PATH);
             var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
 
             if (controller == null)
-                Debug.LogWarning("[SlasherCreator] AnimatorController not found. Run 'Build Animations' first.");
+                Debug.LogWarning("[SlasherCreator] Override controller not found. Run 'Build Animations > All Characters' first.");
 
             var config = new CharacterPrefabConfig
             {

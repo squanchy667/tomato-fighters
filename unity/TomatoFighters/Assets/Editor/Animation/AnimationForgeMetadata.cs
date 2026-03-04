@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -40,6 +41,139 @@ namespace TomatoFighters.Editor.Animation
         private const string DEFAULT_SOURCE_FOLDER = "Assets/animations/tomato_fighter_animations";
         private const string METADATA_PATH = DEFAULT_SOURCE_FOLDER + "/metadata.json";
         public const string SPRITES_FOLDER = DEFAULT_SOURCE_FOLDER + "/Sprites";
+
+        // ── Canonical State Registry ──
+        // All state names the base controller must have. Used for validation and override mapping.
+
+        /// <summary>Locomotion states driven by Speed float parameter.</summary>
+        public static readonly HashSet<string> LocomotionStates = new HashSet<string> { "idle", "walk", "run" };
+
+        /// <summary>Airborne states driven by IsGrounded bool parameter.</summary>
+        public static readonly HashSet<string> AirborneStates = new HashSet<string> { "jump", "land" };
+
+        /// <summary>Generic action states (trigger-driven, non-attack).</summary>
+        public static readonly HashSet<string> ActionStates = new HashSet<string> { "dash" };
+
+        /// <summary>10 attack slots on the base controller (attack_1 through attack_10).</summary>
+        public static readonly string[] AttackSlots = Enumerable.Range(1, 10).Select(i => $"attack_{i}").ToArray();
+
+        /// <summary>Defense states on the base controller.</summary>
+        public static readonly HashSet<string> DefenseStates = new HashSet<string> { "block", "guard" };
+
+        /// <summary>Reaction states on the base controller.</summary>
+        public static readonly HashSet<string> ReactionStates = new HashSet<string> { "hurt", "death" };
+
+        /// <summary>All canonical states that appear on the base controller (attacks + defense + reaction + actions).</summary>
+        public static readonly HashSet<string> AllCanonicalStates;
+
+        /// <summary>
+        /// Per-character mapping of canonical attack slot name to AttackData asset name.
+        /// Used by AnimationBuilder (clip mapping) and AnimationEventStamper (event timing).
+        /// </summary>
+        public static readonly Dictionary<string, Dictionary<string, string>> AttackSlotMappings = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Brutor"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "BrutorShieldBash1",
+                ["attack_2"] = "BrutorShieldBash2",
+                ["attack_3"] = "BrutorSweep",
+                ["attack_4"] = "BrutorLauncher",
+                ["attack_5"] = "BrutorLauncherSlam",
+                ["attack_6"] = "BrutorOverheadSlam",
+                ["attack_7"] = "BrutorGroundPound",
+            },
+            ["Slasher"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "SlasherSlash1",
+                ["attack_2"] = "SlasherSlash2",
+                ["attack_3"] = "SlasherSlash3",
+                ["attack_4"] = "SlasherSpinFinisher",
+                ["attack_5"] = "SlasherHeavySlash",
+                ["attack_6"] = "SlasherLunge",
+                ["attack_7"] = "SlasherLungeFinisher",
+                ["attack_8"] = "SlasherQuickSlash",
+            },
+            ["Mystica"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "MysticaStrike1",
+                ["attack_2"] = "MysticaStrike2",
+                ["attack_3"] = "MysticaStrike3",
+                ["attack_4"] = "MysticaArcaneBolt",
+                ["attack_5"] = "MysticaEmpoweredBolt",
+            },
+            ["Viper"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "ViperShot1",
+                ["attack_2"] = "ViperShot2",
+                ["attack_3"] = "ViperRapidBurst",
+                ["attack_4"] = "ViperChargedShot",
+                ["attack_5"] = "ViperPiercingShot",
+                ["attack_6"] = "ViperQuickCharged",
+            },
+        };
+
+        static AnimationForgeMetadata()
+        {
+            AllCanonicalStates = new HashSet<string>(LocomotionStates);
+            AllCanonicalStates.UnionWith(AirborneStates);
+            AllCanonicalStates.UnionWith(ActionStates);
+            foreach (var slot in AttackSlots) AllCanonicalStates.Add(slot);
+            AllCanonicalStates.UnionWith(DefenseStates);
+            AllCanonicalStates.UnionWith(ReactionStates);
+        }
+
+        /// <summary>
+        /// Checks if an animation name from metadata.json maps to any recognized state.
+        /// Returns false for names that don't match any canonical state (validation ERROR candidates).
+        /// </summary>
+        public static bool IsRecognizedAnimationName(string animName)
+        {
+            return AllCanonicalStates.Contains(animName);
+        }
+
+        /// <summary>
+        /// Validates a character's metadata animations against canonical states.
+        /// Logs ERROR for unmapped metadata animations and WARNING for missing canonical states.
+        /// Returns the set of canonical states found in the metadata.
+        /// </summary>
+        public static HashSet<string> ValidateMetadata(string characterName, MetadataRoot metadata)
+        {
+            var foundCanonical = new HashSet<string>();
+
+            foreach (var animName in metadata.animations.Keys)
+            {
+                if (IsRecognizedAnimationName(animName))
+                {
+                    foundCanonical.Add(animName);
+                }
+                else
+                {
+                    Debug.LogError($"[AnimationForgeMetadata] {characterName}: metadata animation '{animName}' " +
+                                   "does not map to any canonical state. Check naming or add mapping.");
+                }
+            }
+
+            // Check which canonical attack/defense/reaction states are missing
+            var requiredActionStates = new List<string>();
+            requiredActionStates.AddRange(ActionStates);
+            if (AttackSlotMappings.ContainsKey(characterName))
+            {
+                requiredActionStates.AddRange(AttackSlotMappings[characterName].Keys);
+            }
+            requiredActionStates.AddRange(DefenseStates);
+            requiredActionStates.AddRange(ReactionStates);
+
+            foreach (var state in requiredActionStates)
+            {
+                if (!foundCanonical.Contains(state))
+                {
+                    Debug.LogWarning($"[AnimationForgeMetadata] {characterName}: canonical state '{state}' " +
+                                     "has no matching animation. Placeholder will be generated.");
+                }
+            }
+
+            return foundCanonical;
+        }
 
         /// <summary>
         /// Per-character animation pipeline config: source folder (where metadata.json + Sprites live)
