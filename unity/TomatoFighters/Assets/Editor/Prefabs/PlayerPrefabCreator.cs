@@ -1,4 +1,5 @@
 using TomatoFighters.Characters;
+using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Enums;
@@ -202,6 +203,16 @@ namespace TomatoFighters.Editor.Prefabs
             hmSO.FindProperty("useTimerFallback").boolValue = config.useTimerFallback;
             hmSO.FindProperty("fallbackActiveDuration").floatValue = config.fallbackActiveDuration;
             hmSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- PassiveAbilitySystem --
+            var passiveSystem = EnsureComponent<PassiveAbilitySystem>(root);
+            var psSO = new SerializedObject(passiveSystem);
+            psSO.FindProperty("characterType").enumValueIndex = (int)config.characterType;
+            psSO.FindProperty("hitboxManager").objectReferenceValue = hitboxManager;
+            psSO.FindProperty("comboController").objectReferenceValue = comboController;
+            if (config.passiveConfig != null)
+                psSO.FindProperty("passiveConfig").objectReferenceValue = config.passiveConfig;
+            psSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- Clean up missing scripts (e.g. old HitboxDamage refs after move to Shared) --
             RemoveMissingScripts(root);

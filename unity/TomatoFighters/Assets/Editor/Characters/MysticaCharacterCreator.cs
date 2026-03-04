@@ -1,3 +1,4 @@
+using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Editor.Prefabs;
 using TomatoFighters.Shared.Data;
@@ -25,6 +26,8 @@ namespace TomatoFighters.Editor.Characters
         private const string MYSTICA_COMBO_PATH = COMBO_FOLDER + "/Mystica_ComboDefinition.asset";
         private const string DEFENSE_CONFIG_FOLDER = "Assets/ScriptableObjects/DefenseConfigs";
         private const string MYSTICA_DEFENSE_PATH = DEFENSE_CONFIG_FOLDER + "/Mystica_DefenseConfig.asset";
+        private const string PASSIVE_CONFIG_FOLDER = "Assets/ScriptableObjects/Passives";
+        private const string PASSIVE_CONFIG_PATH = PASSIVE_CONFIG_FOLDER + "/PassiveConfig.asset";
         private const string CONTROLLER_PATH = "Assets/Animations/Mystica/Mystica_Controller.controller";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
@@ -36,9 +39,12 @@ namespace TomatoFighters.Editor.Characters
             PlayerPrefabCreator.EnsureFolderExists(COMBO_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
 
+            PlayerPrefabCreator.EnsureFolderExists(PASSIVE_CONFIG_FOLDER);
+
             var movementConfig = CreateOrLoadMysticaMovementConfig();
             var comboDef = CreateOrLoadMysticaComboDefinition();
             var defenseConfig = CreateOrLoadMysticaDefenseConfig();
+            var passiveConfig = CreateOrLoadPassiveConfig();
             WireAttackDataIntoComboSteps(comboDef);
 
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH);
@@ -56,6 +62,7 @@ namespace TomatoFighters.Editor.Characters
                 animatorController = controller,
                 inputActions = inputActions,
                 defenseConfig = defenseConfig,
+                passiveConfig = passiveConfig,
                 baseAttack = 10f,
                 useTimerFallback = true,
                 fallbackActiveDuration = 0.3f,
@@ -87,6 +94,19 @@ namespace TomatoFighters.Editor.Characters
 
             PlayerPrefabCreator.CreatePlayerPrefab(config);
             Debug.Log("[MysticaCreator] Mystica prefab created successfully.");
+        }
+
+        private static PassiveConfig CreateOrLoadPassiveConfig()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<PassiveConfig>(PASSIVE_CONFIG_PATH);
+            if (existing != null)
+                return existing;
+
+            var config = ScriptableObject.CreateInstance<PassiveConfig>();
+            AssetDatabase.CreateAsset(config, PASSIVE_CONFIG_PATH);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[MysticaCreator] Created PassiveConfig at " + PASSIVE_CONFIG_PATH);
+            return config;
         }
 
         private static MovementConfig CreateOrLoadMysticaMovementConfig()

@@ -1,3 +1,4 @@
+using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Editor.Prefabs;
 using TomatoFighters.Shared.Data;
@@ -25,6 +26,8 @@ namespace TomatoFighters.Editor.Characters
         private const string SLASHER_CONFIG_PATH = CONFIG_FOLDER + "/Slasher_MovementConfig.asset";
         private const string SLASHER_COMBO_PATH = COMBO_FOLDER + "/Slasher_ComboDefinition.asset";
         private const string SLASHER_DEFENSE_PATH = DEFENSE_CONFIG_FOLDER + "/Slasher_DefenseConfig.asset";
+        private const string PASSIVE_CONFIG_FOLDER = "Assets/ScriptableObjects/Passives";
+        private const string PASSIVE_CONFIG_PATH = PASSIVE_CONFIG_FOLDER + "/PassiveConfig.asset";
         private const string CONTROLLER_PATH = "Assets/Animations/Slasher/Slasher_Controller.controller";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
@@ -36,9 +39,12 @@ namespace TomatoFighters.Editor.Characters
             PlayerPrefabCreator.EnsureFolderExists(COMBO_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
 
+            PlayerPrefabCreator.EnsureFolderExists(PASSIVE_CONFIG_FOLDER);
+
             var movementConfig = CreateOrLoadSlasherMovementConfig();
             var comboDef = CreateOrLoadSlasherComboDefinition();
             var defenseConfig = CreateOrLoadSlasherDefenseConfig();
+            var passiveConfig = CreateOrLoadPassiveConfig();
             WireAttackDataIntoComboSteps(comboDef);
 
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH);
@@ -56,6 +62,7 @@ namespace TomatoFighters.Editor.Characters
                 animatorController = controller,
                 inputActions = inputActions,
                 defenseConfig = defenseConfig,
+                passiveConfig = passiveConfig,
                 baseAttack = 20f, // ATK 2.0 × base 10
                 useTimerFallback = true,
                 fallbackActiveDuration = 0.25f,
@@ -98,6 +105,19 @@ namespace TomatoFighters.Editor.Characters
 
             PlayerPrefabCreator.CreatePlayerPrefab(config);
             Debug.Log("[SlasherCreator] Slasher prefab created successfully at " + PREFAB_PATH);
+        }
+
+        private static PassiveConfig CreateOrLoadPassiveConfig()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<PassiveConfig>(PASSIVE_CONFIG_PATH);
+            if (existing != null)
+                return existing;
+
+            var config = ScriptableObject.CreateInstance<PassiveConfig>();
+            AssetDatabase.CreateAsset(config, PASSIVE_CONFIG_PATH);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SlasherCreator] Created PassiveConfig at " + PASSIVE_CONFIG_PATH);
+            return config;
         }
 
         private static MovementConfig CreateOrLoadSlasherMovementConfig()
