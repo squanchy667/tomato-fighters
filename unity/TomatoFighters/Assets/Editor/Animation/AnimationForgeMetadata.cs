@@ -37,19 +37,55 @@ namespace TomatoFighters.Editor.Animation
     /// <seealso cref="AnimationBuilder"/>
     public static class AnimationForgeMetadata
     {
-        private const string METADATA_PATH = "Assets/animations/tomato_fighter_animations/metadata.json";
-        public const string SPRITES_FOLDER = "Assets/animations/tomato_fighter_animations/Sprites";
+        private const string DEFAULT_SOURCE_FOLDER = "Assets/animations/tomato_fighter_animations";
+        private const string METADATA_PATH = DEFAULT_SOURCE_FOLDER + "/metadata.json";
+        public const string SPRITES_FOLDER = DEFAULT_SOURCE_FOLDER + "/Sprites";
 
         /// <summary>
-        /// Loads and parses metadata.json, returning the character name and all animation entries.
+        /// Per-character animation pipeline config: source folder (where metadata.json + Sprites live)
+        /// and output folder (where .anim clips + controller are written).
+        /// </summary>
+        public struct CharacterAnimConfig
+        {
+            public string sourceFolder;
+            public string outputFolder;
+        }
+
+        /// <summary>Registry of known character animation configs.</summary>
+        public static readonly Dictionary<string, CharacterAnimConfig> Characters = new Dictionary<string, CharacterAnimConfig>
+        {
+            ["Mystica"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/tomato_fighter_animations",
+                outputFolder = "Assets/Animations/Mystica"
+            },
+            ["Slasher"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/blue_warrior_animations",
+                outputFolder = "Assets/Animations/Slasher"
+            }
+        };
+
+        /// <summary>
+        /// Loads metadata.json from the default source folder (tomato_fighter_animations).
         /// Returns null if the file is missing or unparseable.
         /// </summary>
         public static MetadataRoot Load()
         {
-            var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(METADATA_PATH);
+            return Load(DEFAULT_SOURCE_FOLDER);
+        }
+
+        /// <summary>
+        /// Loads metadata.json from any source folder.
+        /// Returns null if the file is missing or unparseable.
+        /// </summary>
+        public static MetadataRoot Load(string sourceFolder)
+        {
+            string metadataPath = $"{sourceFolder}/metadata.json";
+            var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(metadataPath);
             if (asset == null)
             {
-                Debug.LogError($"[AnimationForgeMetadata] metadata.json not found at {METADATA_PATH}");
+                Debug.LogError($"[AnimationForgeMetadata] metadata.json not found at {metadataPath}");
                 return null;
             }
 
@@ -64,10 +100,16 @@ namespace TomatoFighters.Editor.Animation
             return root;
         }
 
-        /// <summary>Returns the sprite sheet asset path for a given animation name.</summary>
+        /// <summary>Returns the sprite sheet asset path using the default sprites folder.</summary>
         public static string GetSheetPath(string characterName, string animName)
         {
             return $"{SPRITES_FOLDER}/{characterName}_{animName}.png";
+        }
+
+        /// <summary>Returns the sprite sheet asset path for any source folder.</summary>
+        public static string GetSheetPath(string spritesFolder, string characterName, string animName)
+        {
+            return $"{spritesFolder}/{characterName}_{animName}.png";
         }
 
         public class MetadataRoot

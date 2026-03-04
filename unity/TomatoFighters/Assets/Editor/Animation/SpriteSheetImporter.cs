@@ -38,26 +38,41 @@ namespace TomatoFighters.Editor.Animation
     /// <seealso cref="AnimationBuilder"/>
     public static class SpriteSheetImporter
     {
-        [MenuItem("TomatoFighters/Import Sprite Sheets")]
+        [MenuItem("TomatoFighters/Import Sprite Sheets/Mystica (default)")]
         public static void ImportSpriteSheets()
         {
-            var metadata = AnimationForgeMetadata.Load();
+            ImportSpriteSheets(AnimationForgeMetadata.Characters["Mystica"].sourceFolder);
+        }
+
+        [MenuItem("TomatoFighters/Import Sprite Sheets/Slasher")]
+        public static void ImportSlasherSpriteSheets()
+        {
+            ImportSpriteSheets(AnimationForgeMetadata.Characters["Slasher"].sourceFolder);
+        }
+
+        /// <summary>
+        /// Imports sprite sheets from any source folder containing metadata.json + Sprites/.
+        /// </summary>
+        public static void ImportSpriteSheets(string sourceFolder)
+        {
+            var metadata = AnimationForgeMetadata.Load(sourceFolder);
             if (metadata == null) return;
 
+            string spritesFolder = $"{sourceFolder}/Sprites";
             int count = 0;
             foreach (var kvp in metadata.animations)
             {
                 string animName = kvp.Key;
                 var entry = kvp.Value;
 
-                string assetPath = AnimationForgeMetadata.GetSheetPath(metadata.characterName, animName);
+                string assetPath = AnimationForgeMetadata.GetSheetPath(spritesFolder, metadata.characterName, animName);
                 if (ConfigureSpriteSheet(animName, entry, assetPath))
                     count++;
             }
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[SpriteSheetImporter] Done — configured {count}/{metadata.animations.Count} sprite sheets.");
+            Debug.Log($"[SpriteSheetImporter] Done — configured {count}/{metadata.animations.Count} sprite sheets for '{metadata.characterName}'.");
         }
 
         /// <summary>

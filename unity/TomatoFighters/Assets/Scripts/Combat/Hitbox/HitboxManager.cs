@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
@@ -11,16 +12,24 @@ namespace TomatoFighters.Combat
     /// <summary>
     /// Orchestrates hitbox activation/deactivation via Animation Events.
     /// Subscribes to <see cref="HitboxDamage"/> events on child hitbox GameObjects,
-    /// forwards hit-confirms to <see cref="ComboController"/>, and applies a temporary
-    /// damage shim until T016 (DefenseSystem) handles proper resolution.
+    /// forwards hit-confirms to <see cref="ComboController"/>, and resolves defense
+    /// outcomes via <see cref="IDamageable.ResolveIncoming"/>.
     /// </summary>
     public class HitboxManager : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private ComboController comboController;
+        [SerializeField] private DefenseSystem ownerDefenseSystem;
 
-        [Header("Temporary Damage Shim")]
-        [Tooltip("TEMPORARY: Base attack value for damage calculation until stat system is wired.")]
+        [Header("Timer Fallback (no Animation Events)")]
+        [Tooltip("Auto-activate hitboxes on combo step start. Disable when animation events are set up.")]
+        [SerializeField] private bool useTimerFallback;
+
+        [Tooltip("How long hitbox stays active per attack in fallback mode.")]
+        [SerializeField] private float fallbackActiveDuration = 0.3f;
+
+        [Header("Damage")]
+        [Tooltip("Base attack value for damage calculation until stat system is wired.")]
         [SerializeField] private float baseAttack = 10f;
 
         /// <summary>Fired when a hit is detected and processed. Downstream systems can subscribe.</summary>
@@ -29,6 +38,7 @@ namespace TomatoFighters.Combat
         // Hitbox child lookup: hitboxId → (GameObject, HitboxDamage)
         private readonly Dictionary<string, HitboxDamage> _hitboxMap = new();
         private HitboxDamage _activeHitbox;
+        private Coroutine _fallbackCoroutine;
 
         private void Awake()
         {
@@ -48,6 +58,9 @@ namespace TomatoFighters.Combat
             {
                 comboController.ComboDropped += DeactivateActiveHitbox;
                 comboController.ComboEnded += DeactivateActiveHitbox;
+
+                if (useTimerFallback)
+                    comboController.AttackStarted += OnAttackStartedFallback;
             }
         }
 
@@ -57,9 +70,39 @@ namespace TomatoFighters.Combat
             {
                 comboController.ComboDropped -= DeactivateActiveHitbox;
                 comboController.ComboEnded -= DeactivateActiveHitbox;
+
+                if (useTimerFallback)
+                    comboController.AttackStarted -= OnAttackStartedFallback;
             }
 
+            StopFallbackCoroutine();
             DeactivateActiveHitbox();
+        }
+
+        // ── Timer Fallback (temporary until animation events are set up) ──
+
+        private void OnAttackStartedFallback(AttackType attackType, int stepIndex)
+        {
+            Debug.Log($"[HitboxManager] FALLBACK: AttackStarted({attackType}, step={stepIndex})");
+            StopFallbackCoroutine();
+            ActivateHitbox();
+            _fallbackCoroutine = StartCoroutine(FallbackDeactivateAfterDelay());
+        }
+
+        private IEnumerator FallbackDeactivateAfterDelay()
+        {
+            yield return new WaitForSeconds(fallbackActiveDuration);
+            DeactivateActiveHitbox();
+            _fallbackCoroutine = null;
+        }
+
+        private void StopFallbackCoroutine()
+        {
+            if (_fallbackCoroutine != null)
+            {
+                StopCoroutine(_fallbackCoroutine);
+                _fallbackCoroutine = null;
+            }
         }
 
         /// <summary>
@@ -99,6 +142,7 @@ namespace TomatoFighters.Combat
 
             _activeHitbox = hitbox;
             hitbox.gameObject.SetActive(true);
+            Debug.Log($"[HitboxManager] Activated hitbox '{hitbox.name}' (id='{attackData.hitboxId}', attack='{attackData.attackName}')");
         }
 
         /// <summary>
@@ -161,43 +205,130 @@ namespace TomatoFighters.Combat
 
                 // Hitbox children start disabled
                 child.gameObject.SetActive(false);
+
+                Debug.Log($"[HitboxManager] Cached hitbox '{hitboxId}' → {child.name} (layer={child.gameObject.layer})");
             }
+
+            Debug.Log($"[HitboxManager] CacheHitboxChildren done — {_hitboxMap.Count} hitboxes cached on '{gameObject.name}'");
         }
 
-        // ── TEMPORARY DAMAGE SHIM (T016 replaces this with DefenseSystem) ────
+        // ── Hit Resolution ──────────────────────────────────────────────
 
         /// <summary>
-        /// TEMPORARY: Applies damage directly and forwards hit-confirm to combo system.
-        /// T016 (DefenseSystem) will replace this with proper resolution
-        /// (Hit/Deflected/Clashed/Dodged) where the target decides the outcome.
+        /// Resolves an incoming hit through the target's defense system,
+        /// then applies damage, fires events, and forwards hit-confirm.
         /// </summary>
         private void HandleHitDetected(IDamageable target, Vector2 hitPoint)
         {
+            Debug.Log($"[HitboxManager] HandleHitDetected ENTRY — target={target}, hitPoint={hitPoint}, " +
+                $"state={comboController?.CurrentState}, stepIndex={comboController?.CurrentStepIndex}");
+
             var attackData = GetCurrentAttackData();
-            if (attackData == null) return;
+            if (attackData == null)
+            {
+                Debug.LogWarning($"[HitboxManager] HandleHitDetected — no current AttackData. " +
+                    $"State={comboController?.CurrentState}, StepIndex={comboController?.CurrentStepIndex}");
+                return;
+            }
 
             var characterType = comboController != null
                 ? comboController.CharacterType
                 : CharacterType.Brutor;
 
-            var detectionData = new HitDetectionData(target, attackData, hitPoint, characterType);
+            bool isUnstoppable = attackData.telegraphType == TelegraphType.Unstoppable;
 
-            // TEMPORARY: Skip invulnerable targets, apply damage directly
-            if (!target.IsInvulnerable)
+            // Ask the target how it responds to this attack
+            var response = target.ResolveIncoming(transform.position, isUnstoppable);
+
+            var packet = BuildDamagePacket(attackData);
+
+            switch (response)
             {
-                var packet = BuildDamagePacket(attackData);
-                target.TakeDamage(packet);
+                case DamageResponse.Hit:
+                    if (!target.IsInvulnerable)
+                    {
+                        Debug.Log($"[HitboxManager] APPLYING DAMAGE: {packet.amount:F1} to {target} (type={packet.type})");
+                        target.TakeDamage(packet);
+                    }
+                    else
+                    {
+                        Debug.Log($"[HitboxManager] BLOCKED by IsInvulnerable on {target}");
+                    }
+                    break;
+
+                case DamageResponse.Deflected:
+                    // No damage on deflect. Notify the target's DefenseSystem.
+                    NotifyTargetDefense(target, response, packet, characterType);
+                    break;
+
+                case DamageResponse.Clashed:
+                    // Reduced damage on clash — both parties stagger
+                    if (!target.IsInvulnerable)
+                    {
+                        var clashPacket = new DamagePacket(
+                            type: packet.type,
+                            amount: packet.amount * 0.5f,
+                            isPunishDamage: false,
+                            knockbackForce: packet.knockbackForce * 0.3f,
+                            launchForce: Vector2.zero,
+                            source: packet.source);
+                        target.TakeDamage(clashPacket);
+                    }
+                    NotifyTargetDefense(target, response, packet, characterType);
+                    break;
+
+                case DamageResponse.Dodged:
+                    // No damage, attack passes through
+                    NotifyTargetDefense(target, response, packet, characterType);
+                    break;
             }
 
             // Forward hit-confirm to combo system (enables cancel windows)
             comboController?.OnHitConfirmed();
 
+            var detectionData = new HitDetectionData(target, attackData, hitPoint, characterType);
             OnHitProcessed?.Invoke(detectionData);
         }
 
         /// <summary>
-        /// TEMPORARY: Builds a basic DamagePacket from AttackData.
-        /// T016 will add buff multipliers, defense resolution, and elemental modifiers.
+        /// Notifies the target's <see cref="DefenseSystem"/> about a successful defense
+        /// so it can fire events and apply character-specific bonuses.
+        /// </summary>
+        private void NotifyTargetDefense(
+            IDamageable target,
+            DamageResponse response,
+            DamagePacket packet,
+            CharacterType attackerType)
+        {
+            // Try to get DefenseSystem from the target's GameObject
+            if (target is MonoBehaviour mb)
+            {
+                var targetDefense = mb.GetComponent<DefenseSystem>();
+                if (targetDefense != null)
+                {
+                    var context = new DefenseContext
+                    {
+                        defender = mb.gameObject,
+                        attacker = gameObject,
+                        hitPoint = mb.transform.position,
+                        incomingPacket = packet
+                    };
+
+                    // Use the target's CharacterType if available via motor
+                    var targetMotor = mb.GetComponent<CharacterMotor>();
+                    var defenderType = targetMotor != null
+                        ? targetMotor.CharacterType
+                        : CharacterType.Brutor;
+
+                    targetDefense.ProcessDefenseResult(
+                        response, context, defenderType, packet.amount, packet.type);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Builds a DamagePacket from the current AttackData.
+        /// Uses baseAttack as a temporary stand-in until the stat system is wired.
         /// </summary>
         private DamagePacket BuildDamagePacket(AttackData attackData)
         {

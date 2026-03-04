@@ -18,6 +18,10 @@ namespace TomatoFighters.World
         [Header("Data")]
         [SerializeField] private EnemyData enemyData;
 
+        [Header("Defense")]
+        [Tooltip("Assign a DefenseSystem component (implements IDefenseProvider). Null = no defense.")]
+        [SerializeField] private Component defenseProviderComponent;
+
         /// <summary>Fired when this enemy dies. WaveManager subscribes to track alive count.</summary>
         public event Action OnDied;
 
@@ -28,10 +32,13 @@ namespace TomatoFighters.World
         protected Collider2D[] Colliders { get; private set; }
         protected EnemyData Data => enemyData;
 
+        private IDefenseProvider _defenseProvider;
+
         // ── Health ────────────────────────────────────────────────────────
 
         private float _currentHealth;
         private bool _isDead;
+        private Coroutine _knockbackCoroutine;
 
         /// <inheritdoc/>
         public float CurrentHealth => _currentHealth;
@@ -78,6 +85,7 @@ namespace TomatoFighters.World
             Rb = GetComponent<Rigidbody2D>();
             Sprite = GetComponentInChildren<SpriteRenderer>();
             Colliders = GetComponentsInChildren<Collider2D>();
+            _defenseProvider = defenseProviderComponent as IDefenseProvider;
 
             _currentHealth = enemyData.maxHealth;
         }
@@ -85,11 +93,23 @@ namespace TomatoFighters.World
         // ── IDamageable Implementation ────────────────────────────────────
 
         /// <inheritdoc/>
+        public DamageResponse ResolveIncoming(Vector2 attackerPosition, bool isUnstoppable)
+        {
+            if (_defenseProvider == null) return DamageResponse.Hit;
+            return _defenseProvider.ResolveDefense(attackerPosition, isUnstoppable);
+        }
+
+        /// <inheritdoc/>
         public void TakeDamage(DamagePacket damage)
         {
-            if (_isDead || _isInvulnerable) return;
+            if (_isDead || _isInvulnerable)
+            {
+                Debug.Log($"[EnemyBase] TakeDamage BLOCKED — dead={_isDead}, invulnerable={_isInvulnerable}");
+                return;
+            }
 
             _currentHealth -= damage.amount;
+            Debug.Log($"[EnemyBase] TakeDamage: {damage.amount:F1} dmg → HP: {_currentHealth:F1}/{enemyData.maxHealth}");
 
             // Pressure fills faster on punish hits
             float pressureAmount = damage.amount * (damage.isPunishDamage ? 2f : 1f);
@@ -127,6 +147,17 @@ namespace TomatoFighters.World
 
             Vector2 reducedForce = force * (1f - enemyData.knockbackResistance);
             Rb.AddForce(reducedForce, ForceMode2D.Impulse);
+
+            if (_knockbackCoroutine != null)
+                StopCoroutine(_knockbackCoroutine);
+            _knockbackCoroutine = StartCoroutine(KnockbackRecovery());
+        }
+
+        private IEnumerator KnockbackRecovery()
+        {
+            yield return new WaitForSeconds(0.5f);
+            Rb.linearVelocity = Vector2.zero;
+            _knockbackCoroutine = null;
         }
 
         /// <inheritdoc/>

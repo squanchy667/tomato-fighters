@@ -50,6 +50,11 @@ namespace TomatoFighters.World
             {
                 hitbox.OnHitDetected += HandleHitDetected;
                 hitbox.gameObject.SetActive(false);
+                Debug.Log($"[TestDummyEnemy] Awake — hitbox='{hitbox.name}', attackData={(attackData != null ? attackData.attackName : "NULL")}");
+            }
+            else
+            {
+                Debug.LogError("[TestDummyEnemy] Awake — hitbox is NULL! Enemy attacks won't work.");
             }
         }
 
@@ -119,6 +124,24 @@ namespace TomatoFighters.World
             _isAttacking = true;
             Sprite.color = new Color(1f, 0.2f, 0f); // Bright red-orange during swing
             hitbox.gameObject.SetActive(true);
+            var hbCol = hitbox.GetComponent<Collider2D>();
+            // Find player via IDamageable (Shared) to avoid cross-pillar reference
+            Transform playerT = null;
+            Bounds playerBounds = default;
+            foreach (var dmg in FindObjectsByType<MonoBehaviour>(FindObjectsSortMode.None))
+            {
+                if (dmg is IDamageable && dmg.gameObject != gameObject)
+                {
+                    playerT = dmg.transform;
+                    var pCol = dmg.GetComponent<Collider2D>();
+                    if (pCol != null) playerBounds = pCol.bounds;
+                    break;
+                }
+            }
+            Debug.Log($"[TestDummyEnemy] Hitbox ENABLED — '{hitbox.name}', layer={hitbox.gameObject.layer}" +
+                $"\n  Enemy pos={transform.position}, Hitbox bounds={hbCol?.bounds}" +
+                $"\n  Player pos={playerT?.position}, Player bounds={playerBounds}" +
+                $"\n  Distance={Vector2.Distance(transform.position, playerT != null ? (Vector2)playerT.position : (Vector2)transform.position):F2}");
 
             yield return new WaitForSeconds(attackActiveDuration);
 
@@ -133,7 +156,14 @@ namespace TomatoFighters.World
 
         private void HandleHitDetected(IDamageable target, Vector2 hitPoint)
         {
-            if (attackData == null) return;
+            if (attackData == null)
+            {
+                Debug.LogWarning("[TestDummyEnemy] HandleHitDetected — attackData is null!");
+                return;
+            }
+
+            bool isUnstoppable = attackData.telegraphType == TelegraphType.Unstoppable;
+            var response = target.ResolveIncoming(transform.position, isUnstoppable);
 
             float damage = attackData.damageMultiplier * 10f; // Base enemy ATK placeholder
 
@@ -146,7 +176,36 @@ namespace TomatoFighters.World
                 source: CharacterType.Brutor // Enemies don't have a CharacterType; use default
             );
 
-            target.TakeDamage(packet);
+            switch (response)
+            {
+                case DamageResponse.Hit:
+                    if (!target.IsInvulnerable)
+                    {
+                        target.TakeDamage(packet);
+                    }
+                    break;
+
+                case DamageResponse.Clashed:
+                    if (!target.IsInvulnerable)
+                    {
+                        var clashPacket = new DamagePacket(
+                            type: packet.type,
+                            amount: packet.amount * 0.5f,
+                            isPunishDamage: false,
+                            knockbackForce: packet.knockbackForce * 0.3f,
+                            launchForce: Vector2.zero,
+                            source: packet.source);
+                        target.TakeDamage(clashPacket);
+                    }
+                    break;
+
+                case DamageResponse.Deflected:
+                case DamageResponse.Dodged:
+                    // No damage applied
+                    break;
+            }
+
+            Debug.Log($"[TestDummyEnemy] Hit resolved: {response} ({damage:F1} base damage)");
         }
 
         // ── Virtual Hook Overrides ────────────────────────────────────────
@@ -160,6 +219,24 @@ namespace TomatoFighters.World
             }
 
             _isAttacking = false;
+        }
+
+        protected override void OnDamaged(DamagePacket damage)
+        {
+            // Brief white flash on hit for visual feedback
+            if (_damageFlash != null) StopCoroutine(_damageFlash);
+            _damageFlash = StartCoroutine(DamageFlashRoutine());
+        }
+
+        private Coroutine _damageFlash;
+
+        private IEnumerator DamageFlashRoutine()
+        {
+            Color original = Sprite.color;
+            Sprite.color = Color.white;
+            yield return new WaitForSeconds(0.1f);
+            Sprite.color = original;
+            _damageFlash = null;
         }
     }
 }

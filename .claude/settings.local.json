@@ -19,7 +19,8 @@
       "WebFetch(domain:answers.unity.com)",
       "Bash(git:*)",
       "Bash(do echo:*)",
-      "Bash(tr:*)"
+      "Bash(tr:*)",
+      "Bash(python3:*)"
     ]
   }
 }

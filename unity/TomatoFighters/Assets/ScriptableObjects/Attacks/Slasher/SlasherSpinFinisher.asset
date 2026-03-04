@@ -19,7 +19,7 @@ MonoBehaviour:
   launchForce: {x: 0, y: 3}
   causesWallBounce: 0
   causesLaunch: 1
-  hitboxId: Slam
+  hitboxId: Spin
   animationClip: {fileID: 0}
   hitboxStartFrame: 3
   hitboxActiveFrames: 5

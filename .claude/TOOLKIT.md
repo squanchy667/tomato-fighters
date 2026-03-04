@@ -43,6 +43,13 @@
 | `repo-scanner` | sonnet | Indexes the Unity repo into a structured map by pillar, domain, namespace, and file relationships. |
 | `agent-tailor` | sonnet | Creates new specialized agents on demand, following existing conventions and prompt patterns. |
 
+## MCP Servers
+
+| Server | What it does |
+|--------|--------------|
+| `mcp-for-unity` | Bridges Claude Code to the Unity Editor via HTTP on port 8080. Enables scene inspection, component queries, asset operations, and running editor scripts directly from Claude. Requires the Unity project to be open. |
+| `agent-tailor` | Creates new specialized agents on demand via the AgentTailor API. |
+
 ## Typical Workflow
 
 ```

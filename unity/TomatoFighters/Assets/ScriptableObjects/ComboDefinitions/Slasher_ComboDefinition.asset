@@ -43,7 +43,7 @@ MonoBehaviour:
     canDashCancelOnHit: 1
     canJumpCancelOnHit: 1
     isFinisher: 0
-  - attackData: {fileID: 11400000, guid: 89e484d8bfacdbc44a08d446d76e8424, type: 2}
+  - attackData: {fileID: 11400000, guid: 9c52e4a9939abde4f99d4f8a3f8afbbb, type: 2}
     attackType: 0
     animationTrigger: finisher_light
     damageMultiplier: 1
@@ -63,7 +63,7 @@ MonoBehaviour:
     canDashCancelOnHit: 1
     canJumpCancelOnHit: 1
     isFinisher: 0
-  - attackData: {fileID: 11400000, guid: 9c52e4a9939abde4f99d4f8a3f8afbbb, type: 2}
+  - attackData: {fileID: 11400000, guid: 5449b904f18ab9e4cba0ddbda64a0dd4, type: 2}
     attackType: 1
     animationTrigger: attack_heavy_1
     damageMultiplier: 1
@@ -73,7 +73,7 @@ MonoBehaviour:
     canDashCancelOnHit: 1
     canJumpCancelOnHit: 1
     isFinisher: 0
-  - attackData: {fileID: 11400000, guid: 5449b904f18ab9e4cba0ddbda64a0dd4, type: 2}
+  - attackData: {fileID: 11400000, guid: 09461a76058535a49a3efe073f2a5f43, type: 2}
     attackType: 1
     animationTrigger: finisher_heavy
     damageMultiplier: 1
@@ -83,7 +83,7 @@ MonoBehaviour:
     canDashCancelOnHit: 1
     canJumpCancelOnHit: 1
     isFinisher: 1
-  - attackData: {fileID: 11400000, guid: 09461a76058535a49a3efe073f2a5f43, type: 2}
+  - attackData: {fileID: 11400000, guid: 89e484d8bfacdbc44a08d446d76e8424, type: 2}
     attackType: 0
     animationTrigger: attack_branch_light
     damageMultiplier: 1

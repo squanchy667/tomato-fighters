@@ -24,17 +24,44 @@ namespace TomatoFighters.Shared.Components
 
         private void OnEnable()
         {
-            // Fresh set at the start of each swing — tracks by IDamageable
-            // to prevent double-damage from entities with multiple colliders
             _hitThisActivation.Clear();
+
+            // Force physics to pick up this newly-enabled trigger collider immediately.
+            // Without this, autoSyncTransforms=false causes the collider position to be
+            // stale, and sleeping Rigidbody2Ds won't detect the overlap.
+            Physics2D.SyncTransforms();
+            var rb = GetComponentInParent<Rigidbody2D>();
+            if (rb != null) rb.WakeUp();
+
+            Debug.Log($"[HitboxDamage] '{name}' ENABLED — layer={gameObject.layer}, subscribers={(OnHitDetected != null ? OnHitDetected.GetInvocationList().Length : 0)}");
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            var target = other.GetComponentInParent<IDamageable>();
-            if (target == null) return;
-            if (!_hitThisActivation.Add(target)) return;
+            Debug.Log($"[HitboxDamage] '{name}' OnTriggerEnter2D with '{other.name}' (layer={other.gameObject.layer})");
+            ProcessTrigger(other);
+        }
 
+        // Fallback: OnTriggerEnter2D may not fire when a disabled trigger is
+        // re-enabled while already overlapping. Stay fires on subsequent frames.
+        private void OnTriggerStay2D(Collider2D other)
+        {
+            if (_hitThisActivation.Count == 0)
+                Debug.Log($"[HitboxDamage] '{name}' OnTriggerStay2D with '{other.name}' (layer={other.gameObject.layer}) — first contact via Stay, not Enter");
+            ProcessTrigger(other);
+        }
+
+        private void ProcessTrigger(Collider2D other)
+        {
+            var target = other.GetComponentInParent<IDamageable>();
+            if (target == null)
+            {
+                Debug.Log($"[HitboxDamage] '{name}' — no IDamageable on '{other.name}' or parents");
+                return;
+            }
+            if (!_hitThisActivation.Add(target)) return; // Already hit this activation
+
+            Debug.Log($"[HitboxDamage] '{name}' HIT '{other.name}' → firing OnHitDetected (subscribers={(OnHitDetected != null ? OnHitDetected.GetInvocationList().Length : 0)})");
             OnHitDetected?.Invoke(target, other.ClosestPoint(transform.position));
         }
     }

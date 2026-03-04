@@ -1,5 +1,6 @@
 using System.Collections;
 using TomatoFighters.Shared.Data;
+using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Interfaces;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ namespace TomatoFighters.Combat
     /// <summary>
     /// Stub <see cref="IDamageable"/> implementation on the player for bidirectional damage testing.
     /// Logs damage, flashes the sprite red, and applies knockback via Rigidbody2D.
-    /// Not a full PlayerHealth system — that's future scope.
+    /// Delegates defense resolution to <see cref="DefenseSystem"/> when assigned.
     /// </summary>
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(SpriteRenderer))]
@@ -16,6 +17,9 @@ namespace TomatoFighters.Combat
     {
         [Header("Stub Health")]
         [SerializeField] private float maxHealth = 100f;
+
+        [Header("Defense")]
+        [SerializeField] private DefenseSystem defenseSystem;
 
         [Header("Hit Flash")]
         [SerializeField] private Color flashColor = Color.red;
@@ -41,8 +45,16 @@ namespace TomatoFighters.Combat
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
-            _sprite = GetComponent<SpriteRenderer>();
+            // Use child SpriteRenderer (the visible one) — root SR has no sprite assigned
+            _sprite = GetComponentInChildren<SpriteRenderer>();
             _currentHealth = maxHealth;
+        }
+
+        /// <inheritdoc/>
+        public DamageResponse ResolveIncoming(Vector2 attackerPosition, bool isUnstoppable)
+        {
+            if (defenseSystem == null) return DamageResponse.Hit;
+            return defenseSystem.Resolve(attackerPosition, isUnstoppable);
         }
 
         /// <inheritdoc/>
