@@ -21,7 +21,8 @@
       "Bash(do echo:*)",
       "Bash(tr:*)",
       "Bash(python3:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(grep:*)"
     ]
   }
 }

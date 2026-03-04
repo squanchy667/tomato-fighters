@@ -57,8 +57,18 @@ namespace TomatoFighters.Editor.Animation
         // Airborne animations get IsGrounded-driven transitions instead of triggers
         private static readonly HashSet<string> AIRBORNE_NAMES = new HashSet<string> { "jump", "land" };
 
-        [MenuItem("TomatoFighters/Build Animations/Mystica (default)")]
-        public static void BuildAnimations()
+        [MenuItem("TomatoFighters/Build Animations/All Characters")]
+        public static void BuildAllAnimations()
+        {
+            foreach (var kvp in AnimationForgeMetadata.Characters)
+            {
+                Debug.Log($"[AnimationBuilder] Building {kvp.Key}...");
+                BuildAnimations(kvp.Value.sourceFolder, kvp.Value.outputFolder);
+            }
+        }
+
+        [MenuItem("TomatoFighters/Build Animations/Mystica")]
+        public static void BuildMysticaAnimations()
         {
             var config = AnimationForgeMetadata.Characters["Mystica"];
             BuildAnimations(config.sourceFolder, config.outputFolder);
@@ -68,6 +78,20 @@ namespace TomatoFighters.Editor.Animation
         public static void BuildSlasherAnimations()
         {
             var config = AnimationForgeMetadata.Characters["Slasher"];
+            BuildAnimations(config.sourceFolder, config.outputFolder);
+        }
+
+        [MenuItem("TomatoFighters/Build Animations/Brutor")]
+        public static void BuildBrutorAnimations()
+        {
+            var config = AnimationForgeMetadata.Characters["Brutor"];
+            BuildAnimations(config.sourceFolder, config.outputFolder);
+        }
+
+        [MenuItem("TomatoFighters/Build Animations/Viper")]
+        public static void BuildViperAnimations()
+        {
+            var config = AnimationForgeMetadata.Characters["Viper"];
             BuildAnimations(config.sourceFolder, config.outputFolder);
         }
 

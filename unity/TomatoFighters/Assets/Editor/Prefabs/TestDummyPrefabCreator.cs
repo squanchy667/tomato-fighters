@@ -172,6 +172,43 @@ namespace TomatoFighters.Editor.Prefabs
             return sprite;
         }
 
+        // ── Attack Data Factory ───────────────────────────────────────────
+
+        /// <summary>
+        /// Creates or updates an AttackData SO at the given path.
+        /// Used by MovementTestSceneCreator to set up tiered dummies.
+        /// </summary>
+        public static AttackData CreateOrLoadAttackData(
+            string path, string attackId, string attackName,
+            float damageMultiplier, Vector2 knockbackForce, Vector2 launchForce,
+            TelegraphType telegraphType)
+        {
+            PlayerPrefabCreator.EnsureFolderExists(ATTACK_FOLDER);
+
+            var existing = AssetDatabase.LoadAssetAtPath<AttackData>(path);
+            var attack = existing != null ? existing : ScriptableObject.CreateInstance<AttackData>();
+
+            attack.attackId = attackId;
+            attack.attackName = attackName;
+            attack.damageMultiplier = damageMultiplier;
+            attack.knockbackForce = knockbackForce;
+            attack.launchForce = launchForce;
+            attack.hitboxId = "Punch";
+            attack.hitboxStartFrame = 12;
+            attack.hitboxActiveFrames = 18;
+            attack.totalFrames = 45;
+            attack.animationSpeed = 1f;
+            attack.telegraphType = telegraphType;
+
+            if (existing == null)
+                AssetDatabase.CreateAsset(attack, path);
+            else
+                EditorUtility.SetDirty(attack);
+            AssetDatabase.SaveAssets();
+
+            return attack;
+        }
+
         // ── Prefab Setup ──────────────────────────────────────────────────
 
         private static GameObject SetupPrefab(EnemyData enemyData, AttackData attackData,
