@@ -455,6 +455,8 @@ namespace TomatoFighters.Editor
             public bool causesLaunch;
             public bool isOTGCapable;
             public bool isAirAttack;
+            public float clashWindowStart;
+            public float clashWindowEnd;
         }
 
         /// <returns>1 if created, 0 if skipped (already exists).</returns>
@@ -485,6 +487,8 @@ namespace TomatoFighters.Editor
             attack.causesLaunch       = p.causesLaunch;
             attack.isOTGCapable       = p.isOTGCapable;
             attack.isAirAttack        = p.isAirAttack;
+            attack.clashWindowStart   = p.clashWindowStart;
+            attack.clashWindowEnd     = p.clashWindowEnd;
 
             AssetDatabase.CreateAsset(attack, path);
             Debug.Log($"[CreateAllCharacterAttacks] Created {p.fileName} at {path}");

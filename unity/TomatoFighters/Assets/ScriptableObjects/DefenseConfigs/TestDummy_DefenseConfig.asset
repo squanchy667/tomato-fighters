@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1320adf118e05ab4b8d7b999d5318855, type: 3}
-  m_Name: Slasher_DefenseConfig
+  m_Name: TestDummy_DefenseConfig
   m_EditorClassIdentifier: 
-  deflectWindowDuration: 0.12
+  deflectWindowDuration: 0
   clashWindowStart: 0
-  clashWindowEnd: 0.4
-  dodgeIFrameStart: 0.04
-  dodgeIFrameEnd: 0.25
-  defenseBonus: {fileID: 11400000, guid: 1c82e4750b36930478987bc825dc3b6d, type: 2}
+  clashWindowEnd: 0
+  dodgeIFrameStart: 0
+  dodgeIFrameEnd: 0
+  defenseBonus: {fileID: 0}

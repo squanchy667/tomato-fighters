@@ -47,9 +47,13 @@ namespace TomatoFighters.Combat
         // Clash has a start delay before the window opens
         private bool _isClashPending;
         private float _clashDelayRemaining;
+        private float _pendingClashDuration;
 
         /// <summary>Current defense posture.</summary>
         public DefenseState CurrentState => _currentState;
+
+        /// <inheritdoc/>
+        public bool IsInClashWindow => _currentState == DefenseState.HeavyStartup;
 
         /// <summary>The assigned defense configuration.</summary>
         public DefenseConfig Config => config;
@@ -94,7 +98,7 @@ namespace TomatoFighters.Combat
                 {
                     _isClashPending = false;
                     _currentState = DefenseState.HeavyStartup;
-                    _windowTimer = config.clashWindowEnd - config.clashWindowStart;
+                    _windowTimer = _pendingClashDuration;
                 }
                 return;
             }
@@ -127,11 +131,19 @@ namespace TomatoFighters.Combat
         {
             Vector2 toAttacker = ((Vector3)attackerPosition - transform.position).normalized;
 
-            return _resolver.Resolve(
+            var result = _resolver.Resolve(
                 _currentState,
                 _actionDirection,
                 toAttacker,
                 isUnstoppable);
+
+            Debug.Log(
+                $"[DefenseSystem] Resolve: state={_currentState}, actionDir={_actionDirection}, " +
+                $"toAttacker={toAttacker}, timer={_windowTimer:F3}, " +
+                $"isFacing={DefenseResolver.IsFacing(_actionDirection, toAttacker)}, " +
+                $"isVertical={DefenseResolver.IsVertical(_actionDirection)} → {result}");
+
+            return result;
         }
 
         /// <summary>
@@ -178,9 +190,42 @@ namespace TomatoFighters.Combat
             }
         }
 
+        /// <inheritdoc/>
+        public void NotifyDefenseSuccess(DamageResponse response, float incomingDamage, DamageType incomingType)
+        {
+            switch (response)
+            {
+                case DamageResponse.Deflected:
+                    OnDeflect?.Invoke(new DeflectEventData(default, incomingDamage, incomingType));
+                    break;
+                case DamageResponse.Clashed:
+                    OnClash?.Invoke(new ClashEventData(default, incomingDamage, incomingType));
+                    break;
+                case DamageResponse.Dodged:
+                    OnDodge?.Invoke(new DodgeEventData(default, _actionDirection));
+                    break;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void OpenClashWindow(float duration, Vector2 facingDirection)
+        {
+            _actionDirection = facingDirection;
+            _currentState = DefenseState.HeavyStartup;
+            _windowTimer = duration;
+            _isClashPending = false;
+            Debug.Log($"[DefenseSystem] Manual clash window opened: duration={duration:F3}s, dir={facingDirection}");
+        }
+
         private void HandleDashStarted(CharacterType charType, Vector2 dashDirection, bool hasIFrames)
         {
-            if (config == null) return;
+            if (config == null)
+            {
+                Debug.LogWarning("[DefenseSystem] HandleDashStarted — config is NULL, ignoring.");
+                return;
+            }
+
+            Debug.Log($"[DefenseSystem] HandleDashStarted: dir={dashDirection}, isVertical={DefenseResolver.IsVertical(dashDirection)}, deflectWindow={config.deflectWindowDuration}s");
 
             _actionDirection = dashDirection;
 
@@ -223,9 +268,9 @@ namespace TomatoFighters.Combat
 
         private void HandleAttackStarted(AttackType attackType, int stepIndex)
         {
-            // Only heavy attacks open a clash window
-            if (attackType != AttackType.Heavy) return;
-            if (config == null) return;
+            // Read clash window from the attack's own data
+            var attackData = GetAttackData(stepIndex);
+            if (attackData == null || !attackData.HasClashWindow) return;
 
             // Get facing direction from motor
             if (motor != null)
@@ -234,21 +279,35 @@ namespace TomatoFighters.Combat
             }
 
             // Clash window has a start delay
-            if (config.clashWindowStart > 0f)
+            if (attackData.clashWindowStart > 0f)
             {
                 _isClashPending = true;
-                _clashDelayRemaining = config.clashWindowStart;
+                _clashDelayRemaining = attackData.clashWindowStart;
+                // Store window duration for when the delay finishes
+                _pendingClashDuration = attackData.clashWindowEnd - attackData.clashWindowStart;
             }
             else
             {
                 _currentState = DefenseState.HeavyStartup;
-                _windowTimer = config.clashWindowEnd;
+                _windowTimer = attackData.clashWindowEnd;
                 _isClashPending = false;
             }
+
+            Debug.Log($"[DefenseSystem] Clash window opened for '{attackData.attackName}': " +
+                $"start={attackData.clashWindowStart:F3}s, end={attackData.clashWindowEnd:F3}s");
+        }
+
+        private AttackData GetAttackData(int stepIndex)
+        {
+            if (comboController == null) return null;
+            var def = comboController.Definition;
+            if (def == null || !def.IsValidStep(stepIndex)) return null;
+            return def.steps[stepIndex].attackData;
         }
 
         private void CloseWindow()
         {
+            Debug.Log($"[DefenseSystem] Window CLOSED (was {_currentState})");
             _currentState = DefenseState.None;
             _windowTimer = 0f;
             _isClashPending = false;

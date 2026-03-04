@@ -20,6 +20,7 @@ namespace TomatoFighters.Combat
         [Header("References")]
         [SerializeField] private ComboController comboController;
         [SerializeField] private DefenseSystem ownerDefenseSystem;
+        [SerializeField] private ClashTracker ownerClashTracker;
 
         [Header("Timer Fallback (no Animation Events)")]
         [Tooltip("Auto-activate hitboxes on combo step start. Disable when animation events are set up.")]
@@ -39,6 +40,7 @@ namespace TomatoFighters.Combat
         private readonly Dictionary<string, HitboxDamage> _hitboxMap = new();
         private HitboxDamage _activeHitbox;
         private Coroutine _fallbackCoroutine;
+        private IDamageable _ownerDamageable;
 
         private void Awake()
         {
@@ -48,6 +50,8 @@ namespace TomatoFighters.Combat
                     $"[HitboxManager] No ComboController assigned on {gameObject.name}. " +
                     "Hit-confirm will not propagate.", this);
             }
+
+            _ownerDamageable = GetComponentInParent<IDamageable>();
 
             CacheHitboxChildren();
         }
@@ -85,8 +89,35 @@ namespace TomatoFighters.Combat
         {
             Debug.Log($"[HitboxManager] FALLBACK: AttackStarted({attackType}, step={stepIndex})");
             StopFallbackCoroutine();
+
+            var attackData = GetCurrentAttackData();
+            float startupDelay = 0f;
+
+            // Use per-attack clash window to determine startup delay
+            if (attackData != null && attackData.HasClashWindow)
+            {
+                // Hitbox activates after the clash window ends
+                startupDelay = attackData.clashWindowEnd;
+            }
+
+            if (startupDelay > 0f)
+            {
+                _fallbackCoroutine = StartCoroutine(StartupThenActivate(startupDelay));
+            }
+            else
+            {
+                ActivateHitbox();
+                _fallbackCoroutine = StartCoroutine(FallbackDeactivateAfterDelay());
+            }
+        }
+
+        private IEnumerator StartupThenActivate(float delay)
+        {
+            yield return new WaitForSeconds(delay);
             ActivateHitbox();
-            _fallbackCoroutine = StartCoroutine(FallbackDeactivateAfterDelay());
+            yield return new WaitForSeconds(fallbackActiveDuration);
+            DeactivateActiveHitbox();
+            _fallbackCoroutine = null;
         }
 
         private IEnumerator FallbackDeactivateAfterDelay()
@@ -112,6 +143,7 @@ namespace TomatoFighters.Combat
         /// </summary>
         public void ActivateHitbox()
         {
+            ownerClashTracker?.ClearImmunities();
             DeactivateActiveHitbox();
 
             var attackData = GetCurrentAttackData();
@@ -223,6 +255,13 @@ namespace TomatoFighters.Combat
             Debug.Log($"[HitboxManager] HandleHitDetected ENTRY — target={target}, hitPoint={hitPoint}, " +
                 $"state={comboController?.CurrentState}, stepIndex={comboController?.CurrentStepIndex}");
 
+            // Clash immunity: skip targets that were already part of a clash resolution
+            if (ownerClashTracker != null && ownerClashTracker.HasClashImmunity(target))
+            {
+                Debug.Log($"[HitboxManager] Skipping {target} — clash immunity active");
+                return;
+            }
+
             var attackData = GetCurrentAttackData();
             if (attackData == null)
             {
@@ -239,6 +278,17 @@ namespace TomatoFighters.Combat
 
             // Ask the target how it responds to this attack
             var response = target.ResolveIncoming(transform.position, isUnstoppable);
+
+            // Mutual clash: player's attack has a clash window AND enemy is in its clash window
+            if (response == DamageResponse.Hit && attackData.HasClashWindow)
+            {
+                var targetAttacker = (target as MonoBehaviour)?.GetComponent<IAttacker>();
+                if (targetAttacker != null && targetAttacker.IsInClashWindow)
+                {
+                    response = DamageResponse.Clashed;
+                    Debug.Log("[HitboxManager] MUTUAL CLASH — both attacker and target in clash windows");
+                }
+            }
 
             var packet = BuildDamagePacket(attackData);
 
@@ -262,19 +312,14 @@ namespace TomatoFighters.Combat
                     break;
 
                 case DamageResponse.Clashed:
-                    // Reduced damage on clash — both parties stagger
-                    if (!target.IsInvulnerable)
-                    {
-                        var clashPacket = new DamagePacket(
-                            type: packet.type,
-                            amount: packet.amount * 0.5f,
-                            isPunishDamage: false,
-                            knockbackForce: packet.knockbackForce * 0.3f,
-                            launchForce: Vector2.zero,
-                            source: packet.source);
-                        target.TakeDamage(clashPacket);
-                    }
+                    // No damage on clash — mutual cancel
                     NotifyTargetDefense(target, response, packet, characterType);
+                    // Register reciprocal immunity: target's future hitbox should skip this entity
+                    if (_ownerDamageable != null && target is MonoBehaviour tmb)
+                    {
+                        var targetTracker = tmb.GetComponentInChildren<ClashTracker>();
+                        targetTracker?.AddClashImmunity(_ownerDamageable);
+                    }
                     break;
 
                 case DamageResponse.Dodged:

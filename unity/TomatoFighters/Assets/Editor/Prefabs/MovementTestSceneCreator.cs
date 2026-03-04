@@ -42,12 +42,6 @@ namespace TomatoFighters.Editor.Prefabs
         private const float ARENA_HEIGHT = 10f;
         private const float WALL_THICKNESS = 1f;
 
-        [MenuItem("TomatoFighters/Create Movement Test Scene")]
-        public static void CreateTestScene()
-        {
-            CreateTestScene(PREFAB_PATH, SCENE_PATH, CharacterType.Mystica);
-        }
-
         /// <summary>
         /// Creates a movement test scene for a specific character prefab.
         /// Called by per-character scene creators.
@@ -220,7 +214,20 @@ namespace TomatoFighters.Editor.Prefabs
                 hbSO.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar.");
+            // Defense debug UI — floating text on deflect/clash/dodge
+            if (player.GetComponent<DefenseDebugUI>() == null)
+            {
+                var debugUI = player.AddComponent<DefenseDebugUI>();
+                var defenseSystem = player.GetComponent<DefenseSystem>();
+                if (defenseSystem != null)
+                {
+                    var debugSO = new SerializedObject(debugUI);
+                    debugSO.FindProperty("defenseSystem").objectReferenceValue = defenseSystem;
+                    debugSO.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar + DefenseDebugUI.");
         }
 
         private static void CreateTestDummyFromPrefab()
@@ -241,7 +248,20 @@ namespace TomatoFighters.Editor.Prefabs
             if (dummy.GetComponent<DebugHealthBar>() == null)
                 dummy.AddComponent<DebugHealthBar>();
 
-            Debug.Log("[MovementTestScene] TestDummy enemy placed at (3, 0) with DebugHealthBar.");
+            // Defense debug UI — floating text on clash/deflect/dodge
+            if (dummy.GetComponent<DefenseDebugUI>() == null)
+            {
+                var debugUI = dummy.AddComponent<DefenseDebugUI>();
+                var defenseSystem = dummy.GetComponent<DefenseSystem>();
+                if (defenseSystem != null)
+                {
+                    var debugSO = new SerializedObject(debugUI);
+                    debugSO.FindProperty("defenseSystem").objectReferenceValue = defenseSystem;
+                    debugSO.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            Debug.Log("[MovementTestScene] TestDummy enemy placed at (3, 0) with DebugHealthBar + DefenseDebugUI.");
         }
 
         private static void BuildInlineFallbackPlayer()

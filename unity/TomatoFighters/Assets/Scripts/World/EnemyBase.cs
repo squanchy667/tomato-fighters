@@ -34,6 +34,9 @@ namespace TomatoFighters.World
 
         private IDefenseProvider _defenseProvider;
 
+        /// <summary>The entity's defense provider, if any. Subclasses use this to open clash windows.</summary>
+        protected IDefenseProvider DefenseProvider => _defenseProvider;
+
         // ── Health ────────────────────────────────────────────────────────
 
         private float _currentHealth;
@@ -77,6 +80,9 @@ namespace TomatoFighters.World
 
         /// <inheritdoc/>
         public virtual bool IsInPunishableState => false;
+
+        /// <inheritdoc/>
+        public virtual bool IsInClashWindow => _defenseProvider?.IsInClashWindow ?? false;
 
         // ── Unity Lifecycle ───────────────────────────────────────────────
 
