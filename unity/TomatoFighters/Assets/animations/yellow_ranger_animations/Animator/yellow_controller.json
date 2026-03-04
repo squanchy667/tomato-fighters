@@ -1,0 +1,195 @@
+{
+  "character_name": "yellow",
+  "animator_controller": "yellow_AnimatorController",
+  "parameters": [
+    {
+      "name": "Speed",
+      "type": "Float",
+      "default": 0.0
+    },
+    {
+      "name": "IsGrounded",
+      "type": "Bool",
+      "default": true
+    },
+    {
+      "name": "AttackTrigger",
+      "type": "Trigger",
+      "default": null
+    },
+    {
+      "name": "HurtTrigger",
+      "type": "Trigger",
+      "default": null
+    },
+    {
+      "name": "DeathTrigger",
+      "type": "Trigger",
+      "default": null
+    }
+  ],
+  "layers": [
+    {
+      "name": "Base Layer",
+      "states": [
+        {
+          "name": "idle",
+          "motion": "yellow_idle",
+          "speed": 1.0
+        },
+        {
+          "name": "walk",
+          "motion": "yellow_walk",
+          "speed": 1.0
+        },
+        {
+          "name": "run",
+          "motion": "yellow_run",
+          "speed": 1.0
+        },
+        {
+          "name": "jump",
+          "motion": "yellow_jump",
+          "speed": 1.0
+        },
+        {
+          "name": "fall",
+          "motion": "yellow_fall",
+          "speed": 1.0
+        },
+        {
+          "name": "land",
+          "motion": "yellow_land",
+          "speed": 1.0
+        },
+        {
+          "name": "dash",
+          "motion": "yellow_dash",
+          "speed": 1.0
+        },
+        {
+          "name": "attack_1",
+          "motion": "yellow_attack_1",
+          "speed": 1.0
+        },
+        {
+          "name": "attack_2",
+          "motion": "yellow_attack_2",
+          "speed": 1.0
+        },
+        {
+          "name": "block",
+          "motion": "yellow_block",
+          "speed": 1.0
+        },
+        {
+          "name": "guard",
+          "motion": "yellow_guard",
+          "speed": 1.0
+        },
+        {
+          "name": "hurt",
+          "motion": "yellow_hurt",
+          "speed": 1.0
+        },
+        {
+          "name": "death",
+          "motion": "yellow_death",
+          "speed": 1.0,
+          "no_exit": true
+        },
+        {
+          "name": "kneel",
+          "motion": "yellow_kneel",
+          "speed": 1.0
+        }
+      ],
+      "transitions": [
+        {
+          "from": "idle",
+          "to": "walk",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Greater",
+            "threshold": 0.1
+          }
+        },
+        {
+          "from": "walk",
+          "to": "run",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Greater",
+            "threshold": 0.8
+          }
+        },
+        {
+          "from": "walk",
+          "to": "idle",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Less",
+            "threshold": 0.1
+          }
+        },
+        {
+          "from": "run",
+          "to": "walk",
+          "condition": {
+            "parameter": "Speed",
+            "mode": "Less",
+            "threshold": 0.8
+          }
+        },
+        {
+          "from": "fall",
+          "to": "land",
+          "condition": {
+            "parameter": "IsGrounded",
+            "mode": "Equals",
+            "threshold": true
+          }
+        },
+        {
+          "from": "land",
+          "to": "idle",
+          "has_exit_time": true,
+          "exit_time": 1.0
+        },
+        {
+          "from": "hurt",
+          "to": "idle",
+          "has_exit_time": true,
+          "exit_time": 1.0
+        },
+        {
+          "from": "Any",
+          "to": "hurt",
+          "condition": {
+            "parameter": "HurtTrigger",
+            "mode": "Trigger"
+          }
+        },
+        {
+          "from": "Any",
+          "to": "death",
+          "condition": {
+            "parameter": "DeathTrigger",
+            "mode": "Trigger"
+          }
+        },
+        {
+          "from": "Any",
+          "to": "attack_1",
+          "condition": {
+            "parameter": "AttackTrigger",
+            "mode": "Trigger"
+          }
+        }
+      ],
+      "default_state": "idle"
+    }
+  ],
+  "generated_by": "Animation Forge v0.1.0",
+  "generated_at": "2026-03-04T23:36:24.676665+00:00"
+}
