@@ -1,0 +1,89 @@
+{
+  "character_name": "blue_warrior",
+  "generated_at": "2026-03-03T18:26:15.945154+00:00",
+  "generated_by": "Animation Forge v0.2.0",
+  "bg_removal_method": "rembg + green_defringe_v2 + sharpen",
+  "game_profile": {
+    "game_type": "2d_roguelite",
+    "art_style": "ai_generated_hd",
+    "export_target": "unity",
+    "filter_mode": "bilinear"
+  },
+  "animations": {
+    "idle": {
+      "spritesheet": "Sprites/blue_warrior_idle.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 4,
+      "n_frames": 16,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "walk": {
+      "spritesheet": "Sprites/blue_warrior_walk.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 4,
+      "n_frames": 16,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "run": {
+      "spritesheet": "Sprites/blue_warrior_run.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 4,
+      "n_frames": 16,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "attack_1": {
+      "spritesheet": "Sprites/blue_warrior_attack_1.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 2,
+      "n_frames": 8,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "attack_2": {
+      "spritesheet": "Sprites/blue_warrior_attack_2.png",
+      "frame_w": 128,
+      "frame_h": 192,
+      "cols": 4,
+      "rows": 2,
+      "n_frames": 8,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    }
+  }
+}

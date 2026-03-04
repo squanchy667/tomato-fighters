@@ -34,7 +34,7 @@ namespace TomatoFighters.Editor.Prefabs
     {
         private const string SCENE_FOLDER = "Assets/Scenes";
         private const string SCENE_PATH = SCENE_FOLDER + "/MovementTest.unity";
-        private const string PREFAB_PATH = "Assets/Prefabs/Player/Player.prefab";
+        private const string PREFAB_PATH = "Assets/Prefabs/Player/Mystica.prefab";
         private const string DUMMY_PREFAB_PATH = "Assets/Prefabs/Enemies/TestDummy.prefab";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
@@ -45,20 +45,29 @@ namespace TomatoFighters.Editor.Prefabs
         [MenuItem("TomatoFighters/Create Movement Test Scene")]
         public static void CreateTestScene()
         {
+            CreateTestScene(PREFAB_PATH, SCENE_PATH, CharacterType.Mystica);
+        }
+
+        /// <summary>
+        /// Creates a movement test scene for a specific character prefab.
+        /// Called by per-character scene creators.
+        /// </summary>
+        public static void CreateTestScene(string prefabPath, string scenePath, CharacterType characterType)
+        {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             SetupLayerCollisionMatrix();
             SetupCamera();
             CreateArenaBackground();
             CreateArenaWalls();
-            CreatePlayerFromPrefab();
+            CreatePlayerFromPrefab(prefabPath, characterType);
             CreateTestDummyFromPrefab();
             CreateDebugCanvas();
 
             PlayerPrefabCreator.EnsureFolderExists(SCENE_FOLDER);
-            EditorSceneManager.SaveScene(scene, SCENE_PATH);
+            EditorSceneManager.SaveScene(scene, scenePath);
 
-            Debug.Log($"[MovementTestScene] Scene created at {SCENE_PATH}");
+            Debug.Log($"[MovementTestScene] Scene created at {scenePath} for {characterType}");
             Debug.Log("[MovementTestScene] Controls: WASD = move, Space = jump, L-Shift = dash, LMB = light, C = heavy, L-Ctrl = run");
         }
 
@@ -164,9 +173,12 @@ namespace TomatoFighters.Editor.Prefabs
             col.size = size;
         }
 
-        private static void CreatePlayerFromPrefab()
+        private static void CreatePlayerFromPrefab(string prefabPath, CharacterType characterType)
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_PATH);
+            // Force reimport to ensure the Library cache is current
+            AssetDatabase.ImportAsset(prefabPath, ImportAssetOptions.ForceUpdate);
+
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
             if (prefab == null)
             {
                 Debug.LogWarning("[MovementTestScene] Player prefab not found. Run 'Create Player Prefab' first. Building inline fallback.");

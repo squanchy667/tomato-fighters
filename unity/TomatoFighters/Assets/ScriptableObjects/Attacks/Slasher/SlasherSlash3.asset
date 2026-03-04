@@ -19,7 +19,7 @@ MonoBehaviour:
   launchForce: {x: 0, y: 0}
   causesWallBounce: 0
   causesLaunch: 0
-  hitboxId: Sweep
+  hitboxId: WideSlash
   animationClip: {fileID: 0}
   hitboxStartFrame: 2
   hitboxActiveFrames: 4

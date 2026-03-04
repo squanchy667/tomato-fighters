@@ -38,6 +38,7 @@ namespace TomatoFighters.World
 
         private float _currentHealth;
         private bool _isDead;
+        private Coroutine _knockbackCoroutine;
 
         /// <inheritdoc/>
         public float CurrentHealth => _currentHealth;
@@ -146,6 +147,17 @@ namespace TomatoFighters.World
 
             Vector2 reducedForce = force * (1f - enemyData.knockbackResistance);
             Rb.AddForce(reducedForce, ForceMode2D.Impulse);
+
+            if (_knockbackCoroutine != null)
+                StopCoroutine(_knockbackCoroutine);
+            _knockbackCoroutine = StartCoroutine(KnockbackRecovery());
+        }
+
+        private IEnumerator KnockbackRecovery()
+        {
+            yield return new WaitForSeconds(0.5f);
+            Rb.linearVelocity = Vector2.zero;
+            _knockbackCoroutine = null;
         }
 
         /// <inheritdoc/>

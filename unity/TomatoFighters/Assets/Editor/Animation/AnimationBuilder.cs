@@ -44,8 +44,7 @@ namespace TomatoFighters.Editor.Animation
     /// <seealso cref="TomatoFighters.Combat.CharacterAnimationBridge"/>
     public static class AnimationBuilder
     {
-        private const string OUTPUT_FOLDER = "Assets/Animations/TomatoFighter";
-        private const string CONTROLLER_PATH = OUTPUT_FOLDER + "/TomatoFighter_Controller.controller";
+        private const string DEFAULT_OUTPUT_FOLDER = "Assets/Animations/TomatoFighter";
 
         // Locomotion state layout — order matters for Speed threshold wiring
         private static readonly string[] LOCOMOTION_ORDER = { "idle", "walk", "run" };
@@ -58,13 +57,31 @@ namespace TomatoFighters.Editor.Animation
         // Airborne animations get IsGrounded-driven transitions instead of triggers
         private static readonly HashSet<string> AIRBORNE_NAMES = new HashSet<string> { "jump", "land" };
 
-        [MenuItem("TomatoFighters/Build Animations")]
+        [MenuItem("TomatoFighters/Build Animations/Mystica (default)")]
         public static void BuildAnimations()
         {
-            var metadata = AnimationForgeMetadata.Load();
+            var config = AnimationForgeMetadata.Characters["Mystica"];
+            BuildAnimations(config.sourceFolder, config.outputFolder);
+        }
+
+        [MenuItem("TomatoFighters/Build Animations/Slasher")]
+        public static void BuildSlasherAnimations()
+        {
+            var config = AnimationForgeMetadata.Characters["Slasher"];
+            BuildAnimations(config.sourceFolder, config.outputFolder);
+        }
+
+        /// <summary>
+        /// Builds animation clips and controller from any source folder into any output folder.
+        /// </summary>
+        public static void BuildAnimations(string sourceFolder, string outputFolder)
+        {
+            var metadata = AnimationForgeMetadata.Load(sourceFolder);
             if (metadata == null) return;
 
-            EnsureFolderExists(OUTPUT_FOLDER);
+            EnsureFolderExists(outputFolder);
+
+            string spritesFolder = $"{sourceFolder}/Sprites";
 
             // Create clips for ALL animations
             var clips = new Dictionary<string, AnimationClip>();
@@ -73,8 +90,8 @@ namespace TomatoFighters.Editor.Animation
                 string animName = kvp.Key;
                 var entry = kvp.Value;
 
-                string sheetPath = AnimationForgeMetadata.GetSheetPath(metadata.characterName, animName);
-                var clip = CreateClip(animName, entry, sheetPath);
+                string sheetPath = AnimationForgeMetadata.GetSheetPath(spritesFolder, metadata.characterName, animName);
+                var clip = CreateClip(animName, entry, sheetPath, metadata.characterName, outputFolder);
                 if (clip != null)
                     clips[animName] = clip;
             }
@@ -100,16 +117,20 @@ namespace TomatoFighters.Editor.Animation
                     actions[kvp.Key] = kvp.Value;
             }
 
-            // Build the controller
-            BuildController(locomotion, actions, airborne);
+            // Build the controller — derive name from output folder (last segment)
+            string folderName = outputFolder.Substring(outputFolder.LastIndexOf('/') + 1);
+            string controllerPath = $"{outputFolder}/{folderName}_Controller.controller";
+            BuildController(locomotion, actions, airborne, controllerPath);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log($"[AnimationBuilder] Done — created {clips.Count} clips ({locomotion.Count} locomotion, {airborne.Count} airborne, {actions.Count} action) at {OUTPUT_FOLDER}");
+            Debug.Log($"[AnimationBuilder] Done — created {clips.Count} clips ({locomotion.Count} locomotion, {airborne.Count} airborne, {actions.Count} action) at {outputFolder}");
         }
 
         /// <summary>Creates a single .anim clip from a sliced sprite sheet.</summary>
-        private static AnimationClip CreateClip(string animName, AnimationForgeMetadata.AnimationEntry entry, string sheetPath)
+        private static AnimationClip CreateClip(
+            string animName, AnimationForgeMetadata.AnimationEntry entry,
+            string sheetPath, string characterName, string outputFolder)
         {
             var sprites = AssetDatabase.LoadAllAssetsAtPath(sheetPath)
                 .OfType<Sprite>()
@@ -126,7 +147,7 @@ namespace TomatoFighters.Editor.Animation
                 Debug.LogWarning($"[AnimationBuilder] {animName}: expected {entry.frameCount} frames, found {sprites.Length}.");
 
             var clip = new AnimationClip();
-            clip.name = $"tomato_fighter_{animName}";
+            clip.name = $"{characterName}_{animName}";
             clip.frameRate = entry.fps;
 
             // Animator and SpriteRenderer are on the same GameObject → empty binding path
@@ -149,7 +170,7 @@ namespace TomatoFighters.Editor.Animation
             settings.loopTime = entry.loop;
             AnimationUtility.SetAnimationClipSettings(clip, settings);
 
-            string clipPath = $"{OUTPUT_FOLDER}/tomato_fighter_{animName}.anim";
+            string clipPath = $"{outputFolder}/{characterName}_{animName}.anim";
 
             // Overwrite existing clip asset if present
             var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
@@ -168,13 +189,14 @@ namespace TomatoFighters.Editor.Animation
         private static void BuildController(
             Dictionary<string, AnimationClip> locomotion,
             Dictionary<string, AnimationClip> actions,
-            Dictionary<string, AnimationClip> airborne)
+            Dictionary<string, AnimationClip> airborne,
+            string controllerPath)
         {
             // Delete existing controller to start clean
-            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH) != null)
-                AssetDatabase.DeleteAsset(CONTROLLER_PATH);
+            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath) != null)
+                AssetDatabase.DeleteAsset(controllerPath);
 
-            var controller = AnimatorController.CreateAnimatorControllerAtPath(CONTROLLER_PATH);
+            var controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
             var rootSM = controller.layers[0].stateMachine;
 
             // --- Parameters ---

@@ -92,9 +92,10 @@ namespace TomatoFighters.Editor.Prefabs
             var animator = EnsureComponent<Animator>(spriteChild);
             if (config.animatorController != null)
             {
-                var animatorSO = new SerializedObject(animator);
-                animatorSO.FindProperty("m_Controller").objectReferenceValue = config.animatorController;
-                animatorSO.ApplyModifiedPropertiesWithoutUndo();
+                // Direct assignment — SerializedObject can lose the reference
+                // when used with PrefabUtility.LoadPrefabContents
+                animator.runtimeAnimatorController = config.animatorController;
+                EditorUtility.SetDirty(animator);
             }
 
             // -- Shadow child (preserved if exists) --
@@ -216,6 +217,9 @@ namespace TomatoFighters.Editor.Prefabs
                 savedPrefab = PrefabUtility.SaveAsPrefabAsset(root, config.prefabPath);
                 Object.DestroyImmediate(root);
             }
+
+            // Force reimport to ensure Library cache matches the .prefab on disk
+            AssetDatabase.ImportAsset(config.prefabPath, ImportAssetOptions.ForceUpdate);
 
             return savedPrefab;
         }

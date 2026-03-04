@@ -17,13 +17,13 @@ namespace TomatoFighters.Editor.Characters
     /// </summary>
     public static class MysticaCharacterCreator
     {
-        private const string PREFAB_PATH = "Assets/Prefabs/Player/Player.prefab";
+        private const string PREFAB_PATH = "Assets/Prefabs/Player/Mystica.prefab";
         private const string CONFIG_FOLDER = "Assets/ScriptableObjects/MovementConfigs";
         private const string COMBO_FOLDER = "Assets/ScriptableObjects/ComboDefinitions";
         private const string ATTACKS_FOLDER = "Assets/ScriptableObjects/Attacks/Mystica";
         private const string MYSTICA_CONFIG_PATH = CONFIG_FOLDER + "/Mystica_MovementConfig.asset";
         private const string MYSTICA_COMBO_PATH = COMBO_FOLDER + "/Mystica_ComboDefinition.asset";
-        private const string CONTROLLER_PATH = "Assets/Animations/TomatoFighter/TomatoFighter_Controller.controller";
+        private const string CONTROLLER_PATH = "Assets/Animations/Mystica/Mystica_Controller.controller";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
         [MenuItem("TomatoFighters/Characters/Create Mystica")]
@@ -61,21 +61,21 @@ namespace TomatoFighters.Editor.Characters
                         hitboxId = "Burst",
                         shape = HitboxShape.Circle,
                         circleRadius = 0.5f,
-                        offset = new Vector2(0.5f, 0.1f)
+                        offset = new Vector2(0.5f, 0.5f)
                     },
                     new HitboxDefinition
                     {
                         hitboxId = "BigBurst",
                         shape = HitboxShape.Circle,
                         circleRadius = 0.8f,
-                        offset = new Vector2(0.4f, 0.1f)
+                        offset = new Vector2(0.4f, 0.5f)
                     },
                     new HitboxDefinition
                     {
                         hitboxId = "Bolt",
                         shape = HitboxShape.Box,
                         boxSize = new Vector2(1.6f, 0.35f),
-                        offset = new Vector2(1.1f, 0.15f)
+                        offset = new Vector2(1.1f, 0.5f)
                     }
                 }
             };
