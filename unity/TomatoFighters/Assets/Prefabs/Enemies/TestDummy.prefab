@@ -266,6 +266,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyData: {fileID: 11400000, guid: 6188144bea3d97c4886ff2aaeec3e03a, type: 2}
+  defenseProviderComponent: {fileID: 0}
   attackInterval: 3
   attackData: {fileID: 11400000, guid: 020c9a598aff3474a87a6b9212a54b84, type: 2}
   attackActiveDuration: 0.6

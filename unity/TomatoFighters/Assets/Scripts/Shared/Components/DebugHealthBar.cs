@@ -16,7 +16,8 @@ namespace TomatoFighters.Shared.Components
         [SerializeField] private Color bgColor = new(0.2f, 0.2f, 0.2f, 0.8f);
 
         private IDamageable _damageable;
-        private Image _fill;
+        private RectTransform _fillRt;
+        private Image _fillImg;
 
         private void Awake()
         {
@@ -36,8 +37,10 @@ namespace TomatoFighters.Shared.Components
 
         private void LateUpdate()
         {
-            if (_damageable == null || _damageable.MaxHealth <= 0f) return;
-            _fill.fillAmount = _damageable.CurrentHealth / _damageable.MaxHealth;
+            if (_damageable == null || _damageable.MaxHealth <= 0f || _fillRt == null) return;
+            float ratio = Mathf.Clamp01(_damageable.CurrentHealth / _damageable.MaxHealth);
+            // Shrink the fill rect from the right by adjusting anchorMax.x
+            _fillRt.anchorMax = new Vector2(ratio, 1f);
         }
 
         private void BuildBar()
@@ -54,7 +57,7 @@ namespace TomatoFighters.Shared.Components
             rt.sizeDelta = barSize;
             rt.localScale = Vector3.one;
 
-            // Background
+            // Background — solid color, no sprite needed
             var bgGO = new GameObject("BG");
             bgGO.transform.SetParent(canvasGO.transform, false);
             var bgImg = bgGO.AddComponent<Image>();
@@ -65,19 +68,16 @@ namespace TomatoFighters.Shared.Components
             bgRt.sizeDelta = Vector2.zero;
             bgRt.anchoredPosition = Vector2.zero;
 
-            // Fill
+            // Fill — uses Simple type (solid rect) with anchorMax.x driven by health ratio
             var fillGO = new GameObject("Fill");
             fillGO.transform.SetParent(canvasGO.transform, false);
-            _fill = fillGO.AddComponent<Image>();
-            _fill.color = fillColor;
-            _fill.type = Image.Type.Filled;
-            _fill.fillMethod = Image.FillMethod.Horizontal;
-            _fill.fillAmount = 1f;
-            var fillRt = fillGO.GetComponent<RectTransform>();
-            fillRt.anchorMin = Vector2.zero;
-            fillRt.anchorMax = Vector2.one;
-            fillRt.sizeDelta = Vector2.zero;
-            fillRt.anchoredPosition = Vector2.zero;
+            _fillImg = fillGO.AddComponent<Image>();
+            _fillImg.color = fillColor;
+            _fillRt = fillGO.GetComponent<RectTransform>();
+            _fillRt.anchorMin = Vector2.zero;
+            _fillRt.anchorMax = Vector2.one;
+            _fillRt.sizeDelta = Vector2.zero;
+            _fillRt.anchoredPosition = Vector2.zero;
         }
     }
 }

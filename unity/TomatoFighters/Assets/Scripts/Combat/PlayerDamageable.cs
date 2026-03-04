@@ -45,7 +45,8 @@ namespace TomatoFighters.Combat
         private void Awake()
         {
             _rb = GetComponent<Rigidbody2D>();
-            _sprite = GetComponent<SpriteRenderer>();
+            // Use child SpriteRenderer (the visible one) — root SR has no sprite assigned
+            _sprite = GetComponentInChildren<SpriteRenderer>();
             _currentHealth = maxHealth;
         }
 

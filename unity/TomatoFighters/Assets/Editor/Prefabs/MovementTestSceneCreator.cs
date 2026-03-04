@@ -102,6 +102,13 @@ namespace TomatoFighters.Editor.Prefabs
             cam.backgroundColor = new Color(0.15f, 0.15f, 0.2f);
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGO.transform.position = new Vector3(0f, 0f, -10f);
+
+            // Runtime diagnostic — validates damage pipeline on Play
+            var diagType = System.Type.GetType("DamagePipelineDiagnostic, Assembly-CSharp");
+            if (diagType != null)
+                camGO.AddComponent(diagType);
+            else
+                Debug.LogWarning("[MovementTestScene] DamagePipelineDiagnostic not found — skipping.");
         }
 
         private static void CreateArenaBackground()

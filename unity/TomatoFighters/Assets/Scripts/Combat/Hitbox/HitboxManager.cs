@@ -220,6 +220,9 @@ namespace TomatoFighters.Combat
         /// </summary>
         private void HandleHitDetected(IDamageable target, Vector2 hitPoint)
         {
+            Debug.Log($"[HitboxManager] HandleHitDetected ENTRY — target={target}, hitPoint={hitPoint}, " +
+                $"state={comboController?.CurrentState}, stepIndex={comboController?.CurrentStepIndex}");
+
             var attackData = GetCurrentAttackData();
             if (attackData == null)
             {
@@ -244,7 +247,12 @@ namespace TomatoFighters.Combat
                 case DamageResponse.Hit:
                     if (!target.IsInvulnerable)
                     {
+                        Debug.Log($"[HitboxManager] APPLYING DAMAGE: {packet.amount:F1} to {target} (type={packet.type})");
                         target.TakeDamage(packet);
+                    }
+                    else
+                    {
+                        Debug.Log($"[HitboxManager] BLOCKED by IsInvulnerable on {target}");
                     }
                     break;
 

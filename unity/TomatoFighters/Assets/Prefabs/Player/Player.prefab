@@ -102,6 +102,7 @@ GameObject:
   - component: {fileID: 3256251602842254549}
   - component: {fileID: 3525874026355810357}
   - component: {fileID: 3371754522427657081}
+  - component: {fileID: 618079417979342889}
   m_Layer: 9
   m_Name: Player
   m_TagString: Untagged
@@ -190,7 +191,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.1}
+  m_Offset: {x: 0, y: 0.6}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -349,6 +350,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxHealth: 100
+  defenseSystem: {fileID: 618079417979342889}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
   flashDuration: 0.15
 --- !u!114 &3525874026355810357
@@ -380,7 +382,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   comboController: {fileID: 6939669992788416737}
+  ownerDefenseSystem: {fileID: 618079417979342889}
+  useTimerFallback: 1
+  fallbackActiveDuration: 0.3
   baseAttack: 10
+--- !u!114 &618079417979342889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3134480171828959484}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 047f97ab82dec544bb25d8345111979d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  config: {fileID: 0}
+  motor: {fileID: 2861447664385703623}
+  comboController: {fileID: 6939669992788416737}
 --- !u!1 &5962387494755430168
 GameObject:
   m_ObjectHideFlags: 0

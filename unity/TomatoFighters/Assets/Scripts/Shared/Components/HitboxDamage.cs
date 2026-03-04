@@ -25,6 +25,14 @@ namespace TomatoFighters.Shared.Components
         private void OnEnable()
         {
             _hitThisActivation.Clear();
+
+            // Force physics to pick up this newly-enabled trigger collider immediately.
+            // Without this, autoSyncTransforms=false causes the collider position to be
+            // stale, and sleeping Rigidbody2Ds won't detect the overlap.
+            Physics2D.SyncTransforms();
+            var rb = GetComponentInParent<Rigidbody2D>();
+            if (rb != null) rb.WakeUp();
+
             Debug.Log($"[HitboxDamage] '{name}' ENABLED — layer={gameObject.layer}, subscribers={(OnHitDetected != null ? OnHitDetected.GetInvocationList().Length : 0)}");
         }
 
@@ -38,6 +46,8 @@ namespace TomatoFighters.Shared.Components
         // re-enabled while already overlapping. Stay fires on subsequent frames.
         private void OnTriggerStay2D(Collider2D other)
         {
+            if (_hitThisActivation.Count == 0)
+                Debug.Log($"[HitboxDamage] '{name}' OnTriggerStay2D with '{other.name}' (layer={other.gameObject.layer}) — first contact via Stay, not Enter");
             ProcessTrigger(other);
         }
 
