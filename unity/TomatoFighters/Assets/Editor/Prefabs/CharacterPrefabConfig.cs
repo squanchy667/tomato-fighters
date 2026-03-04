@@ -1,4 +1,5 @@
 using System;
+using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Shared.Enums;
 using UnityEditor.Animations;
@@ -37,5 +38,6 @@ namespace TomatoFighters.Editor.Prefabs
         public float baseAttack = 10f;
         public bool useTimerFallback = true;
         public float fallbackActiveDuration = 0.3f;
+        public PassiveConfig passiveConfig;
     }
 }

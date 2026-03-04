@@ -27,13 +27,17 @@ namespace TomatoFighters.Shared.Data
         /// <summary>Which character dealt this damage (for passive tracking).</summary>
         public readonly CharacterType source;
 
+        /// <summary>Pre-calculated pressure fill for the target's stun meter.</summary>
+        public readonly float stunFillAmount;
+
         public DamagePacket(
             DamageType type,
             float amount,
             bool isPunishDamage,
             Vector2 knockbackForce,
             Vector2 launchForce,
-            CharacterType source)
+            CharacterType source,
+            float stunFillAmount = 0f)
         {
             this.type = type;
             this.amount = amount;
@@ -41,6 +45,7 @@ namespace TomatoFighters.Shared.Data
             this.knockbackForce = knockbackForce;
             this.launchForce = launchForce;
             this.source = source;
+            this.stunFillAmount = stunFillAmount;
         }
     }
 }

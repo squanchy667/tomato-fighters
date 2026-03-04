@@ -68,6 +68,27 @@ namespace TomatoFighters.Shared.Data
         [Range(0.1f, 3.0f)]
         public float animationSpeed = 1.0f;
 
+        // ── Clash Window ──────────────────────────────────────────────────
+
+        [Header("Clash Window")]
+
+        [Tooltip("Delay in seconds from attack start before the clash window opens. 0 = opens immediately.")]
+        [Range(0f, 2.0f)]
+        public float clashWindowStart;
+
+        [Tooltip("Time in seconds from attack start when the clash window closes. 0 = no clash window.")]
+        [Range(0f, 3.0f)]
+        public float clashWindowEnd;
+
+        /// <summary>Whether this attack has a clash window.</summary>
+        public bool HasClashWindow => clashWindowEnd > clashWindowStart;
+
+        /// <summary>Duration of the clash window in seconds.</summary>
+        public float ClashWindowDuration => clashWindowEnd - clashWindowStart;
+
+        /// <summary>Hitbox start time in seconds, derived from frame data.</summary>
+        public float HitboxStartTime => hitboxStartFrame / (60f * animationSpeed);
+
         // ── Telegraph & State ───────────────────────────────────────────
 
         [Header("Telegraph & State")]
@@ -93,5 +114,23 @@ namespace TomatoFighters.Shared.Data
 
         [Tooltip("Sound on hit confirm. Can be null in Phase 1.")]
         public AudioClip hitSound;
+
+        // ── Validation ────────────────────────────────────────────────────
+
+        private void OnValidate()
+        {
+            if (!HasClashWindow) return;
+
+            if (clashWindowEnd <= clashWindowStart)
+            {
+                Debug.LogError($"[AttackData] '{attackName}': clashWindowEnd ({clashWindowEnd:F3}s) must be > clashWindowStart ({clashWindowStart:F3}s).", this);
+            }
+
+            float hitboxStart = HitboxStartTime;
+            if (clashWindowStart >= hitboxStart)
+            {
+                Debug.LogError($"[AttackData] '{attackName}': clash window starts at {clashWindowStart:F3}s but hitbox starts at {hitboxStart:F3}s. Clash window must open BEFORE the hitbox.", this);
+            }
+        }
     }
 }

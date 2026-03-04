@@ -88,9 +88,10 @@ Update task statuses in `tomato-fighters-docs/TASK_BOARD.md`:
    |-----------|--------|
    | All files in File Plan exist and have content | `DONE` |
    | Some files exist (partial implementation) | `IN_PROGRESS` |
-   | No files exist, but all dependencies are DONE | `PENDING` |
-   | No files exist, and a dependency is not DONE | `BLOCKED` |
+   | No files exist | `PENDING` |
    | Task spec says DONE (manually marked) | Trust it — `DONE` |
+
+   **Do NOT use BLOCKED** — dependency info is already in each task's "Depends On" field. Keep unstarted tasks as PENDING.
 
 3. Update the `[STATUS]` tag in TASK_BOARD.md for any changes
 4. **Cross-check:** If a task spec has `| **Status** | DONE |` but TASK_BOARD.md says `[PENDING]`, update the board to match the spec (spec is source of truth for completed tasks)

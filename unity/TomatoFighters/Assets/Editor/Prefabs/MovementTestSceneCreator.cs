@@ -1,7 +1,9 @@
 using TomatoFighters.Characters;
 using TomatoFighters.Combat;
 using TomatoFighters.Shared.Components;
+using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
+using TomatoFighters.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -42,12 +44,6 @@ namespace TomatoFighters.Editor.Prefabs
         private const float ARENA_HEIGHT = 10f;
         private const float WALL_THICKNESS = 1f;
 
-        [MenuItem("TomatoFighters/Create Movement Test Scene")]
-        public static void CreateTestScene()
-        {
-            CreateTestScene(PREFAB_PATH, SCENE_PATH, CharacterType.Mystica);
-        }
-
         /// <summary>
         /// Creates a movement test scene for a specific character prefab.
         /// Called by per-character scene creators.
@@ -61,7 +57,7 @@ namespace TomatoFighters.Editor.Prefabs
             CreateArenaBackground();
             CreateArenaWalls();
             CreatePlayerFromPrefab(prefabPath, characterType);
-            CreateTestDummyFromPrefab();
+            CreateTestDummies();
             CreateDebugCanvas();
 
             PlayerPrefabCreator.EnsureFolderExists(SCENE_FOLDER);
@@ -220,10 +216,158 @@ namespace TomatoFighters.Editor.Prefabs
                 hbSO.ApplyModifiedPropertiesWithoutUndo();
             }
 
-            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar.");
+            // Defense debug UI — floating text on deflect/clash/dodge
+            if (player.GetComponent<DefenseDebugUI>() == null)
+            {
+                var debugUI = player.AddComponent<DefenseDebugUI>();
+                var defenseSystem = player.GetComponent<DefenseSystem>();
+                if (defenseSystem != null)
+                {
+                    var debugSO = new SerializedObject(debugUI);
+                    debugSO.FindProperty("defenseSystem").objectReferenceValue = defenseSystem;
+                    debugSO.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar + DefenseDebugUI.");
         }
 
-        private static void CreateTestDummyFromPrefab()
+        // ── 5 Tiered Dummies ─────────────────────────────────────────────
+
+        private struct DummyTierConfig
+        {
+            public string name;
+            public string label;
+            public string attackAsset;
+            public string attackId;
+            public string attackName;
+            public float damageMultiplier;
+            public Vector2 knockbackForce;
+            public Vector2 launchForce;
+            public TelegraphType telegraphType;
+            public float telegraphDuration;
+            public float attackActiveDuration;
+            public float attackInterval;
+            public Color spriteColor;
+            public Vector2 bodyScale;
+            public Vector2 hitboxSize;
+            public Vector2 hitboxOffset;
+            public Vector3 position;
+        }
+
+        private static DummyTierConfig[] GetDummyTiers()
+        {
+            return new[]
+            {
+                // Tier 1 — Bruiser (strongest, attacks BOTH sides)
+                new DummyTierConfig
+                {
+                    name = "Dummy_Bruiser",
+                    label = "BRUISER [Both Sides]",
+                    attackAsset = "DummyBruiser",
+                    attackId = "dummy_bruiser",
+                    attackName = "Bruiser Slam",
+                    damageMultiplier = 2.0f,
+                    knockbackForce = new Vector2(8f, 2f),
+                    launchForce = new Vector2(0f, 3f),
+                    telegraphType = TelegraphType.Unstoppable,
+                    telegraphDuration = 1.5f,
+                    attackActiveDuration = 2.0f,
+                    attackInterval = 1.0f,
+                    spriteColor = new Color(0.7f, 0.1f, 0.1f),   // Dark crimson
+                    bodyScale = new Vector2(1.0f, 1.5f),
+                    hitboxSize = new Vector2(2.4f, 1.0f),
+                    hitboxOffset = new Vector2(0f, 0.1f),         // Centered — hits both sides
+                    position = new Vector3(0f, 2.5f, 0f)
+                },
+                // Tier 2 — Heavy
+                new DummyTierConfig
+                {
+                    name = "Dummy_Heavy",
+                    label = "HEAVY",
+                    attackAsset = "DummyHeavy",
+                    attackId = "dummy_heavy",
+                    attackName = "Heavy Swing",
+                    damageMultiplier = 1.5f,
+                    knockbackForce = new Vector2(5f, 1f),
+                    launchForce = Vector2.zero,
+                    telegraphType = TelegraphType.Unstoppable,
+                    telegraphDuration = 1.2f,
+                    attackActiveDuration = 1.5f,
+                    attackInterval = 2.0f,
+                    spriteColor = new Color(0.9f, 0.2f, 0.15f),  // Red
+                    bodyScale = new Vector2(0.9f, 1.35f),
+                    hitboxSize = new Vector2(1.0f, 0.8f),
+                    hitboxOffset = new Vector2(-0.7f, 0.1f),
+                    position = new Vector3(5f, -1.5f, 0f)
+                },
+                // Tier 3 — Fighter
+                new DummyTierConfig
+                {
+                    name = "Dummy_Fighter",
+                    label = "FIGHTER",
+                    attackAsset = "DummyFighter",
+                    attackId = "dummy_fighter",
+                    attackName = "Fighter Jab",
+                    damageMultiplier = 1.0f,
+                    knockbackForce = new Vector2(3f, 0f),
+                    launchForce = Vector2.zero,
+                    telegraphType = TelegraphType.Normal,
+                    telegraphDuration = 1.0f,
+                    attackActiveDuration = 1.0f,
+                    attackInterval = 3.0f,
+                    spriteColor = new Color(1f, 0.6f, 0.15f),    // Orange (original)
+                    bodyScale = new Vector2(0.8f, 1.2f),
+                    hitboxSize = new Vector2(0.8f, 0.6f),
+                    hitboxOffset = new Vector2(-0.6f, 0.1f),
+                    position = new Vector3(3f, 1f, 0f)
+                },
+                // Tier 4 — Scrapper
+                new DummyTierConfig
+                {
+                    name = "Dummy_Scrapper",
+                    label = "SCRAPPER",
+                    attackAsset = "DummyScrapper",
+                    attackId = "dummy_scrapper",
+                    attackName = "Scrapper Poke",
+                    damageMultiplier = 0.6f,
+                    knockbackForce = new Vector2(2f, 0f),
+                    launchForce = Vector2.zero,
+                    telegraphType = TelegraphType.Normal,
+                    telegraphDuration = 0.7f,
+                    attackActiveDuration = 0.7f,
+                    attackInterval = 4.0f,
+                    spriteColor = new Color(1f, 0.75f, 0.2f),    // Yellow-orange
+                    bodyScale = new Vector2(0.7f, 1.1f),
+                    hitboxSize = new Vector2(0.6f, 0.5f),
+                    hitboxOffset = new Vector2(-0.5f, 0.1f),
+                    position = new Vector3(7f, 1.5f, 0f)
+                },
+                // Tier 5 — Weakling (weakest)
+                new DummyTierConfig
+                {
+                    name = "Dummy_Weakling",
+                    label = "WEAKLING",
+                    attackAsset = "DummyWeakling",
+                    attackId = "dummy_weakling",
+                    attackName = "Weakling Slap",
+                    damageMultiplier = 0.3f,
+                    knockbackForce = new Vector2(1f, 0f),
+                    launchForce = Vector2.zero,
+                    telegraphType = TelegraphType.Normal,
+                    telegraphDuration = 0.5f,
+                    attackActiveDuration = 0.5f,
+                    attackInterval = 5.0f,
+                    spriteColor = new Color(1f, 0.9f, 0.4f),     // Pale yellow
+                    bodyScale = new Vector2(0.65f, 1.0f),
+                    hitboxSize = new Vector2(0.5f, 0.4f),
+                    hitboxOffset = new Vector2(-0.4f, 0.1f),
+                    position = new Vector3(7f, -2.5f, 0f)
+                }
+            };
+        }
+
+        private static void CreateTestDummies()
         {
             var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DUMMY_PREFAB_PATH);
             if (prefab == null)
@@ -234,14 +378,104 @@ namespace TomatoFighters.Editor.Prefabs
                 return;
             }
 
-            var dummy = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-            dummy.transform.position = new Vector3(3f, 0f, 0f);
+            var tiers = GetDummyTiers();
+            var dummiesRoot = new GameObject("Dummies");
 
-            // Ensure debug HP bar on scene instance (prefab may already have it)
+            for (int i = 0; i < tiers.Length; i++)
+            {
+                var tier = tiers[i];
+
+                // Create or load the tier-specific AttackData SO
+                string attackPath = $"Assets/ScriptableObjects/Attacks/Enemy/{tier.attackAsset}.asset";
+                var attackData = TestDummyPrefabCreator.CreateOrLoadAttackData(
+                    attackPath, tier.attackId, tier.attackName,
+                    tier.damageMultiplier, tier.knockbackForce, tier.launchForce,
+                    tier.telegraphType);
+
+                PlaceDummyInstance(prefab, dummiesRoot.transform, tier, attackData);
+            }
+
+            Debug.Log($"[MovementTestScene] Placed {tiers.Length} tiered dummies (Bruiser → Weakling).");
+        }
+
+        private static void PlaceDummyInstance(GameObject prefab, Transform parent,
+            DummyTierConfig tier, AttackData attackData)
+        {
+            var dummy = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            dummy.name = tier.name;
+            dummy.transform.SetParent(parent);
+            dummy.transform.position = tier.position;
+
+            // Override sprite color and body scale
+            var spriteChild = dummy.transform.Find("Sprite");
+            if (spriteChild != null)
+            {
+                var sr = spriteChild.GetComponent<SpriteRenderer>();
+                if (sr != null) sr.color = tier.spriteColor;
+                spriteChild.localScale = new Vector3(tier.bodyScale.x, tier.bodyScale.y, 1f);
+            }
+
+            // Override attack settings via SerializedObject
+            var dummyEnemy = dummy.GetComponent<TestDummyEnemy>();
+            if (dummyEnemy != null)
+            {
+                var so = new SerializedObject(dummyEnemy);
+                so.FindProperty("attackData").objectReferenceValue = attackData;
+                so.FindProperty("attackInterval").floatValue = tier.attackInterval;
+                so.FindProperty("attackActiveDuration").floatValue = tier.attackActiveDuration;
+                so.FindProperty("telegraphDuration").floatValue = tier.telegraphDuration;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            // Override hitbox collider size/offset for this tier
+            var hitboxChild = dummy.transform.Find("Hitbox_Punch");
+            if (hitboxChild != null)
+            {
+                var col = hitboxChild.GetComponent<BoxCollider2D>();
+                if (col != null)
+                {
+                    col.size = tier.hitboxSize;
+                    col.offset = tier.hitboxOffset;
+                }
+
+                // Update debug visual to match new collider
+                var debugVisual = hitboxChild.Find("DebugVisual");
+                if (debugVisual != null)
+                {
+                    debugVisual.localPosition = new Vector3(tier.hitboxOffset.x, tier.hitboxOffset.y, 0f);
+                    debugVisual.localScale = new Vector3(tier.hitboxSize.x, tier.hitboxSize.y, 1f);
+                }
+            }
+
+            // Ensure debug HP bar
             if (dummy.GetComponent<DebugHealthBar>() == null)
                 dummy.AddComponent<DebugHealthBar>();
 
-            Debug.Log("[MovementTestScene] TestDummy enemy placed at (3, 0) with DebugHealthBar.");
+            // Defense debug UI
+            if (dummy.GetComponent<DefenseDebugUI>() == null)
+            {
+                var debugUI = dummy.AddComponent<DefenseDebugUI>();
+                var defenseSystem = dummy.GetComponent<DefenseSystem>();
+                if (defenseSystem != null)
+                {
+                    var debugSO = new SerializedObject(debugUI);
+                    debugSO.FindProperty("defenseSystem").objectReferenceValue = defenseSystem;
+                    debugSO.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            // Floating label above the dummy
+            var labelGO = new GameObject("Label");
+            labelGO.transform.SetParent(dummy.transform);
+            float labelY = tier.bodyScale.y + 0.3f;
+            labelGO.transform.localPosition = new Vector3(0f, labelY, 0f);
+            var tm = labelGO.AddComponent<TextMesh>();
+            tm.text = tier.label;
+            tm.fontSize = 24;
+            tm.characterSize = 0.1f;
+            tm.anchor = TextAnchor.LowerCenter;
+            tm.alignment = TextAlignment.Center;
+            tm.color = tier.spriteColor;
         }
 
         private static void BuildInlineFallbackPlayer()

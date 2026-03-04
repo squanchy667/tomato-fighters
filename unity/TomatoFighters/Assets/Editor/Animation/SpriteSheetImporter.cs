@@ -38,8 +38,18 @@ namespace TomatoFighters.Editor.Animation
     /// <seealso cref="AnimationBuilder"/>
     public static class SpriteSheetImporter
     {
-        [MenuItem("TomatoFighters/Import Sprite Sheets/Mystica (default)")]
-        public static void ImportSpriteSheets()
+        [MenuItem("TomatoFighters/Import Sprite Sheets/All Characters")]
+        public static void ImportAllSpriteSheets()
+        {
+            foreach (var kvp in AnimationForgeMetadata.Characters)
+            {
+                Debug.Log($"[SpriteSheetImporter] Importing {kvp.Key}...");
+                ImportSpriteSheets(kvp.Value.sourceFolder);
+            }
+        }
+
+        [MenuItem("TomatoFighters/Import Sprite Sheets/Mystica")]
+        public static void ImportMysticaSpriteSheets()
         {
             ImportSpriteSheets(AnimationForgeMetadata.Characters["Mystica"].sourceFolder);
         }
@@ -48,6 +58,18 @@ namespace TomatoFighters.Editor.Animation
         public static void ImportSlasherSpriteSheets()
         {
             ImportSpriteSheets(AnimationForgeMetadata.Characters["Slasher"].sourceFolder);
+        }
+
+        [MenuItem("TomatoFighters/Import Sprite Sheets/Brutor")]
+        public static void ImportBrutorSpriteSheets()
+        {
+            ImportSpriteSheets(AnimationForgeMetadata.Characters["Brutor"].sourceFolder);
+        }
+
+        [MenuItem("TomatoFighters/Import Sprite Sheets/Viper")]
+        public static void ImportViperSpriteSheets()
+        {
+            ImportSpriteSheets(AnimationForgeMetadata.Characters["Viper"].sourceFolder);
         }
 
         /// <summary>

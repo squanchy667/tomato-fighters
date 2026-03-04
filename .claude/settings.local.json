@@ -20,7 +20,9 @@
       "Bash(git:*)",
       "Bash(do echo:*)",
       "Bash(tr:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(sed:*)",
+      "Bash(grep:*)"
     ]
   }
 }

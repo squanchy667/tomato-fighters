@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Slasher_DefenseConfig
   m_EditorClassIdentifier: 
   deflectWindowDuration: 0.12
-  clashWindowStart: 0.015
-  clashWindowEnd: 0.06
+  clashWindowStart: 0
+  clashWindowEnd: 0.4
   dodgeIFrameStart: 0.04
   dodgeIFrameEnd: 0.25
   defenseBonus: {fileID: 11400000, guid: 1c82e4750b36930478987bc825dc3b6d, type: 2}

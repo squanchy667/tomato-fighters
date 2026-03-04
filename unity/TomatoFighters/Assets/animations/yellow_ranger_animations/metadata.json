@@ -1,0 +1,11 @@
+{
+  "character_name": "yellow_ranger",
+  "animations": {
+    "idle":  { "frame_w": 128, "frame_h": 192, "cols": 4, "rows": 4, "n_frames": 16, "fps": 12, "loop": true,  "pivot": [0.5, 0.0], "ppu": 128 },
+    "walk":  { "frame_w": 128, "frame_h": 192, "cols": 4, "rows": 4, "n_frames": 16, "fps": 12, "loop": true,  "pivot": [0.5, 0.0], "ppu": 128 },
+    "run":   { "frame_w": 128, "frame_h": 192, "cols": 4, "rows": 2, "n_frames": 8,  "fps": 12, "loop": true,  "pivot": [0.5, 0.0], "ppu": 128 },
+    "jump":  { "frame_w": 128, "frame_h": 192, "cols": 4, "rows": 2, "n_frames": 8,  "fps": 12, "loop": false, "pivot": [0.5, 0.0], "ppu": 128 },
+    "land":  { "frame_w": 128, "frame_h": 192, "cols": 4, "rows": 1, "n_frames": 4,  "fps": 12, "loop": false, "pivot": [0.5, 0.0], "ppu": 128 },
+    "dash":  { "frame_w": 128, "frame_h": 192, "cols": 4, "rows": 2, "n_frames": 6,  "fps": 12, "loop": false, "pivot": [0.5, 0.0], "ppu": 128 }
+  }
+}

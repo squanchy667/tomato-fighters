@@ -1,4 +1,5 @@
 using System.IO;
+using TomatoFighters.Combat;
 using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
@@ -23,6 +24,8 @@ namespace TomatoFighters.Editor.Prefabs
         private const string ATTACK_FOLDER = "Assets/ScriptableObjects/Attacks/Enemy";
         private const string ATTACK_DATA_PATH = ATTACK_FOLDER + "/DummyPunch.asset";
         private const string SPRITE_FOLDER = "Assets/Sprites/Debug";
+        private const string DEFENSE_CONFIG_FOLDER = "Assets/ScriptableObjects/DefenseConfigs";
+        private const string DEFENSE_CONFIG_PATH = DEFENSE_CONFIG_FOLDER + "/TestDummy_DefenseConfig.asset";
 
         private const string ENEMY_HURTBOX_LAYER = "EnemyHurtbox";
         private const string ENEMY_HITBOX_LAYER = "EnemyHitbox";
@@ -34,16 +37,18 @@ namespace TomatoFighters.Editor.Prefabs
             PlayerPrefabCreator.EnsureFolderExists(SO_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(ATTACK_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(SPRITE_FOLDER);
+            PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
 
             var enemyData = CreateOrLoadEnemyData();
             var attackData = CreateOrLoadDummyPunchAttack();
+            var defenseConfig = CreateOrLoadDefenseConfig();
 
             // Create persistent sprite assets before building prefab
             var whiteSquare = GetOrCreateWhiteSquareSprite();
 
             bool isNew = AssetDatabase.LoadAssetAtPath<GameObject>(PREFAB_PATH) == null;
 
-            var prefab = SetupPrefab(enemyData, attackData, whiteSquare);
+            var prefab = SetupPrefab(enemyData, attackData, defenseConfig, whiteSquare);
 
             string verb = isNew ? "Created" : "Updated";
             Debug.Log($"[TestDummyPrefab] {verb} TestDummy prefab at {PREFAB_PATH}");
@@ -74,27 +79,50 @@ namespace TomatoFighters.Editor.Prefabs
         private static AttackData CreateOrLoadDummyPunchAttack()
         {
             var existing = AssetDatabase.LoadAssetAtPath<AttackData>(ATTACK_DATA_PATH);
-            if (existing != null)
-                return existing;
+            var attack = existing != null ? existing : ScriptableObject.CreateInstance<AttackData>();
 
-            var attack = ScriptableObject.CreateInstance<AttackData>();
+            // Large hitbox window for testing clash timing
             attack.attackId = "dummy_punch";
             attack.attackName = "Dummy Punch";
             attack.damageMultiplier = 0.5f;
             attack.knockbackForce = new Vector2(3f, 0f);
             attack.launchForce = Vector2.zero;
             attack.hitboxId = "Punch";
-            attack.hitboxStartFrame = 2;
-            attack.hitboxActiveFrames = 3;
-            attack.totalFrames = 15;
+            attack.hitboxStartFrame = 12;   // ~200ms startup at 60fps — gives player time to react
+            attack.hitboxActiveFrames = 18; // ~300ms active window
+            attack.totalFrames = 45;        // ~750ms total animation
             attack.animationSpeed = 1f;
             attack.telegraphType = Shared.Enums.TelegraphType.Normal;
 
-            AssetDatabase.CreateAsset(attack, ATTACK_DATA_PATH);
+            if (existing == null)
+                AssetDatabase.CreateAsset(attack, ATTACK_DATA_PATH);
+            else
+                EditorUtility.SetDirty(attack);
             AssetDatabase.SaveAssets();
 
-            Debug.Log("[TestDummyPrefab] Created DummyPunch AttackData.");
+            Debug.Log("[TestDummyPrefab] Created/Updated DummyPunch AttackData (large windows for clash testing).");
             return attack;
+        }
+
+        private static DefenseConfig CreateOrLoadDefenseConfig()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<DefenseConfig>(DEFENSE_CONFIG_PATH);
+            if (existing != null)
+                return existing;
+
+            // TestDummy only uses clash (during telegraph). No deflect/dodge.
+            var config = ScriptableObject.CreateInstance<DefenseConfig>();
+            config.deflectWindowDuration = 0f;
+            config.clashWindowStart = 0f;
+            config.clashWindowEnd = 0f; // Clash window is opened manually via OpenClashWindow
+            config.dodgeIFrameStart = 0f;
+            config.dodgeIFrameEnd = 0f;
+
+            AssetDatabase.CreateAsset(config, DEFENSE_CONFIG_PATH);
+            AssetDatabase.SaveAssets();
+
+            Debug.Log("[TestDummyPrefab] Created TestDummy_DefenseConfig.");
+            return config;
         }
 
         // ── Sprite Asset Creation ─────────────────────────────────────────
@@ -144,9 +172,47 @@ namespace TomatoFighters.Editor.Prefabs
             return sprite;
         }
 
+        // ── Attack Data Factory ───────────────────────────────────────────
+
+        /// <summary>
+        /// Creates or updates an AttackData SO at the given path.
+        /// Used by MovementTestSceneCreator to set up tiered dummies.
+        /// </summary>
+        public static AttackData CreateOrLoadAttackData(
+            string path, string attackId, string attackName,
+            float damageMultiplier, Vector2 knockbackForce, Vector2 launchForce,
+            TelegraphType telegraphType)
+        {
+            PlayerPrefabCreator.EnsureFolderExists(ATTACK_FOLDER);
+
+            var existing = AssetDatabase.LoadAssetAtPath<AttackData>(path);
+            var attack = existing != null ? existing : ScriptableObject.CreateInstance<AttackData>();
+
+            attack.attackId = attackId;
+            attack.attackName = attackName;
+            attack.damageMultiplier = damageMultiplier;
+            attack.knockbackForce = knockbackForce;
+            attack.launchForce = launchForce;
+            attack.hitboxId = "Punch";
+            attack.hitboxStartFrame = 12;
+            attack.hitboxActiveFrames = 18;
+            attack.totalFrames = 45;
+            attack.animationSpeed = 1f;
+            attack.telegraphType = telegraphType;
+
+            if (existing == null)
+                AssetDatabase.CreateAsset(attack, path);
+            else
+                EditorUtility.SetDirty(attack);
+            AssetDatabase.SaveAssets();
+
+            return attack;
+        }
+
         // ── Prefab Setup ──────────────────────────────────────────────────
 
-        private static GameObject SetupPrefab(EnemyData enemyData, AttackData attackData, Sprite whiteSquare)
+        private static GameObject SetupPrefab(EnemyData enemyData, AttackData attackData,
+            DefenseConfig defenseConfig, Sprite whiteSquare)
         {
             int hurtboxLayer = LayerMask.NameToLayer(ENEMY_HURTBOX_LAYER);
             int hitboxLayer = LayerMask.NameToLayer(ENEMY_HITBOX_LAYER);
@@ -214,9 +280,15 @@ namespace TomatoFighters.Editor.Prefabs
             if (attackDataProp != null)
                 attackDataProp.objectReferenceValue = attackData;
 
+            // Large windows for clash testing:
+            // 1s telegraph (react window) → 1.5s hitbox active (overlap window)
             var activeDurProp = dummySO.FindProperty("attackActiveDuration");
             if (activeDurProp != null)
-                activeDurProp.floatValue = 0.6f;
+                activeDurProp.floatValue = 1.5f;
+
+            var telegraphProp = dummySO.FindProperty("telegraphDuration");
+            if (telegraphProp != null)
+                telegraphProp.floatValue = 1.0f;
 
             // -- Hitbox_Punch child --
             var hitboxChild = FindOrCreateChild(root, "Hitbox_Punch");
@@ -240,6 +312,19 @@ namespace TomatoFighters.Editor.Prefabs
             if (hitboxProp != null)
                 hitboxProp.objectReferenceValue = hitboxDmg;
 
+            // -- DefenseSystem (enables clash during telegraph) --
+            var defenseSystem = EnsureComponent<DefenseSystem>(root);
+            var defSO = new SerializedObject(defenseSystem);
+            defSO.FindProperty("config").objectReferenceValue = defenseConfig;
+            // Enemy has no motor or comboController — clash window opened manually
+            defSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- ClashTracker (per-activation clash immunity) --
+            var clashTracker = EnsureComponent<ClashTracker>(root);
+
+            // Wire defenseProviderComponent on EnemyBase to the DefenseSystem
+            dummySO.FindProperty("defenseProviderComponent").objectReferenceValue = defenseSystem;
+            dummySO.FindProperty("clashTracker").objectReferenceValue = clashTracker;
             dummySO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- DebugHealthBar (temp HP bar, replaced by T025 HUD) --

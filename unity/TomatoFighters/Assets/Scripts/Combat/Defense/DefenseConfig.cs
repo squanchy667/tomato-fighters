@@ -16,11 +16,11 @@ namespace TomatoFighters.Combat
 
         [Header("Clash (Heavy Attack Facing Toward)")]
         [Tooltip("Start delay in seconds from heavy attack start.")]
-        [Range(0f, 0.1f)]
+        [Range(0f, 2.0f)]
         public float clashWindowStart = 0.02f;
 
         [Tooltip("End time in seconds from heavy attack start.")]
-        [Range(0f, 0.2f)]
+        [Range(0f, 3.0f)]
         public float clashWindowEnd = 0.08f;
 
         [Header("Dodge (Dash Vertical)")]

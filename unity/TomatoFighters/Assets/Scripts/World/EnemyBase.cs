@@ -25,6 +25,12 @@ namespace TomatoFighters.World
         /// <summary>Fired when this enemy dies. WaveManager subscribes to track alive count.</summary>
         public event Action OnDied;
 
+        /// <summary>Fired when this enemy becomes stunned. Camera/UI/Roguelite subscribe.</summary>
+        public event Action<StunEventData> StunTriggered;
+
+        /// <summary>Fired when this enemy recovers from stun.</summary>
+        public event Action<StunRecoveredEventData> StunRecovered;
+
         // ── Cached Components ─────────────────────────────────────────────
 
         protected Rigidbody2D Rb { get; private set; }
@@ -33,6 +39,9 @@ namespace TomatoFighters.World
         protected EnemyData Data => enemyData;
 
         private IDefenseProvider _defenseProvider;
+
+        /// <summary>The entity's defense provider, if any. Subclasses use this to open clash windows.</summary>
+        protected IDefenseProvider DefenseProvider => _defenseProvider;
 
         // ── Health ────────────────────────────────────────────────────────
 
@@ -50,6 +59,7 @@ namespace TomatoFighters.World
 
         private float _pressureFill;
         private bool _isStunned;
+        private CharacterType _lastHitBy;
 
         /// <inheritdoc/>
         public bool IsStunned => _isStunned;
@@ -77,6 +87,9 @@ namespace TomatoFighters.World
 
         /// <inheritdoc/>
         public virtual bool IsInPunishableState => false;
+
+        /// <inheritdoc/>
+        public virtual bool IsInClashWindow => _defenseProvider?.IsInClashWindow ?? false;
 
         // ── Unity Lifecycle ───────────────────────────────────────────────
 
@@ -109,11 +122,11 @@ namespace TomatoFighters.World
             }
 
             _currentHealth -= damage.amount;
+            _lastHitBy = damage.source;
             Debug.Log($"[EnemyBase] TakeDamage: {damage.amount:F1} dmg → HP: {_currentHealth:F1}/{enemyData.maxHealth}");
 
-            // Pressure fills faster on punish hits
-            float pressureAmount = damage.amount * (damage.isPunishDamage ? 2f : 1f);
-            AddStun(pressureAmount);
+            // Use pre-calculated stun fill from attacker's stats (DD-1)
+            AddStun(damage.stunFillAmount);
 
             ApplyKnockback(damage.knockbackForce);
             ApplyLaunch(damage.launchForce);
@@ -176,12 +189,17 @@ namespace TomatoFighters.World
             _isStunned = true;
             OnStunned();
 
+            StunTriggered?.Invoke(new StunEventData(
+                _lastHitBy, transform.position, enemyData.stunDuration));
+
             yield return new WaitForSeconds(enemyData.stunDuration);
 
             _isStunned = false;
             _pressureFill = 0f;
 
             OnRecovery();
+
+            StunRecovered?.Invoke(new StunRecoveredEventData(transform.position));
 
             // Post-stun invulnerability blink
             yield return InvulnerabilityBlink();

@@ -1,3 +1,4 @@
+using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Editor.Prefabs;
 using TomatoFighters.Shared.Data;
@@ -23,6 +24,10 @@ namespace TomatoFighters.Editor.Characters
         private const string ATTACKS_FOLDER = "Assets/ScriptableObjects/Attacks/Mystica";
         private const string MYSTICA_CONFIG_PATH = CONFIG_FOLDER + "/Mystica_MovementConfig.asset";
         private const string MYSTICA_COMBO_PATH = COMBO_FOLDER + "/Mystica_ComboDefinition.asset";
+        private const string DEFENSE_CONFIG_FOLDER = "Assets/ScriptableObjects/DefenseConfigs";
+        private const string MYSTICA_DEFENSE_PATH = DEFENSE_CONFIG_FOLDER + "/Mystica_DefenseConfig.asset";
+        private const string PASSIVE_CONFIG_FOLDER = "Assets/ScriptableObjects/Passives";
+        private const string PASSIVE_CONFIG_PATH = PASSIVE_CONFIG_FOLDER + "/PassiveConfig.asset";
         private const string CONTROLLER_PATH = "Assets/Animations/Mystica/Mystica_Controller.controller";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
@@ -32,9 +37,14 @@ namespace TomatoFighters.Editor.Characters
             PlayerPrefabCreator.EnsureFolderExists("Assets/Prefabs/Player");
             PlayerPrefabCreator.EnsureFolderExists(CONFIG_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(COMBO_FOLDER);
+            PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
+
+            PlayerPrefabCreator.EnsureFolderExists(PASSIVE_CONFIG_FOLDER);
 
             var movementConfig = CreateOrLoadMysticaMovementConfig();
             var comboDef = CreateOrLoadMysticaComboDefinition();
+            var defenseConfig = CreateOrLoadMysticaDefenseConfig();
+            var passiveConfig = CreateOrLoadPassiveConfig();
             WireAttackDataIntoComboSteps(comboDef);
 
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH);
@@ -51,6 +61,8 @@ namespace TomatoFighters.Editor.Characters
                 comboDefinition = comboDef,
                 animatorController = controller,
                 inputActions = inputActions,
+                defenseConfig = defenseConfig,
+                passiveConfig = passiveConfig,
                 baseAttack = 10f,
                 useTimerFallback = true,
                 fallbackActiveDuration = 0.3f,
@@ -82,6 +94,19 @@ namespace TomatoFighters.Editor.Characters
 
             PlayerPrefabCreator.CreatePlayerPrefab(config);
             Debug.Log("[MysticaCreator] Mystica prefab created successfully.");
+        }
+
+        private static PassiveConfig CreateOrLoadPassiveConfig()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<PassiveConfig>(PASSIVE_CONFIG_PATH);
+            if (existing != null)
+                return existing;
+
+            var config = ScriptableObject.CreateInstance<PassiveConfig>();
+            AssetDatabase.CreateAsset(config, PASSIVE_CONFIG_PATH);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[MysticaCreator] Created PassiveConfig at " + PASSIVE_CONFIG_PATH);
+            return config;
         }
 
         private static MovementConfig CreateOrLoadMysticaMovementConfig()
@@ -175,6 +200,53 @@ namespace TomatoFighters.Editor.Characters
 
             Debug.Log("[MysticaCreator] Created Mystica_ComboDefinition.");
             return def;
+        }
+
+        private static DefenseConfig CreateOrLoadMysticaDefenseConfig()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<DefenseConfig>(MYSTICA_DEFENSE_PATH);
+            var config = existing;
+
+            if (config == null)
+            {
+                PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
+                config = ScriptableObject.CreateInstance<DefenseConfig>();
+            }
+
+            // Mystica: widest dodge (primary survival), generous clash for testing
+            config.deflectWindowDuration = 0.10f;
+            config.clashWindowStart = 0.0f;
+            config.clashWindowEnd = 0.3f;
+            config.dodgeIFrameStart = 0.03f;
+            config.dodgeIFrameEnd = 0.35f;
+
+            // Wire MysticaDefenseBonus if it exists
+            if (config.defenseBonus == null)
+            {
+                var bonusGuids = AssetDatabase.FindAssets("t:MysticaDefenseBonus");
+                if (bonusGuids.Length > 0)
+                {
+                    config.defenseBonus = AssetDatabase.LoadAssetAtPath<DefenseBonus>(
+                        AssetDatabase.GUIDToAssetPath(bonusGuids[0]));
+                }
+                else
+                {
+                    var bonus = ScriptableObject.CreateInstance<MysticaDefenseBonus>();
+                    string bonusPath = DEFENSE_CONFIG_FOLDER + "/MysticaDefenseBonus.asset";
+                    AssetDatabase.CreateAsset(bonus, bonusPath);
+                    config.defenseBonus = bonus;
+                    Debug.Log("[MysticaCreator] Created MysticaDefenseBonus SO.");
+                }
+            }
+
+            if (existing == null)
+                AssetDatabase.CreateAsset(config, MYSTICA_DEFENSE_PATH);
+            else
+                EditorUtility.SetDirty(config);
+            AssetDatabase.SaveAssets();
+
+            Debug.Log("[MysticaCreator] Created/Updated Mystica_DefenseConfig.");
+            return config;
         }
 
         /// <summary>

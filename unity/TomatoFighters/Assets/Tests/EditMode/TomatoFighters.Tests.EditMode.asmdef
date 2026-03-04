@@ -2,6 +2,7 @@
     "name": "TomatoFighters.Tests.EditMode",
     "rootNamespace": "TomatoFighters.Tests.EditMode",
     "references": [
+        "TomatoFighters.Characters",
         "TomatoFighters.Combat",
         "TomatoFighters.Shared",
         "TomatoFighters.Paths"

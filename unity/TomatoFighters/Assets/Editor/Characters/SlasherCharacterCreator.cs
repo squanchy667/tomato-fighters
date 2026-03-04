@@ -1,3 +1,4 @@
+using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Editor.Prefabs;
 using TomatoFighters.Shared.Data;
@@ -25,6 +26,8 @@ namespace TomatoFighters.Editor.Characters
         private const string SLASHER_CONFIG_PATH = CONFIG_FOLDER + "/Slasher_MovementConfig.asset";
         private const string SLASHER_COMBO_PATH = COMBO_FOLDER + "/Slasher_ComboDefinition.asset";
         private const string SLASHER_DEFENSE_PATH = DEFENSE_CONFIG_FOLDER + "/Slasher_DefenseConfig.asset";
+        private const string PASSIVE_CONFIG_FOLDER = "Assets/ScriptableObjects/Passives";
+        private const string PASSIVE_CONFIG_PATH = PASSIVE_CONFIG_FOLDER + "/PassiveConfig.asset";
         private const string CONTROLLER_PATH = "Assets/Animations/Slasher/Slasher_Controller.controller";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
 
@@ -36,9 +39,12 @@ namespace TomatoFighters.Editor.Characters
             PlayerPrefabCreator.EnsureFolderExists(COMBO_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
 
+            PlayerPrefabCreator.EnsureFolderExists(PASSIVE_CONFIG_FOLDER);
+
             var movementConfig = CreateOrLoadSlasherMovementConfig();
             var comboDef = CreateOrLoadSlasherComboDefinition();
             var defenseConfig = CreateOrLoadSlasherDefenseConfig();
+            var passiveConfig = CreateOrLoadPassiveConfig();
             WireAttackDataIntoComboSteps(comboDef);
 
             var controller = AssetDatabase.LoadAssetAtPath<AnimatorController>(CONTROLLER_PATH);
@@ -56,6 +62,7 @@ namespace TomatoFighters.Editor.Characters
                 animatorController = controller,
                 inputActions = inputActions,
                 defenseConfig = defenseConfig,
+                passiveConfig = passiveConfig,
                 baseAttack = 20f, // ATK 2.0 × base 10
                 useTimerFallback = true,
                 fallbackActiveDuration = 0.25f,
@@ -98,6 +105,19 @@ namespace TomatoFighters.Editor.Characters
 
             PlayerPrefabCreator.CreatePlayerPrefab(config);
             Debug.Log("[SlasherCreator] Slasher prefab created successfully at " + PREFAB_PATH);
+        }
+
+        private static PassiveConfig CreateOrLoadPassiveConfig()
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<PassiveConfig>(PASSIVE_CONFIG_PATH);
+            if (existing != null)
+                return existing;
+
+            var config = ScriptableObject.CreateInstance<PassiveConfig>();
+            AssetDatabase.CreateAsset(config, PASSIVE_CONFIG_PATH);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[SlasherCreator] Created PassiveConfig at " + PASSIVE_CONFIG_PATH);
+            return config;
         }
 
         private static MovementConfig CreateOrLoadSlasherMovementConfig()
@@ -237,40 +257,47 @@ namespace TomatoFighters.Editor.Characters
         private static DefenseConfig CreateOrLoadSlasherDefenseConfig()
         {
             var existing = AssetDatabase.LoadAssetAtPath<DefenseConfig>(SLASHER_DEFENSE_PATH);
-            if (existing != null)
-                return existing;
+            var config = existing;
 
-            PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
+            if (config == null)
+            {
+                PlayerPrefabCreator.EnsureFolderExists(DEFENSE_CONFIG_FOLDER);
+                config = ScriptableObject.CreateInstance<DefenseConfig>();
+            }
 
             // Slasher: tighter deflect/clash windows but rewarded with guaranteed crit
-            var config = ScriptableObject.CreateInstance<DefenseConfig>();
             config.deflectWindowDuration = 0.12f;
-            config.clashWindowStart = 0.015f;
-            config.clashWindowEnd = 0.06f;
+            config.clashWindowStart = 0.0f;
+            config.clashWindowEnd = 0.4f;
             config.dodgeIFrameStart = 0.04f;
             config.dodgeIFrameEnd = 0.25f;
 
             // Wire SlasherDefenseBonus if it exists
-            var bonusGuids = AssetDatabase.FindAssets("t:SlasherDefenseBonus");
-            if (bonusGuids.Length > 0)
+            if (config.defenseBonus == null)
             {
-                config.defenseBonus = AssetDatabase.LoadAssetAtPath<DefenseBonus>(
-                    AssetDatabase.GUIDToAssetPath(bonusGuids[0]));
-            }
-            else
-            {
-                // Create the bonus SO
-                var bonus = ScriptableObject.CreateInstance<SlasherDefenseBonus>();
-                string bonusPath = DEFENSE_CONFIG_FOLDER + "/SlasherDefenseBonus.asset";
-                AssetDatabase.CreateAsset(bonus, bonusPath);
-                config.defenseBonus = bonus;
-                Debug.Log("[SlasherCreator] Created SlasherDefenseBonus SO.");
+                var bonusGuids = AssetDatabase.FindAssets("t:SlasherDefenseBonus");
+                if (bonusGuids.Length > 0)
+                {
+                    config.defenseBonus = AssetDatabase.LoadAssetAtPath<DefenseBonus>(
+                        AssetDatabase.GUIDToAssetPath(bonusGuids[0]));
+                }
+                else
+                {
+                    var bonus = ScriptableObject.CreateInstance<SlasherDefenseBonus>();
+                    string bonusPath = DEFENSE_CONFIG_FOLDER + "/SlasherDefenseBonus.asset";
+                    AssetDatabase.CreateAsset(bonus, bonusPath);
+                    config.defenseBonus = bonus;
+                    Debug.Log("[SlasherCreator] Created SlasherDefenseBonus SO.");
+                }
             }
 
-            AssetDatabase.CreateAsset(config, SLASHER_DEFENSE_PATH);
+            if (existing == null)
+                AssetDatabase.CreateAsset(config, SLASHER_DEFENSE_PATH);
+            else
+                EditorUtility.SetDirty(config);
             AssetDatabase.SaveAssets();
 
-            Debug.Log("[SlasherCreator] Created Slasher_DefenseConfig.");
+            Debug.Log("[SlasherCreator] Created/Updated Slasher_DefenseConfig.");
             return config;
         }
 
@@ -282,23 +309,24 @@ namespace TomatoFighters.Editor.Characters
         {
             if (comboDef == null || comboDef.steps == null) return;
 
-            // Step index → (attack SO name, hitboxId)
-            var mapping = new (string soName, string hitboxId)[]
+            // Step index → (attack SO name, hitboxId, clashStart, clashEnd)
+            // Clash windows: 0/0 = no clash (light attacks). Heavy attacks get clash before hitbox.
+            var mapping = new (string soName, string hitboxId, float clashStart, float clashEnd)[]
             {
-                ("SlasherSlash1",        "Slash"),       // 0: light opener
-                ("SlasherSlash2",        "Slash"),       // 1: light follow-up
-                ("SlasherSlash3",        "WideSlash"),   // 2: light finisher
-                ("SlasherHeavySlash",    "WideSlash"),   // 3: heavy opener
-                ("SlasherLunge",         "Lunge"),       // 4: heavy lunge
-                ("SlasherLungeFinisher", "Lunge"),       // 5: heavy finisher
-                ("SlasherQuickSlash",    "Slash"),       // 6: quick poke (L1→H branch)
-                ("SlasherSpinFinisher",  "Spin"),        // 7: spin AoE (L2→H branch)
+                ("SlasherSlash1",        "Slash",     0f,   0f),     // 0: light — no clash
+                ("SlasherSlash2",        "Slash",     0f,   0f),     // 1: light — no clash
+                ("SlasherSlash3",        "WideSlash", 0f,   0f),     // 2: light finisher — no clash
+                ("SlasherHeavySlash",    "WideSlash", 0f,   0.35f),  // 3: heavy opener — hitbox at frame 3 (~50ms)
+                ("SlasherLunge",         "Lunge",     0f,   0.35f),  // 4: heavy lunge — hitbox at frame 3 (~50ms)
+                ("SlasherLungeFinisher", "Lunge",     0f,   0.4f),   // 5: heavy finisher — hitbox at frame 4 (~67ms)
+                ("SlasherQuickSlash",    "Slash",     0f,   0.25f),  // 6: quick poke (L1→H) — hitbox at frame 2 (~33ms)
+                ("SlasherSpinFinisher",  "Spin",      0f,   0.35f),  // 7: spin AoE (L2→H) — hitbox at frame 3 (~50ms)
             };
 
             bool dirty = false;
             for (int i = 0; i < mapping.Length && i < comboDef.steps.Length; i++)
             {
-                var (soName, hitboxId) = mapping[i];
+                var (soName, hitboxId, clashStart, clashEnd) = mapping[i];
                 string path = $"{ATTACKS_FOLDER}/{soName}.asset";
                 var attack = AssetDatabase.LoadAssetAtPath<AttackData>(path);
 
@@ -314,11 +342,25 @@ namespace TomatoFighters.Editor.Characters
                     dirty = true;
                 }
 
+                bool attackDirty = false;
+
                 if (attack.hitboxId != hitboxId)
                 {
                     attack.hitboxId = hitboxId;
+                    attackDirty = true;
+                }
+
+                if (attack.clashWindowStart != clashStart || attack.clashWindowEnd != clashEnd)
+                {
+                    attack.clashWindowStart = clashStart;
+                    attack.clashWindowEnd = clashEnd;
+                    attackDirty = true;
+                }
+
+                if (attackDirty)
+                {
                     EditorUtility.SetDirty(attack);
-                    Debug.Log($"[SlasherCreator] {soName} → hitboxId='{hitboxId}'");
+                    Debug.Log($"[SlasherCreator] {soName} → hitboxId='{hitboxId}', clash=[{clashStart:F2}s, {clashEnd:F2}s]");
                 }
             }
 

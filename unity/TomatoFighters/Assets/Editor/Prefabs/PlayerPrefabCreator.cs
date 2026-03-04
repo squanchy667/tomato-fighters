@@ -1,4 +1,5 @@
 using TomatoFighters.Characters;
+using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Enums;
@@ -189,15 +190,29 @@ namespace TomatoFighters.Editor.Prefabs
             // -- Hitbox children from config --
             CreateHitboxChildren(root, config);
 
+            // -- ClashTracker (per-activation clash immunity) --
+            var clashTracker = EnsureComponent<ClashTracker>(root);
+
             // -- HitboxManager --
             var hitboxManager = EnsureComponent<HitboxManager>(root);
             var hmSO = new SerializedObject(hitboxManager);
             hmSO.FindProperty("comboController").objectReferenceValue = comboController;
             hmSO.FindProperty("ownerDefenseSystem").objectReferenceValue = defenseSystem;
+            hmSO.FindProperty("ownerClashTracker").objectReferenceValue = clashTracker;
             hmSO.FindProperty("baseAttack").floatValue = config.baseAttack;
             hmSO.FindProperty("useTimerFallback").boolValue = config.useTimerFallback;
             hmSO.FindProperty("fallbackActiveDuration").floatValue = config.fallbackActiveDuration;
             hmSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- PassiveAbilitySystem --
+            var passiveSystem = EnsureComponent<PassiveAbilitySystem>(root);
+            var psSO = new SerializedObject(passiveSystem);
+            psSO.FindProperty("characterType").enumValueIndex = (int)config.characterType;
+            psSO.FindProperty("hitboxManager").objectReferenceValue = hitboxManager;
+            psSO.FindProperty("comboController").objectReferenceValue = comboController;
+            if (config.passiveConfig != null)
+                psSO.FindProperty("passiveConfig").objectReferenceValue = config.passiveConfig;
+            psSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- Clean up missing scripts (e.g. old HitboxDamage refs after move to Shared) --
             RemoveMissingScripts(root);

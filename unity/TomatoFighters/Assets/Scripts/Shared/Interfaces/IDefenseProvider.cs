@@ -17,5 +17,21 @@ namespace TomatoFighters.Shared.Interfaces
         /// <param name="isUnstoppable">Whether the incoming attack is unstoppable.</param>
         /// <returns>The defense outcome.</returns>
         DamageResponse ResolveDefense(Vector2 attackerPosition, bool isUnstoppable);
+
+        /// <summary>Whether the entity is currently in a clash window (HeavyStartup state).</summary>
+        bool IsInClashWindow { get; }
+
+        /// <summary>
+        /// Opens a clash window manually. Used by entities without a ComboController
+        /// (e.g. enemies open this during telegraph).
+        /// </summary>
+        void OpenClashWindow(float duration, Vector2 facingDirection);
+
+        /// <summary>
+        /// Notify that a defense was successful. Fires defense events (OnDeflect/OnClash/OnDodge)
+        /// so visual feedback systems can respond. Called by hit resolvers after
+        /// <see cref="ResolveDefense"/> returns a non-Hit result.
+        /// </summary>
+        void NotifyDefenseSuccess(DamageResponse response, float incomingDamage, DamageType incomingType);
     }
 }

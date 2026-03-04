@@ -47,5 +47,11 @@ namespace TomatoFighters.Shared.Interfaces
 
         /// <summary>Fired when a path ability is used in combat.</summary>
         event Action<PathAbilityEventData> OnPathAbilityUsed;
+
+        /// <summary>Fired when an enemy's pressure meter fills and they become stunned.</summary>
+        event Action<StunEventData> OnStun;
+
+        /// <summary>Fired when an enemy recovers from stun (before invulnerability blink).</summary>
+        event Action<StunRecoveredEventData> OnStunRecovered;
     }
 }

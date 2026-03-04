@@ -25,6 +25,19 @@ Pillars communicate ONLY through `Shared/Interfaces/`. Never import across pilla
 - Rigidbody2D for physics — never transform.position for knockback/launch
 - Plain C# classes for testable logic (calculators, state machines)
 - Comments: WHY not WHAT. Public APIs get `<summary>` XML docs
+- **NEVER modify `.prefab` or `.unity` (scene) files directly** — always modify the corresponding **Creator Script** in `Assets/Editor/` instead. Creator Scripts are the source of truth for all prefabs and test scenes. The user runs them from Unity's menu to regenerate assets. See `tomato-fighters-docs/developer/unity-editor-scripts.md` for the full reference.
+
+## Creator Scripts (Assets/Editor/)
+Creator Scripts are C# Editor scripts that programmatically build prefabs, ScriptableObjects, and test scenes. They are the **single source of truth** — `.prefab` and `.unity` files are generated outputs, not hand-edited.
+
+| Pattern | Location | Examples |
+|---------|----------|----------|
+| **Character Creators** | `Editor/Characters/{Name}CharacterCreator.cs` | Defines movement config, combo tree, hitboxes, defense config → delegates to `PlayerPrefabCreator` |
+| **Scene Creators** | `Editor/Characters/{Name}MovementTestSceneCreator.cs` | Defines which prefab + scene path → delegates to `MovementTestSceneCreator` |
+| **Asset Creators** | `Editor/Create*.cs`, `Editor/PathDataCreator.cs` | Creates AttackData, ComboDefinition, PathData SOs |
+| **Generic Builders** | `Editor/Prefabs/PlayerPrefabCreator.cs`, `MovementTestSceneCreator.cs` | Shared builders that character-specific creators delegate to |
+
+When a task says "update the prefab" or "change the test scene," it means: **edit the Creator Script**, not the generated file. When the user says "Creator Scripts", "Editor Scripts", or "unity scripts", they all refer to these.
 
 ## Naming
 - PascalCase: classes, methods, properties

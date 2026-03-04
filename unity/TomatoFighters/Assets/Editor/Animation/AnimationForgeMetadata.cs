@@ -63,6 +63,16 @@ namespace TomatoFighters.Editor.Animation
             {
                 sourceFolder = "Assets/animations/blue_warrior_animations",
                 outputFolder = "Assets/Animations/Slasher"
+            },
+            ["Brutor"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/red_brute_animations",
+                outputFolder = "Assets/Animations/Brutor"
+            },
+            ["Viper"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/yellow_ranger_animations",
+                outputFolder = "Assets/Animations/Viper"
             }
         };
 

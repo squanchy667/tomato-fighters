@@ -215,4 +215,30 @@ namespace TomatoFighters.Shared.Data
             this.manaCost = manaCost;
         }
     }
+
+    /// <summary>Data for when an enemy becomes stunned (pressure meter full).</summary>
+    public readonly struct StunEventData
+    {
+        public readonly CharacterType lastHitBy;
+        public readonly Vector2 stunnedPosition;
+        public readonly float stunDuration;
+
+        public StunEventData(CharacterType lastHitBy, Vector2 stunnedPosition, float stunDuration)
+        {
+            this.lastHitBy = lastHitBy;
+            this.stunnedPosition = stunnedPosition;
+            this.stunDuration = stunDuration;
+        }
+    }
+
+    /// <summary>Data for when an enemy recovers from stun.</summary>
+    public readonly struct StunRecoveredEventData
+    {
+        public readonly Vector2 recoveredPosition;
+
+        public StunRecoveredEventData(Vector2 recoveredPosition)
+        {
+            this.recoveredPosition = recoveredPosition;
+        }
+    }
 }

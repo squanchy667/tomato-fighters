@@ -23,5 +23,8 @@ namespace TomatoFighters.Shared.Interfaces
 
         /// <summary>Whether the attacker is currently in a punishable state.</summary>
         bool IsInPunishableState { get; }
+
+        /// <summary>Whether the attacker is in its pre-attack clash window (telegraph/startup).</summary>
+        bool IsInClashWindow { get; }
     }
 }

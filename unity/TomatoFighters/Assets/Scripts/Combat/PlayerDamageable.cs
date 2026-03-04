@@ -53,8 +53,15 @@ namespace TomatoFighters.Combat
         /// <inheritdoc/>
         public DamageResponse ResolveIncoming(Vector2 attackerPosition, bool isUnstoppable)
         {
-            if (defenseSystem == null) return DamageResponse.Hit;
-            return defenseSystem.Resolve(attackerPosition, isUnstoppable);
+            if (defenseSystem == null)
+            {
+                Debug.LogWarning("[PlayerDamageable] defenseSystem is NULL — cannot resolve defense. Always returning Hit.");
+                return DamageResponse.Hit;
+            }
+
+            var response = defenseSystem.Resolve(attackerPosition, isUnstoppable);
+            Debug.Log($"[PlayerDamageable] ResolveIncoming → {response} (state={defenseSystem.CurrentState}, unstoppable={isUnstoppable})");
+            return response;
         }
 
         /// <inheritdoc/>
@@ -81,7 +88,7 @@ namespace TomatoFighters.Combat
         /// <inheritdoc/>
         public void AddStun(float amount)
         {
-            // Stub — player stun not implemented yet
+            // TODO: Player stun — requires input lock, combo cancel, defense reset, UI. Separate task.
         }
 
         /// <inheritdoc/>
