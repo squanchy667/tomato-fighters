@@ -116,27 +116,90 @@ namespace TomatoFighters.Editor.Prefabs
                 Debug.LogWarning("[MovementTestScene] DamagePipelineDiagnostic not found — skipping.");
         }
 
+        private const string ART_FOLDER = "Assets/Art/Environment/TestArena";
+
         private static void CreateArenaBackground()
         {
-            var ground = new GameObject("Ground");
-            var sr = ground.AddComponent<SpriteRenderer>();
-            sr.sprite = CreateRectSprite();
-            sr.color = new Color(0.25f, 0.3f, 0.2f);
-            ground.transform.localScale = new Vector3(ARENA_WIDTH, ARENA_HEIGHT, 1f);
-            ground.transform.position = Vector3.zero;
-            sr.sortingOrder = -10;
+            var environment = new GameObject("Environment");
 
-            for (int i = -4; i <= 4; i++)
+            // Background layers — full arena, stacked by sorting order
+            CreateArtLayer(environment.transform, $"{ART_FOLDER}/bg_forest_distant.png",
+                "BG_Distant", -100, Vector3.zero, ARENA_WIDTH, ARENA_HEIGHT);
+            CreateArtLayer(environment.transform, $"{ART_FOLDER}/bg_forest_midground.png",
+                "BG_Midground", -90, Vector3.zero, ARENA_WIDTH, ARENA_HEIGHT);
+            CreateArtLayer(environment.transform, $"{ART_FOLDER}/bg_forest_foreground.png",
+                "BG_Foreground", -80, Vector3.zero, ARENA_WIDTH, ARENA_HEIGHT);
+
+            // Ground floor — anchored at bottom of arena
+            var floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ART_FOLDER}/ground_forest_floor.png");
+            if (floorSprite != null)
             {
-                var line = new GameObject($"GridLine_H_{i}");
-                var lineSR = line.AddComponent<SpriteRenderer>();
-                lineSR.sprite = CreateRectSprite();
-                lineSR.color = new Color(1f, 1f, 1f, 0.05f);
-                line.transform.localScale = new Vector3(ARENA_WIDTH, 0.02f, 1f);
-                line.transform.position = new Vector3(0f, i * 1.2f, 0f);
-                lineSR.sortingOrder = -9;
-                line.transform.SetParent(ground.transform);
+                float floorScaleY = ARENA_HEIGHT * 0.2f / floorSprite.bounds.size.y;
+                float floorHeight = floorSprite.bounds.size.y * floorScaleY;
+                CreateArtLayer(environment.transform, $"{ART_FOLDER}/ground_forest_floor.png",
+                    "Ground_Floor", -50,
+                    new Vector3(0f, -ARENA_HEIGHT / 2f + floorHeight / 2f, 0f),
+                    ARENA_WIDTH, ARENA_HEIGHT * 0.2f);
             }
+
+            // Stone wall visuals — visual only, no colliders (DD-6)
+            var wallLeftSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ART_FOLDER}/wall_left_stone.png");
+            if (wallLeftSprite != null)
+            {
+                float wallScaleX = ARENA_WIDTH * 0.05f / wallLeftSprite.bounds.size.x;
+                float wallWidth = wallLeftSprite.bounds.size.x * wallScaleX;
+                CreateArtLayer(environment.transform, $"{ART_FOLDER}/wall_left_stone.png",
+                    "Wall_Left_Visual", -40,
+                    new Vector3(-ARENA_WIDTH / 2f + wallWidth / 2f, 0f, 0f),
+                    ARENA_WIDTH * 0.05f, ARENA_HEIGHT);
+            }
+
+            var wallRightSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ART_FOLDER}/wall_right_stone.png");
+            if (wallRightSprite != null)
+            {
+                float wallScaleX = ARENA_WIDTH * 0.05f / wallRightSprite.bounds.size.x;
+                float wallWidth = wallRightSprite.bounds.size.x * wallScaleX;
+                CreateArtLayer(environment.transform, $"{ART_FOLDER}/wall_right_stone.png",
+                    "Wall_Right_Visual", -40,
+                    new Vector3(ARENA_WIDTH / 2f - wallWidth / 2f, 0f, 0f),
+                    ARENA_WIDTH * 0.05f, ARENA_HEIGHT);
+            }
+
+            Debug.Log("[MovementTestScene] Art layer background created (6 sprites).");
+        }
+
+        /// <summary>
+        /// Creates a SpriteRenderer child scaled to fit the target dimensions using sprite.bounds.size (DD-7).
+        /// </summary>
+        private static void CreateArtLayer(Transform parent, string spritePath, string goName,
+            int sortingOrder, Vector3 position, float targetWidth, float targetHeight)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (sprite == null)
+            {
+                Debug.LogWarning($"[MovementTestScene] Sprite not found: {spritePath} — using fallback color.");
+                var fallback = new GameObject(goName);
+                fallback.transform.SetParent(parent);
+                fallback.transform.position = position;
+                var fallbackSR = fallback.AddComponent<SpriteRenderer>();
+                fallbackSR.sprite = CreateRectSprite();
+                fallbackSR.color = new Color(0.2f, 0.25f, 0.15f);
+                fallback.transform.localScale = new Vector3(targetWidth, targetHeight, 1f);
+                fallbackSR.sortingOrder = sortingOrder;
+                return;
+            }
+
+            var go = new GameObject(goName);
+            go.transform.SetParent(parent);
+            go.transform.position = position;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = sortingOrder;
+
+            // Scale sprite to fit target dimensions (DD-7)
+            float scaleX = targetWidth / sprite.bounds.size.x;
+            float scaleY = targetHeight / sprite.bounds.size.y;
+            go.transform.localScale = new Vector3(scaleX, scaleY, 1f);
         }
 
         private static void CreateArenaWalls()
