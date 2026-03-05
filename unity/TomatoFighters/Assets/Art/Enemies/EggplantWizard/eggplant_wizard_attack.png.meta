@@ -111,6 +111,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -259,7 +272,13 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      eggplant_wizard_attack_0: 7094072541824972847
+      eggplant_wizard_attack_1: -7846997138610408481
+      eggplant_wizard_attack_2: -7458199821175662520
+      eggplant_wizard_attack_3: -4426452474839907250
+      eggplant_wizard_attack_4: 3844878662308727460
+      eggplant_wizard_attack_5: -5167890966204092932
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

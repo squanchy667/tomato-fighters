@@ -117,6 +117,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -309,7 +322,15 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      tomato_walk_0: 4592184077001505750
+      tomato_walk_1: 4514672461374631806
+      tomato_walk_2: 8791741801900482971
+      tomato_walk_3: -8717874883672128369
+      tomato_walk_4: -2674139023398305697
+      tomato_walk_5: -4802303966941406340
+      tomato_walk_6: -4725468737551473687
+      tomato_walk_7: -3444809438651341063
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

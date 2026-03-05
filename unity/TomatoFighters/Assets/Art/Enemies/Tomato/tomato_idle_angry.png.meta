@@ -114,6 +114,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -284,7 +297,14 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      tomato_idle_angry_0: 191806716124996373
+      tomato_idle_angry_1: -1920514213585428754
+      tomato_idle_angry_2: -4289760492334930819
+      tomato_idle_angry_3: 5423939507529321151
+      tomato_idle_angry_4: -2643447401473066377
+      tomato_idle_angry_5: 5374314696772160419
+      tomato_idle_angry_6: -3857862143875334669
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
