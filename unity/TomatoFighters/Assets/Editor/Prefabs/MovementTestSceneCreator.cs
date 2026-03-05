@@ -5,6 +5,7 @@ using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Events;
 using TomatoFighters.World;
+using TomatoFighters.World.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -39,7 +40,10 @@ namespace TomatoFighters.Editor.Prefabs
         private const string SCENE_PATH = SCENE_FOLDER + "/MovementTest.unity";
         private const string PREFAB_PATH = "Assets/Prefabs/Player/Mystica.prefab";
         private const string DUMMY_PREFAB_PATH = "Assets/Prefabs/Enemies/TestDummy.prefab";
+        private const string BASIC_MELEE_PREFAB_PATH = "Assets/Prefabs/Enemies/BasicMeleeEnemy.prefab";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
+        private const string HUD_PREFAB_PATH = "Assets/Prefabs/UI/PlayerHUD.prefab";
+        private const string ENEMY_HEALTH_BAR_PREFAB_PATH = "Assets/Prefabs/UI/EnemyHealthBar.prefab";
 
         private const float ARENA_WIDTH = 20f;
         private const float ARENA_HEIGHT = 10f;
@@ -68,9 +72,14 @@ namespace TomatoFighters.Editor.Prefabs
             CreateArenaWalls();
             var player = CreatePlayerFromPrefab(prefabPath, characterType);
             CreateTestDummies();
+            CreateBasicMeleeEnemies();
             CreateWaveManager();
             CreateLevelBounds();
+            CreatePlayerHUD();
             CreateDebugCanvas();
+
+            // Wire SO event channels to player components (health, mana, combo → HUD)
+            WirePlayerSOEvents(player, characterType);
 
             // Wire CameraController2D → player follow target
             WireCameraToPlayer(camGO, player);
@@ -320,16 +329,9 @@ namespace TomatoFighters.Editor.Prefabs
             if (player.GetComponent<PlayerDamageable>() == null)
                 player.AddComponent<PlayerDamageable>();
 
-            // Temp debug HP bar (replaced by T025 HUD)
-            if (player.GetComponent<DebugHealthBar>() == null)
-            {
-                var hpBar = player.AddComponent<DebugHealthBar>();
-                var hbSO = new SerializedObject(hpBar);
-                var fillColorProp = hbSO.FindProperty("fillColor");
-                if (fillColorProp != null)
-                    fillColorProp.colorValue = new Color(0.2f, 0.8f, 0.3f); // Green for player
-                hbSO.ApplyModifiedPropertiesWithoutUndo();
-            }
+            // PlayerManaTracker — runtime mana tracking + HUD event firing
+            if (player.GetComponent<PlayerManaTracker>() == null)
+                player.AddComponent<PlayerManaTracker>();
 
             // Defense debug UI — floating text on deflect/clash/dodge
             if (player.GetComponent<DefenseDebugUI>() == null)
@@ -344,7 +346,7 @@ namespace TomatoFighters.Editor.Prefabs
                 }
             }
 
-            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar + DefenseDebugUI.");
+            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + PlayerManaTracker + DefenseDebugUI.");
             return player;
         }
 
@@ -563,9 +565,8 @@ namespace TomatoFighters.Editor.Prefabs
                 }
             }
 
-            // Ensure debug HP bar
-            if (dummy.GetComponent<DebugHealthBar>() == null)
-                dummy.AddComponent<DebugHealthBar>();
+            // Wire EnemyHealthBar prefab for world-space health+pressure display
+            WireEnemyHealthBarPrefab(dummy);
 
             // Defense debug UI
             if (dummy.GetComponent<DefenseDebugUI>() == null)
@@ -672,14 +673,7 @@ namespace TomatoFighters.Editor.Prefabs
             inputSO.ApplyModifiedPropertiesWithoutUndo();
 
             root.AddComponent<PlayerDamageable>();
-
-            // Temp debug HP bar
-            var hpBar = root.AddComponent<DebugHealthBar>();
-            var hpBarSO = new SerializedObject(hpBar);
-            var fcProp = hpBarSO.FindProperty("fillColor");
-            if (fcProp != null)
-                fcProp.colorValue = new Color(0.2f, 0.8f, 0.3f);
-            hpBarSO.ApplyModifiedPropertiesWithoutUndo();
+            root.AddComponent<PlayerManaTracker>();
 
             return root;
         }
@@ -830,6 +824,164 @@ namespace TomatoFighters.Editor.Prefabs
                 boundSO.FindProperty("onBoundReached").objectReferenceValue = onBoundReached;
                 boundSO.ApplyModifiedPropertiesWithoutUndo();
             }
+        }
+
+        // ── Player HUD ──────────────────────────────────────────────────
+
+        private static void CreatePlayerHUD()
+        {
+            var hudPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(HUD_PREFAB_PATH);
+            if (hudPrefab == null)
+            {
+                Debug.LogWarning(
+                    "[MovementTestScene] PlayerHUD prefab not found. " +
+                    "Run 'TomatoFighters > Create HUD Assets' first. Skipping HUD.");
+                return;
+            }
+
+            var hud = (GameObject)PrefabUtility.InstantiatePrefab(hudPrefab);
+            Debug.Log("[MovementTestScene] PlayerHUD instantiated in scene.");
+        }
+
+        // ── SO Event Wiring (Player → HUD) ─────────────────────────────
+
+        private static void WirePlayerSOEvents(GameObject player, CharacterType characterType)
+        {
+            if (player == null) return;
+
+            // Load SO event channels
+            var onHealthChanged = AssetDatabase.LoadAssetAtPath<FloatEventChannel>(
+                $"{EVENTS_ROOT}/OnPlayerHealthChanged.asset");
+            var onManaChanged = AssetDatabase.LoadAssetAtPath<FloatEventChannel>(
+                $"{EVENTS_ROOT}/OnPlayerManaChanged.asset");
+            var onComboHit = AssetDatabase.LoadAssetAtPath<IntEventChannel>(
+                $"{EVENTS_ROOT}/OnComboHitConfirmed.asset");
+
+            // Wire PlayerDamageable → OnPlayerHealthChanged
+            var damageable = player.GetComponent<PlayerDamageable>();
+            if (damageable != null && onHealthChanged != null)
+            {
+                var so = new SerializedObject(damageable);
+                so.FindProperty("onHealthChanged").objectReferenceValue = onHealthChanged;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            // Wire PlayerManaTracker → OnPlayerManaChanged + CharacterBaseStats
+            var manaTracker = player.GetComponent<PlayerManaTracker>();
+            if (manaTracker != null)
+            {
+                var so = new SerializedObject(manaTracker);
+
+                if (onManaChanged != null)
+                    so.FindProperty("onManaChanged").objectReferenceValue = onManaChanged;
+
+                // Load character stats for mana values
+                string statsName = characterType.ToString() + "Stats";
+                var baseStats = AssetDatabase.LoadAssetAtPath<CharacterBaseStats>(
+                    $"Assets/ScriptableObjects/Characters/{statsName}.asset");
+                if (baseStats != null)
+                    so.FindProperty("baseStats").objectReferenceValue = baseStats;
+                else
+                    Debug.LogWarning($"[MovementTestScene] CharacterBaseStats not found: {statsName}");
+
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            // Wire ComboController → OnComboHitConfirmed
+            var comboController = player.GetComponent<ComboController>();
+            if (comboController != null && onComboHit != null)
+            {
+                var so = new SerializedObject(comboController);
+                so.FindProperty("onComboHitConfirmed").objectReferenceValue = onComboHit;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Debug.Log("[MovementTestScene] Player SO event channels wired (health, mana, combo → HUD).");
+        }
+
+        // ── BasicMeleeEnemy (AI) ────────────────────────────────────────
+
+        private static void CreateBasicMeleeEnemies()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BASIC_MELEE_PREFAB_PATH);
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    "[MovementTestScene] BasicMeleeEnemy prefab not found. " +
+                    "Run the BasicMeleeEnemy creator first. Skipping AI enemy placement.");
+                return;
+            }
+
+            var aiEnemiesRoot = new GameObject("AIEnemies");
+
+            // Place 2 BasicMeleeEnemies at different positions for AI testing
+            PlaceBasicMeleeEnemy(prefab, aiEnemiesRoot.transform,
+                "BasicMelee_Left",
+                new Vector3(-6f, FLOOR_MID_Y, 0f));
+
+            PlaceBasicMeleeEnemy(prefab, aiEnemiesRoot.transform,
+                "BasicMelee_Right",
+                new Vector3(6f, FLOOR_MID_Y, 0f));
+
+            Debug.Log("[MovementTestScene] Placed 2 BasicMeleeEnemies with AI.");
+        }
+
+        private static void PlaceBasicMeleeEnemy(GameObject prefab, Transform parent,
+            string name, Vector3 position)
+        {
+            var enemy = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            enemy.name = name;
+            enemy.transform.SetParent(parent);
+            enemy.transform.position = position;
+
+            // Wire EnemyHealthBar prefab
+            WireEnemyHealthBarPrefab(enemy);
+
+            // Wire playerLayer mask on EnemyAI so it can detect the player
+            var ai = enemy.GetComponent<EnemyAI>();
+            if (ai != null)
+            {
+                int playerHurtboxLayer = LayerMask.NameToLayer("PlayerHurtbox");
+                if (playerHurtboxLayer >= 0)
+                {
+                    var aiSO = new SerializedObject(ai);
+                    aiSO.FindProperty("playerLayer").intValue = 1 << playerHurtboxLayer;
+                    aiSO.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            // Floating label
+            var labelGO = new GameObject("Label");
+            labelGO.transform.SetParent(enemy.transform);
+            labelGO.transform.localPosition = new Vector3(0f, 1.5f, 0f);
+            var tm = labelGO.AddComponent<TextMesh>();
+            tm.text = "AI MELEE";
+            tm.fontSize = 24;
+            tm.characterSize = 0.1f;
+            tm.anchor = TextAnchor.LowerCenter;
+            tm.alignment = TextAlignment.Center;
+            tm.color = new Color(1f, 0.3f, 0.3f);
+        }
+
+        // ── EnemyHealthBar Wiring ───────────────────────────────────────
+
+        private static void WireEnemyHealthBarPrefab(GameObject enemy)
+        {
+            var enemyBase = enemy.GetComponent<EnemyBase>();
+            if (enemyBase == null) return;
+
+            var healthBarPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ENEMY_HEALTH_BAR_PREFAB_PATH);
+            if (healthBarPrefab == null)
+            {
+                Debug.LogWarning(
+                    "[MovementTestScene] EnemyHealthBar prefab not found. " +
+                    "Run 'TomatoFighters > Create HUD Assets' first.");
+                return;
+            }
+
+            var so = new SerializedObject(enemyBase);
+            so.FindProperty("healthBarPrefab").objectReferenceValue = healthBarPrefab;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ── Debug Canvas ────────────────────────────────────────────────
