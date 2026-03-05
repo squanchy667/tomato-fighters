@@ -268,6 +268,42 @@ namespace TomatoFighters.Roguelite
             _handlers["Lightning_Strike"]      = LightningStrikeHandler;
             _handlers["Lightning_ShockWave"]   = LightningShockWaveHandler;
             _handlers["Lightning_StaticField"] = LightningStaticFieldHandler;
+
+            // Water family (T048)
+            _handlers["Water_TidalWave"] = WaterTidalWaveHandler;
+            _handlers["Water_WaveDash"]  = WaterWaveDashHandler;
+            _handlers["Water_Torrent"]   = WaterTorrentHandler;
+            _handlers["Water_Riptide"]   = WaterRiptideHandler;
+
+            // Thorn family (T048)
+            _handlers["Thorn_BrambleKnives"] = ThornBrambleKnivesHandler;
+            _handlers["Thorn_ThornGuard"]    = ThornThornGuardHandler;
+            _handlers["Thorn_VineBurst"]     = ThornVineBurstHandler;
+            _handlers["Thorn_BrambleDodge"]  = ThornBrambleDodgeHandler;
+
+            // Gale family (T048)
+            _handlers["Gale_Updraft"]  = GaleUpdraftHandler;
+            _handlers["Gale_Tailwind"] = GaleTailwindHandler;
+            _handlers["Gale_Cyclone"]  = GaleCycloneHandler;
+            _handlers["Gale_GaleJump"] = GaleGaleJumpHandler;
+
+            // Time family (T048)
+            _handlers["Time_EchoStrike"]    = TimeEchoStrikeHandler;
+            _handlers["Time_SlowField"]     = TimeSlowFieldHandler;
+            _handlers["Time_TimeBurst"]     = TimeTimeBurstHandler;
+            _handlers["Time_TemporalDodge"] = TimeTemporalDodgeHandler;
+
+            // Cosmic family (T048)
+            _handlers["Cosmic_StarBurst"]  = CosmicStarBurstHandler;
+            _handlers["Cosmic_CosmicDash"] = CosmicCosmicDashHandler;
+            _handlers["Cosmic_Supernova"]  = CosmicSupernovaHandler;
+            _handlers["Cosmic_VoidShield"] = CosmicVoidShieldHandler;
+
+            // Necro family (T048)
+            _handlers["Necro_LifeDrain"]  = NecroLifeDrainHandler;
+            _handlers["Necro_SoulHarvest"] = NecroSoulHarvestHandler;
+            _handlers["Necro_DeathBlow"]  = NecroDeathBlowHandler;
+            _handlers["Necro_BoneShield"] = NecroBoneShieldHandler;
         }
 
         // ── Fire handlers ─────────────────────────────────────────────────────
@@ -324,6 +360,175 @@ namespace TomatoFighters.Roguelite
         private void LightningStaticFieldHandler(RitualContext ctx)
         {
             // TODO [Phase 3 / T029+]: Discharge built charge as a damage spike on next strike.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        // ── Water handlers (T048) ────────────────────────────────────────────
+
+        private void WaterTidalWaveHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Spawn tidal wave projectile that grows with stacks.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void WaterWaveDashHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Spawn water zone along dash path when World supports zones.
+            SpawnVfx(ctx);
+        }
+
+        private void WaterTorrentHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Burst water damage on finisher when World supports AoE queries.
+            SpawnVfx(ctx);
+        }
+
+        private void WaterRiptideHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Pull nearby enemies toward dodge position.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        // ── Thorn handlers (T048) ────────────────────────────────────────────
+
+        private void ThornBrambleKnivesHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Spawn thorn projectiles on strike, count scales with stacks.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void ThornThornGuardHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Reflect thorn damage to attacker on deflect.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void ThornVineBurstHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: AoE vine eruption on finisher when World supports nearby-enemy queries.
+            SpawnVfx(ctx);
+        }
+
+        private void ThornBrambleDodgeHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Spawn thorn patch at dodge origin.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        // ── Gale handlers (T048) ─────────────────────────────────────────────
+
+        private void GaleUpdraftHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Lift enemies on strike, height scales with stacks.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void GaleTailwindHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Grant temporary speed buff on dash.
+            SpawnVfx(ctx);
+        }
+
+        private void GaleCycloneHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: AoE cyclone on finisher when World supports AoE queries.
+            SpawnVfx(ctx);
+        }
+
+        private void GaleGaleJumpHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Ground slam on jump landing, AoE damage.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        // ── Time handlers (T048) ─────────────────────────────────────────────
+
+        private void TimeEchoStrikeHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Repeat last strike as a ghost echo, copies scale with stacks.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void TimeSlowFieldHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Spawn slow zone at skill target when World supports zones.
+            SpawnVfx(ctx);
+        }
+
+        private void TimeTimeBurstHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: AoE time burst on finisher, freezes enemies briefly.
+            SpawnVfx(ctx);
+        }
+
+        private void TimeTemporalDodgeHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Rewind player to pre-dodge position after a delay.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        // ── Cosmic handlers (T048) ───────────────────────────────────────────
+
+        private void CosmicStarBurstHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: AoE star burst on strike, radius scales with stacks.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void CosmicCosmicDashHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Leave cosmic trail on dash that damages enemies.
+            SpawnVfx(ctx);
+        }
+
+        private void CosmicSupernovaHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Massive burst on finisher when World supports AoE queries.
+            SpawnVfx(ctx);
+        }
+
+        private void CosmicVoidShieldHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Counter-damage attacker on taking damage.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        // ── Necro handlers (T048) ────────────────────────────────────────────
+
+        private void NecroLifeDrainHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Heal player for a fraction of strike damage, scales with stacks.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void NecroSoulHarvestHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Temporary damage buff on kill.
+            SpawnVfx(ctx);
+        }
+
+        private void NecroDeathBlowHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Massive necro burst on finisher.
+            SpawnVfx(ctx);
+        }
+
+        private void NecroBoneShieldHandler(RitualContext ctx)
+        {
+            // TODO [Phase 4+]: Spawn bone minion on deflect that absorbs damage.
             SpawnVfx(ctx);
             ctx.entry.AddStack();
         }
