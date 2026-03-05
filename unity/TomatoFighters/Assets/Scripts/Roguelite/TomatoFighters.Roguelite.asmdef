@@ -2,7 +2,8 @@
     "name": "TomatoFighters.Roguelite",
     "rootNamespace": "TomatoFighters.Roguelite",
     "references": [
-        "TomatoFighters.Shared"
+        "TomatoFighters.Shared",
+        "TomatoFighters.Paths"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
