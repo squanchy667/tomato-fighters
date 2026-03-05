@@ -33,6 +33,7 @@ namespace TomatoFighters.World.States
 
             // Pick a random attack
             var attack = attacks[Random.Range(0, attacks.Length)];
+            Debug.Log($"[AttackState] Starting attack: {attack.attackName}, hitboxId={attack.hitboxId}");
             _attackCoroutine = Context.StartCoroutine(PerformAttack(attack));
         }
 
@@ -78,6 +79,7 @@ namespace TomatoFighters.World.States
 
             // Hitbox activation phase
             var hitbox = FindHitbox(attack);
+            Debug.Log($"[AttackState] Hitbox lookup: {(hitbox != null ? hitbox.name : "NULL")}");
             if (hitbox != null)
             {
                 // Clear clash immunity for new attack

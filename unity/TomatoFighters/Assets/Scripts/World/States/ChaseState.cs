@@ -27,6 +27,7 @@ namespace TomatoFighters.World.States
             // In attack range — attack
             if (Context.IsPlayerInAttackRange())
             {
+                Debug.Log($"[ChaseState] In attack range, transitioning to Attack");
                 Context.TransitionTo(new AttackState(Context));
                 return;
             }

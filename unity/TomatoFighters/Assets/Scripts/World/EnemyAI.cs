@@ -192,6 +192,7 @@ namespace TomatoFighters.World
 
             if (hits.Length == 0)
             {
+                Debug.Log($"[EnemyAI] UpdateTarget: no hits. playerLayer mask={playerLayer.value}, aggroRange={aggroRange}");
                 _currentTarget = null;
                 return;
             }

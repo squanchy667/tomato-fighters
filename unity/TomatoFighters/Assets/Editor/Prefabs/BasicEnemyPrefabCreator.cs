@@ -68,18 +68,18 @@ namespace TomatoFighters.Editor.Prefabs
             data.stunDuration = 1.5f;
             data.invulnerabilityDuration = 0.8f;
             data.knockbackResistance = 0.2f;
-            data.movementSpeed = 3f;
+            data.movementSpeed = 5.5f;
 
             // AI behavior
-            data.aggroRange = 7f;
-            data.attackRange = 1.2f;
-            data.patrolRadius = 2.5f;
-            data.leashRange = 10f;
-            data.idleDuration = 1.5f;
-            data.attackCooldown = 1.2f;
-            data.aggression = 0.6f;
-            data.hitReactDuration = 0.25f;
-            data.telegraphDuration = 0.35f;
+            data.aggroRange = 9f;
+            data.attackRange = 1.4f;
+            data.patrolRadius = 3f;
+            data.leashRange = 14f;
+            data.idleDuration = 0.8f;
+            data.attackCooldown = 0.8f;
+            data.aggression = 0.7f;
+            data.hitReactDuration = 0.2f;
+            data.telegraphDuration = 0.25f;
 
             if (existing == null)
                 AssetDatabase.CreateAsset(data, ENEMY_DATA_PATH);
