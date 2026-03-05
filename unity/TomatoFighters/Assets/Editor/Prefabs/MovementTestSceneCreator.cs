@@ -5,6 +5,7 @@ using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Events;
 using TomatoFighters.World;
+using TomatoFighters.World.UI;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -21,8 +22,9 @@ namespace TomatoFighters.Editor.Prefabs
     ///   <item>Orthographic camera (size 7, dark background)</item>
     ///   <item>20x10 arena with 4 invisible wall colliders</item>
     ///   <item>Dark green ground plane with grid lines for depth perception</item>
-    ///   <item>Player — from prefab, with <see cref="PlayerDamageable"/> added for bidirectional damage</item>
-    ///   <item>TestDummy enemy — from prefab, positioned right of center for combat testing</item>
+    ///   <item>Player — from prefab, with <see cref="PlayerDamageable"/> + <see cref="PlayerManaTracker"/> added</item>
+    ///   <item>5 BasicMeleeEnemy (AI) — with state machine, spread across the arena</item>
+    ///   <item>PlayerHUD — screen-space overlay (health, mana, combo, path indicator)</item>
     ///   <item>Controls hint text at top of arena</item>
     /// </list>
     ///
@@ -38,8 +40,10 @@ namespace TomatoFighters.Editor.Prefabs
         private const string SCENE_FOLDER = "Assets/Scenes";
         private const string SCENE_PATH = SCENE_FOLDER + "/MovementTest.unity";
         private const string PREFAB_PATH = "Assets/Prefabs/Player/Mystica.prefab";
-        private const string DUMMY_PREFAB_PATH = "Assets/Prefabs/Enemies/TestDummy.prefab";
+        private const string BASIC_MELEE_PREFAB_PATH = "Assets/Prefabs/Enemies/BasicMeleeEnemy.prefab";
         private const string INPUT_ACTIONS_PATH = "Assets/InputSystem_Actions.inputactions";
+        private const string HUD_PREFAB_PATH = "Assets/Prefabs/UI/PlayerHUD.prefab";
+        private const string ENEMY_HEALTH_BAR_PREFAB_PATH = "Assets/Prefabs/UI/EnemyHealthBar.prefab";
 
         private const float ARENA_WIDTH = 20f;
         private const float ARENA_HEIGHT = 10f;
@@ -67,10 +71,14 @@ namespace TomatoFighters.Editor.Prefabs
             CreateArenaBackground();
             CreateArenaWalls();
             var player = CreatePlayerFromPrefab(prefabPath, characterType);
-            CreateTestDummies();
+            CreateBasicMeleeEnemies();
             CreateWaveManager();
             CreateLevelBounds();
+            CreatePlayerHUD();
             CreateDebugCanvas();
+
+            // Wire SO event channels to player components (health, mana, combo → HUD)
+            WirePlayerSOEvents(player, characterType);
 
             // Wire CameraController2D → player follow target
             WireCameraToPlayer(camGO, player);
@@ -320,16 +328,9 @@ namespace TomatoFighters.Editor.Prefabs
             if (player.GetComponent<PlayerDamageable>() == null)
                 player.AddComponent<PlayerDamageable>();
 
-            // Temp debug HP bar (replaced by T025 HUD)
-            if (player.GetComponent<DebugHealthBar>() == null)
-            {
-                var hpBar = player.AddComponent<DebugHealthBar>();
-                var hbSO = new SerializedObject(hpBar);
-                var fillColorProp = hbSO.FindProperty("fillColor");
-                if (fillColorProp != null)
-                    fillColorProp.colorValue = new Color(0.2f, 0.8f, 0.3f); // Green for player
-                hbSO.ApplyModifiedPropertiesWithoutUndo();
-            }
+            // PlayerManaTracker — runtime mana tracking + HUD event firing
+            if (player.GetComponent<PlayerManaTracker>() == null)
+                player.AddComponent<PlayerManaTracker>();
 
             // Defense debug UI — floating text on deflect/clash/dodge
             if (player.GetComponent<DefenseDebugUI>() == null)
@@ -344,254 +345,8 @@ namespace TomatoFighters.Editor.Prefabs
                 }
             }
 
-            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar + DefenseDebugUI.");
+            Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + PlayerManaTracker + DefenseDebugUI.");
             return player;
-        }
-
-        // ── 5 Tiered Dummies ─────────────────────────────────────────────
-
-        private struct DummyTierConfig
-        {
-            public string name;
-            public string label;
-            public string attackAsset;
-            public string attackId;
-            public string attackName;
-            public float damageMultiplier;
-            public Vector2 knockbackForce;
-            public Vector2 launchForce;
-            public TelegraphType telegraphType;
-            public float telegraphDuration;
-            public float attackActiveDuration;
-            public float attackInterval;
-            public Color spriteColor;
-            public Vector2 bodyScale;
-            public Vector2 hitboxSize;
-            public Vector2 hitboxOffset;
-            public Vector3 position;
-        }
-
-        private static DummyTierConfig[] GetDummyTiers()
-        {
-            return new[]
-            {
-                // Tier 1 — Bruiser (strongest, attacks BOTH sides)
-                new DummyTierConfig
-                {
-                    name = "Dummy_Bruiser",
-                    label = "BRUISER [Both Sides]",
-                    attackAsset = "DummyBruiser",
-                    attackId = "dummy_bruiser",
-                    attackName = "Bruiser Slam",
-                    damageMultiplier = 2.0f,
-                    knockbackForce = new Vector2(8f, 2f),
-                    launchForce = new Vector2(0f, 3f),
-                    telegraphType = TelegraphType.Unstoppable,
-                    telegraphDuration = 1.5f,
-                    attackActiveDuration = 2.0f,
-                    attackInterval = 1.0f,
-                    spriteColor = new Color(0.7f, 0.1f, 0.1f),   // Dark crimson
-                    bodyScale = new Vector2(1.0f, 1.5f),
-                    hitboxSize = new Vector2(2.4f, 1.0f),
-                    hitboxOffset = new Vector2(0f, 0.1f),         // Centered — hits both sides
-                    position = new Vector3(0f, FLOOR_MID_Y, 0f)
-                },
-                // Tier 2 — Heavy
-                new DummyTierConfig
-                {
-                    name = "Dummy_Heavy",
-                    label = "HEAVY",
-                    attackAsset = "DummyHeavy",
-                    attackId = "dummy_heavy",
-                    attackName = "Heavy Swing",
-                    damageMultiplier = 1.5f,
-                    knockbackForce = new Vector2(5f, 1f),
-                    launchForce = Vector2.zero,
-                    telegraphType = TelegraphType.Unstoppable,
-                    telegraphDuration = 1.2f,
-                    attackActiveDuration = 1.5f,
-                    attackInterval = 2.0f,
-                    spriteColor = new Color(0.9f, 0.2f, 0.15f),  // Red
-                    bodyScale = new Vector2(0.9f, 1.35f),
-                    hitboxSize = new Vector2(1.0f, 0.8f),
-                    hitboxOffset = new Vector2(-0.7f, 0.1f),
-                    position = new Vector3(5f, FLOOR_BOTTOM_Y + 0.5f, 0f)
-                },
-                // Tier 3 — Fighter
-                new DummyTierConfig
-                {
-                    name = "Dummy_Fighter",
-                    label = "FIGHTER",
-                    attackAsset = "DummyFighter",
-                    attackId = "dummy_fighter",
-                    attackName = "Fighter Jab",
-                    damageMultiplier = 1.0f,
-                    knockbackForce = new Vector2(3f, 0f),
-                    launchForce = Vector2.zero,
-                    telegraphType = TelegraphType.Normal,
-                    telegraphDuration = 1.0f,
-                    attackActiveDuration = 1.0f,
-                    attackInterval = 3.0f,
-                    spriteColor = new Color(1f, 0.6f, 0.15f),    // Orange (original)
-                    bodyScale = new Vector2(0.8f, 1.2f),
-                    hitboxSize = new Vector2(0.8f, 0.6f),
-                    hitboxOffset = new Vector2(-0.6f, 0.1f),
-                    position = new Vector3(3f, FLOOR_TOP_Y - 0.5f, 0f)
-                },
-                // Tier 4 — Scrapper
-                new DummyTierConfig
-                {
-                    name = "Dummy_Scrapper",
-                    label = "SCRAPPER",
-                    attackAsset = "DummyScrapper",
-                    attackId = "dummy_scrapper",
-                    attackName = "Scrapper Poke",
-                    damageMultiplier = 0.6f,
-                    knockbackForce = new Vector2(2f, 0f),
-                    launchForce = Vector2.zero,
-                    telegraphType = TelegraphType.Normal,
-                    telegraphDuration = 0.7f,
-                    attackActiveDuration = 0.7f,
-                    attackInterval = 4.0f,
-                    spriteColor = new Color(1f, 0.75f, 0.2f),    // Yellow-orange
-                    bodyScale = new Vector2(0.7f, 1.1f),
-                    hitboxSize = new Vector2(0.6f, 0.5f),
-                    hitboxOffset = new Vector2(-0.5f, 0.1f),
-                    position = new Vector3(7f, FLOOR_TOP_Y - 0.3f, 0f)
-                },
-                // Tier 5 — Weakling (weakest)
-                new DummyTierConfig
-                {
-                    name = "Dummy_Weakling",
-                    label = "WEAKLING",
-                    attackAsset = "DummyWeakling",
-                    attackId = "dummy_weakling",
-                    attackName = "Weakling Slap",
-                    damageMultiplier = 0.3f,
-                    knockbackForce = new Vector2(1f, 0f),
-                    launchForce = Vector2.zero,
-                    telegraphType = TelegraphType.Normal,
-                    telegraphDuration = 0.5f,
-                    attackActiveDuration = 0.5f,
-                    attackInterval = 5.0f,
-                    spriteColor = new Color(1f, 0.9f, 0.4f),     // Pale yellow
-                    bodyScale = new Vector2(0.65f, 1.0f),
-                    hitboxSize = new Vector2(0.5f, 0.4f),
-                    hitboxOffset = new Vector2(-0.4f, 0.1f),
-                    position = new Vector3(7f, FLOOR_BOTTOM_Y + 0.3f, 0f)
-                }
-            };
-        }
-
-        private static void CreateTestDummies()
-        {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(DUMMY_PREFAB_PATH);
-            if (prefab == null)
-            {
-                Debug.LogWarning(
-                    "[MovementTestScene] TestDummy prefab not found. " +
-                    "Run 'TomatoFighters > Create TestDummy Prefab' first. Skipping enemy placement.");
-                return;
-            }
-
-            var tiers = GetDummyTiers();
-            var dummiesRoot = new GameObject("Dummies");
-
-            for (int i = 0; i < tiers.Length; i++)
-            {
-                var tier = tiers[i];
-
-                // Create or load the tier-specific AttackData SO
-                string attackPath = $"Assets/ScriptableObjects/Attacks/Enemy/{tier.attackAsset}.asset";
-                var attackData = TestDummyPrefabCreator.CreateOrLoadAttackData(
-                    attackPath, tier.attackId, tier.attackName,
-                    tier.damageMultiplier, tier.knockbackForce, tier.launchForce,
-                    tier.telegraphType);
-
-                PlaceDummyInstance(prefab, dummiesRoot.transform, tier, attackData);
-            }
-
-            Debug.Log($"[MovementTestScene] Placed {tiers.Length} tiered dummies (Bruiser → Weakling).");
-        }
-
-        private static void PlaceDummyInstance(GameObject prefab, Transform parent,
-            DummyTierConfig tier, AttackData attackData)
-        {
-            var dummy = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-            dummy.name = tier.name;
-            dummy.transform.SetParent(parent);
-            dummy.transform.position = tier.position;
-
-            // Override sprite color and body scale
-            var spriteChild = dummy.transform.Find("Sprite");
-            if (spriteChild != null)
-            {
-                var sr = spriteChild.GetComponent<SpriteRenderer>();
-                if (sr != null) sr.color = tier.spriteColor;
-                spriteChild.localScale = new Vector3(tier.bodyScale.x, tier.bodyScale.y, 1f);
-            }
-
-            // Override attack settings via SerializedObject
-            var dummyEnemy = dummy.GetComponent<TestDummyEnemy>();
-            if (dummyEnemy != null)
-            {
-                var so = new SerializedObject(dummyEnemy);
-                so.FindProperty("attackData").objectReferenceValue = attackData;
-                so.FindProperty("attackInterval").floatValue = tier.attackInterval;
-                so.FindProperty("attackActiveDuration").floatValue = tier.attackActiveDuration;
-                so.FindProperty("telegraphDuration").floatValue = tier.telegraphDuration;
-                so.ApplyModifiedPropertiesWithoutUndo();
-            }
-
-            // Override hitbox collider size/offset for this tier
-            var hitboxChild = dummy.transform.Find("Hitbox_Punch");
-            if (hitboxChild != null)
-            {
-                var col = hitboxChild.GetComponent<BoxCollider2D>();
-                if (col != null)
-                {
-                    col.size = tier.hitboxSize;
-                    col.offset = tier.hitboxOffset;
-                }
-
-                // Update debug visual to match new collider
-                var debugVisual = hitboxChild.Find("DebugVisual");
-                if (debugVisual != null)
-                {
-                    debugVisual.localPosition = new Vector3(tier.hitboxOffset.x, tier.hitboxOffset.y, 0f);
-                    debugVisual.localScale = new Vector3(tier.hitboxSize.x, tier.hitboxSize.y, 1f);
-                }
-            }
-
-            // Ensure debug HP bar
-            if (dummy.GetComponent<DebugHealthBar>() == null)
-                dummy.AddComponent<DebugHealthBar>();
-
-            // Defense debug UI
-            if (dummy.GetComponent<DefenseDebugUI>() == null)
-            {
-                var debugUI = dummy.AddComponent<DefenseDebugUI>();
-                var defenseSystem = dummy.GetComponent<DefenseSystem>();
-                if (defenseSystem != null)
-                {
-                    var debugSO = new SerializedObject(debugUI);
-                    debugSO.FindProperty("defenseSystem").objectReferenceValue = defenseSystem;
-                    debugSO.ApplyModifiedPropertiesWithoutUndo();
-                }
-            }
-
-            // Floating label above the dummy
-            var labelGO = new GameObject("Label");
-            labelGO.transform.SetParent(dummy.transform);
-            float labelY = tier.bodyScale.y + 0.3f;
-            labelGO.transform.localPosition = new Vector3(0f, labelY, 0f);
-            var tm = labelGO.AddComponent<TextMesh>();
-            tm.text = tier.label;
-            tm.fontSize = 24;
-            tm.characterSize = 0.1f;
-            tm.anchor = TextAnchor.LowerCenter;
-            tm.alignment = TextAlignment.Center;
-            tm.color = tier.spriteColor;
         }
 
         private static GameObject BuildInlineFallbackPlayer()
@@ -672,14 +427,7 @@ namespace TomatoFighters.Editor.Prefabs
             inputSO.ApplyModifiedPropertiesWithoutUndo();
 
             root.AddComponent<PlayerDamageable>();
-
-            // Temp debug HP bar
-            var hpBar = root.AddComponent<DebugHealthBar>();
-            var hpBarSO = new SerializedObject(hpBar);
-            var fcProp = hpBarSO.FindProperty("fillColor");
-            if (fcProp != null)
-                fcProp.colorValue = new Color(0.2f, 0.8f, 0.3f);
-            hpBarSO.ApplyModifiedPropertiesWithoutUndo();
+            root.AddComponent<PlayerManaTracker>();
 
             return root;
         }
@@ -747,8 +495,8 @@ namespace TomatoFighters.Editor.Prefabs
             for (int i = 0; i < spawnTransforms.Length; i++)
                 spawnPointsProp.GetArrayElementAtIndex(i).objectReferenceValue = spawnTransforms[i];
 
-            // Configure 1 test wave with 3 enemy spawns (1 per spawn point)
-            var dummyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DUMMY_PREFAB_PATH);
+            // Configure 1 test wave with 3 AI enemy spawns (1 per spawn point)
+            var enemyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(BASIC_MELEE_PREFAB_PATH);
             var wavesProp = wmSO.FindProperty("waves");
             wavesProp.arraySize = 1;
             var wave0 = wavesProp.GetArrayElementAtIndex(0);
@@ -760,7 +508,7 @@ namespace TomatoFighters.Editor.Prefabs
             for (int i = 0; i < 3; i++)
             {
                 var group = groupsProp.GetArrayElementAtIndex(i);
-                group.FindPropertyRelative("enemyPrefab").objectReferenceValue = dummyPrefab;
+                group.FindPropertyRelative("enemyPrefab").objectReferenceValue = enemyPrefab;
                 group.FindPropertyRelative("spawnCount").intValue = 1;
                 group.FindPropertyRelative("spawnDelay").floatValue = 0.3f;
                 group.FindPropertyRelative("spawnPointIndex").intValue = i;
@@ -783,10 +531,10 @@ namespace TomatoFighters.Editor.Prefabs
 
             wmSO.ApplyModifiedPropertiesWithoutUndo();
 
-            if (dummyPrefab == null)
-                Debug.LogWarning("[MovementTestScene] TestDummy prefab not found — WaveManager wave has null enemy prefab.");
+            if (enemyPrefab == null)
+                Debug.LogWarning("[MovementTestScene] BasicMeleeEnemy prefab not found — WaveManager wave has null enemy prefab.");
 
-            Debug.Log("[MovementTestScene] WaveManager created with 1 test wave (3 spawns) and SO event channels.");
+            Debug.Log("[MovementTestScene] WaveManager created with 1 test wave (3 AI enemy spawns) and SO event channels.");
         }
 
         // ── Level Bounds ────────────────────────────────────────────────
@@ -830,6 +578,176 @@ namespace TomatoFighters.Editor.Prefabs
                 boundSO.FindProperty("onBoundReached").objectReferenceValue = onBoundReached;
                 boundSO.ApplyModifiedPropertiesWithoutUndo();
             }
+        }
+
+        // ── Player HUD ──────────────────────────────────────────────────
+
+        private static void CreatePlayerHUD()
+        {
+            var hudPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(HUD_PREFAB_PATH);
+            if (hudPrefab == null)
+            {
+                Debug.LogWarning(
+                    "[MovementTestScene] PlayerHUD prefab not found. " +
+                    "Run 'TomatoFighters > Create HUD Assets' first. Skipping HUD.");
+                return;
+            }
+
+            var hud = (GameObject)PrefabUtility.InstantiatePrefab(hudPrefab);
+            Debug.Log("[MovementTestScene] PlayerHUD instantiated in scene.");
+        }
+
+        // ── SO Event Wiring (Player → HUD) ─────────────────────────────
+
+        private static void WirePlayerSOEvents(GameObject player, CharacterType characterType)
+        {
+            if (player == null) return;
+
+            // Load SO event channels
+            var onHealthChanged = AssetDatabase.LoadAssetAtPath<FloatEventChannel>(
+                $"{EVENTS_ROOT}/OnPlayerHealthChanged.asset");
+            var onManaChanged = AssetDatabase.LoadAssetAtPath<FloatEventChannel>(
+                $"{EVENTS_ROOT}/OnPlayerManaChanged.asset");
+            var onComboHit = AssetDatabase.LoadAssetAtPath<IntEventChannel>(
+                $"{EVENTS_ROOT}/OnComboHitConfirmed.asset");
+
+            // Wire PlayerDamageable → OnPlayerHealthChanged
+            var damageable = player.GetComponent<PlayerDamageable>();
+            if (damageable != null && onHealthChanged != null)
+            {
+                var so = new SerializedObject(damageable);
+                so.FindProperty("onHealthChanged").objectReferenceValue = onHealthChanged;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            // Wire PlayerManaTracker → OnPlayerManaChanged + CharacterBaseStats
+            var manaTracker = player.GetComponent<PlayerManaTracker>();
+            if (manaTracker != null)
+            {
+                var so = new SerializedObject(manaTracker);
+
+                if (onManaChanged != null)
+                    so.FindProperty("onManaChanged").objectReferenceValue = onManaChanged;
+
+                // Load character stats for mana values
+                string statsName = characterType.ToString() + "Stats";
+                var baseStats = AssetDatabase.LoadAssetAtPath<CharacterBaseStats>(
+                    $"Assets/ScriptableObjects/Characters/{statsName}.asset");
+                if (baseStats != null)
+                    so.FindProperty("baseStats").objectReferenceValue = baseStats;
+                else
+                    Debug.LogWarning($"[MovementTestScene] CharacterBaseStats not found: {statsName}");
+
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            // Wire ComboController → OnComboHitConfirmed
+            var comboController = player.GetComponent<ComboController>();
+            if (comboController != null && onComboHit != null)
+            {
+                var so = new SerializedObject(comboController);
+                so.FindProperty("onComboHitConfirmed").objectReferenceValue = onComboHit;
+                so.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Debug.Log("[MovementTestScene] Player SO event channels wired (health, mana, combo → HUD).");
+        }
+
+        // ── BasicMeleeEnemy (AI) ────────────────────────────────────────
+
+        private static void CreateBasicMeleeEnemies()
+        {
+            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(BASIC_MELEE_PREFAB_PATH);
+            if (prefab == null)
+            {
+                Debug.LogWarning(
+                    "[MovementTestScene] BasicMeleeEnemy prefab not found. " +
+                    "Run the BasicMeleeEnemy creator first. Skipping AI enemy placement.");
+                return;
+            }
+
+            var enemiesRoot = new GameObject("Enemies");
+
+            // 5 AI enemies spread across the arena
+            PlaceBasicMeleeEnemy(prefab, enemiesRoot.transform,
+                "Enemy_Center",
+                new Vector3(0f, FLOOR_MID_Y, 0f));
+
+            PlaceBasicMeleeEnemy(prefab, enemiesRoot.transform,
+                "Enemy_NearRight",
+                new Vector3(3f, FLOOR_TOP_Y - 0.5f, 0f));
+
+            PlaceBasicMeleeEnemy(prefab, enemiesRoot.transform,
+                "Enemy_FarRight",
+                new Vector3(6f, FLOOR_MID_Y, 0f));
+
+            PlaceBasicMeleeEnemy(prefab, enemiesRoot.transform,
+                "Enemy_NearLeft",
+                new Vector3(-5f, FLOOR_BOTTOM_Y + 0.5f, 0f));
+
+            PlaceBasicMeleeEnemy(prefab, enemiesRoot.transform,
+                "Enemy_FarLeft",
+                new Vector3(-7f, FLOOR_TOP_Y - 0.3f, 0f));
+
+            Debug.Log("[MovementTestScene] Placed 5 BasicMeleeEnemies with AI.");
+        }
+
+        private static void PlaceBasicMeleeEnemy(GameObject prefab, Transform parent,
+            string name, Vector3 position)
+        {
+            var enemy = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            enemy.name = name;
+            enemy.transform.SetParent(parent);
+            enemy.transform.position = position;
+
+            // Wire EnemyHealthBar prefab
+            WireEnemyHealthBarPrefab(enemy);
+
+            // Wire playerLayer mask on EnemyAI so it can detect the player
+            var ai = enemy.GetComponent<EnemyAI>();
+            if (ai != null)
+            {
+                int playerHurtboxLayer = LayerMask.NameToLayer("PlayerHurtbox");
+                if (playerHurtboxLayer >= 0)
+                {
+                    var aiSO = new SerializedObject(ai);
+                    aiSO.FindProperty("playerLayer").intValue = 1 << playerHurtboxLayer;
+                    aiSO.ApplyModifiedPropertiesWithoutUndo();
+                }
+            }
+
+            // Floating label
+            var labelGO = new GameObject("Label");
+            labelGO.transform.SetParent(enemy.transform);
+            labelGO.transform.localPosition = new Vector3(0f, 1.5f, 0f);
+            var tm = labelGO.AddComponent<TextMesh>();
+            tm.text = "AI MELEE";
+            tm.fontSize = 24;
+            tm.characterSize = 0.1f;
+            tm.anchor = TextAnchor.LowerCenter;
+            tm.alignment = TextAlignment.Center;
+            tm.color = new Color(1f, 0.3f, 0.3f);
+        }
+
+        // ── EnemyHealthBar Wiring ───────────────────────────────────────
+
+        private static void WireEnemyHealthBarPrefab(GameObject enemy)
+        {
+            var enemyBase = enemy.GetComponent<EnemyBase>();
+            if (enemyBase == null) return;
+
+            var healthBarPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ENEMY_HEALTH_BAR_PREFAB_PATH);
+            if (healthBarPrefab == null)
+            {
+                Debug.LogWarning(
+                    "[MovementTestScene] EnemyHealthBar prefab not found. " +
+                    "Run 'TomatoFighters > Create HUD Assets' first.");
+                return;
+            }
+
+            var so = new SerializedObject(enemyBase);
+            so.FindProperty("healthBarPrefab").objectReferenceValue = healthBarPrefab;
+            so.ApplyModifiedPropertiesWithoutUndo();
         }
 
         // ── Debug Canvas ────────────────────────────────────────────────

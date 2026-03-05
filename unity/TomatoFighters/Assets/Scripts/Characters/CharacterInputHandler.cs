@@ -8,6 +8,8 @@ namespace TomatoFighters.Characters
     /// Reads Unity Input System actions and drives the CharacterMotor and ComboController.
     /// Routes dash/jump inputs through the combo cancel system when a combo is active.
     /// Wire InputActionReferences in the inspector from the project's InputActions asset.
+    /// If references are null at runtime (e.g. after prefab instantiation), self-wires
+    /// from a Resources-loaded InputActionAsset.
     /// </summary>
     public class CharacterInputHandler : MonoBehaviour
     {
@@ -24,6 +26,20 @@ namespace TomatoFighters.Characters
         [SerializeField] private InputActionReference lightAttackAction;
         [SerializeField] private InputActionReference heavyAttackAction;
         [SerializeField] private InputActionReference runAction;
+
+        // Runtime-created asset kept alive so actions aren't GC'd
+        private InputActionAsset _runtimeAsset;
+
+        private void Awake()
+        {
+            if (motor == null)
+                motor = GetComponent<CharacterMotor>();
+            if (comboController == null)
+                comboController = GetComponent<ComboController>();
+
+            if (moveAction == null)
+                SelfWireInputActions();
+        }
 
         private void OnEnable()
         {
@@ -120,6 +136,41 @@ namespace TomatoFighters.Characters
             lightAttackAction?.action.Enable();
             heavyAttackAction?.action.Enable();
             runAction?.action.Enable();
+        }
+
+        /// <summary>
+        /// InputActionReferences don't survive prefab serialization.
+        /// When instantiated at runtime (e.g. via CharacterSpawner), self-wire from Resources.
+        /// </summary>
+        private void SelfWireInputActions()
+        {
+            var asset = Resources.Load<InputActionAsset>("InputSystem_Actions");
+            if (asset == null)
+            {
+                Debug.LogError("[CharacterInputHandler] InputSystem_Actions not found in Resources. Copy it there.");
+                return;
+            }
+
+            // Clone so each player instance has independent action state
+            _runtimeAsset = Instantiate(asset);
+
+            moveAction        = InputActionReference.Create(_runtimeAsset.FindAction("Player/Move"));
+            jumpAction        = InputActionReference.Create(_runtimeAsset.FindAction("Player/Jump"));
+            dashAction        = InputActionReference.Create(_runtimeAsset.FindAction("Player/Sprint"));
+            lightAttackAction = InputActionReference.Create(_runtimeAsset.FindAction("Player/Attack"));
+            heavyAttackAction = InputActionReference.Create(_runtimeAsset.FindAction("Player/Crouch"));
+
+            var runActionFound = _runtimeAsset.FindAction("Player/Run");
+            if (runActionFound != null)
+                runAction = InputActionReference.Create(runActionFound);
+
+            Debug.Log("[CharacterInputHandler] Self-wired input actions from Resources.");
+        }
+
+        private void OnDestroy()
+        {
+            if (_runtimeAsset != null)
+                Destroy(_runtimeAsset);
         }
     }
 }

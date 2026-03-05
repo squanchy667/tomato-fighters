@@ -237,16 +237,10 @@ namespace TomatoFighters.Editor.Prefabs
 
             hitboxChild.SetActive(false);
 
-            // DebugHealthBar
-            var healthBar = EnsureComponent<DebugHealthBar>(root);
-            var hbSO = new SerializedObject(healthBar);
-            var offsetProp = hbSO.FindProperty("offset");
-            if (offsetProp != null)
-                offsetProp.vector3Value = new Vector3(0f, 1.0f, 0f);
-            var fillColorProp = hbSO.FindProperty("fillColor");
-            if (fillColorProp != null)
-                fillColorProp.colorValue = new Color(1f, 0.3f, 0.2f);
-            hbSO.ApplyModifiedPropertiesWithoutUndo();
+            // Remove legacy DebugHealthBar if present (replaced by EnemyHealthBarUI)
+            var legacyBar = root.GetComponent<DebugHealthBar>();
+            if (legacyBar != null)
+                Object.DestroyImmediate(legacyBar);
 
             // Save prefab
             GameObject savedPrefab;

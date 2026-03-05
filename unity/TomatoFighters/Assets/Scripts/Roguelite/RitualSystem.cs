@@ -210,6 +210,10 @@ namespace TomatoFighters.Roguelite
         /// <remarks>Path abilities are PathSystem's responsibility — always returns empty list.</remarks>
         public List<PathAbility> GetActivePathAbilities() => new List<PathAbility>();
 
+        /// <inheritdoc/>
+        /// <remarks>No Phase 2 ritual modifies juggle gravity. Returns 1.0.</remarks>
+        public float GetJuggleGravityMultiplier() => 1f;
+
         // ── ICombatEvents handlers ────────────────────────────────────────────
 
         private void HandleStrike(StrikeEventData e)         => DispatchTrigger(RitualTrigger.OnStrike,     e.hitPosition);
