@@ -78,32 +78,39 @@ namespace TomatoFighters.Editor
         {
             PlayerPrefabCreator.EnsureFolderExists(REGISTRY_FOLDER);
 
-            var existing = AssetDatabase.LoadAssetAtPath<CharacterRegistry>(REGISTRY_PATH);
-            if (existing == null)
+            var registry = AssetDatabase.LoadAssetAtPath<CharacterRegistry>(REGISTRY_PATH);
+            if (registry == null)
             {
-                existing = ScriptableObject.CreateInstance<CharacterRegistry>();
-                AssetDatabase.CreateAsset(existing, REGISTRY_PATH);
+                registry = ScriptableObject.CreateInstance<CharacterRegistry>();
+                AssetDatabase.CreateAsset(registry, REGISTRY_PATH);
             }
 
-            var entries = new CharacterEntry[CHARACTER_DEFS.Length];
+            // Use SerializedObject to ensure changes persist to disk
+            var so = new SerializedObject(registry);
+            var charsProp = so.FindProperty("characters");
+            charsProp.arraySize = CHARACTER_DEFS.Length;
+
             for (int i = 0; i < CHARACTER_DEFS.Length; i++)
             {
                 var (type, prefabPath, statsPath) = CHARACTER_DEFS[i];
-                entries[i] = new CharacterEntry
-                {
-                    characterType = type,
-                    prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath),
-                    baseStats = AssetDatabase.LoadAssetAtPath<CharacterBaseStats>(statsPath)
-                };
+                var element = charsProp.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("characterType").enumValueIndex = (int)type;
 
-                if (entries[i].prefab == null)
+                var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
+                element.FindPropertyRelative("prefab").objectReferenceValue = prefab;
+                element.FindPropertyRelative("baseStats").objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<CharacterBaseStats>(statsPath);
+
+                if (prefab == null)
                     Debug.LogWarning($"[DemoScene] Prefab not found for {type} at {prefabPath}. Run 'Create {type}' first.");
             }
 
-            existing.characters = entries;
-            EditorUtility.SetDirty(existing);
+            so.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(registry);
             AssetDatabase.SaveAssets();
-            return existing;
+
+            Debug.Log($"[DemoScene] CharacterRegistry at {REGISTRY_PATH} — {CHARACTER_DEFS.Length} characters wired.");
+            return registry;
         }
 
         // ── Layer Collision Matrix ──────────────────────────────────────
@@ -290,20 +297,18 @@ namespace TomatoFighters.Editor
         {
             var spawnerGO = new GameObject("CharacterSpawner");
 
+            var spawnPoint = new GameObject("SpawnPoint");
+            spawnPoint.transform.SetParent(spawnerGO.transform);
+            spawnPoint.transform.localPosition = new Vector3(-3f, FLOOR_MID_Y, 0f);
+
+            // CharacterSpawner — all properties in one SerializedObject pass
             var spawner = spawnerGO.AddComponent<CharacterSpawner>();
             var so = new SerializedObject(spawner);
             so.FindProperty("registry").objectReferenceValue = registry;
             so.FindProperty("selectedCharacter").enumValueIndex = (int)CharacterType.Brutor;
             so.FindProperty("deferSpawn").boolValue = true;
+            so.FindProperty("spawnPoint").objectReferenceValue = spawnPoint.transform;
             so.ApplyModifiedPropertiesWithoutUndo();
-
-            var spawnPoint = new GameObject("SpawnPoint");
-            spawnPoint.transform.SetParent(spawnerGO.transform);
-            spawnPoint.transform.localPosition = new Vector3(-3f, FLOOR_MID_Y, 0f);
-
-            var spawnSO = new SerializedObject(spawner);
-            spawnSO.FindProperty("spawnPoint").objectReferenceValue = spawnPoint.transform;
-            spawnSO.ApplyModifiedPropertiesWithoutUndo();
 
             // Character select screen — pauses game until player picks
             var selectUI = spawnerGO.AddComponent<CharacterSelectUI>();
