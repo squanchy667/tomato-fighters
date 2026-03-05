@@ -1,0 +1,134 @@
+{
+  "character_name": "eggplant_wizard",
+  "generated_at": "2026-03-05T17:32:53.595434+00:00",
+  "generated_by": "Animation Forge v0.2.0",
+  "bg_removal_method": "rembg_u2net",
+  "game_profile": {
+    "game_type": "2d_platformer",
+    "art_style": "painted",
+    "export_target": "unity",
+    "filter_mode": "bilinear"
+  },
+  "animations": {
+    "attack": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_attack.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "death": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_death.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 3,
+      "n_frames": 8,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "guard": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_guard.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "hurt": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_hurt.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 2,
+      "rows": 2,
+      "n_frames": 4,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "idle": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_idle.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "jump": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_jump.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 5,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "stun": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_stun.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "walk": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_eggplant_wizard/export/Sprites/eggplant_wizard_walk.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 3,
+      "n_frames": 8,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    }
+  }
+}

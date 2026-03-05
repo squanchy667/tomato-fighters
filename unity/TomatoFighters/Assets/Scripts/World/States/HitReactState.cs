@@ -22,6 +22,16 @@ namespace TomatoFighters.World.States
             Context.Rb.linearVelocity = Vector2.zero;
             Context.SetActiveAttack(null);
 
+            // Drive animator reaction triggers
+            var animator = Context.Animator;
+            if (animator != null)
+            {
+                if (_isStun)
+                    animator.SetTrigger("StunTrigger");
+                else
+                    animator.SetTrigger("Hurt");
+            }
+
             if (!_isStun)
             {
                 _staggerTimer = Context.Data.hitReactDuration;

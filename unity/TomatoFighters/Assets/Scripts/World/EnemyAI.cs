@@ -25,9 +25,11 @@ namespace TomatoFighters.World
 
         private EnemyBase _enemyBase;
         private Rigidbody2D _rb;
+        private Animator _animator;
         private EnemyData _data;
         private Vector2 _spawnPosition;
         private TelegraphVisualController _telegraphVisual;
+        private Vector2 _lastPosition;
 
         /// <summary>The EnemyBase component on this GameObject.</summary>
         public EnemyBase EnemyBase => _enemyBase;
@@ -40,6 +42,9 @@ namespace TomatoFighters.World
 
         /// <summary>The position this enemy was at on Awake. Used by PatrolState.</summary>
         public Vector2 SpawnPosition => _spawnPosition;
+
+        /// <summary>The Animator on the Sprite child (used for locomotion + attack triggers).</summary>
+        public Animator Animator => _animator;
 
         /// <summary>The TelegraphVisualController for attack telegraph effects.</summary>
         public TelegraphVisualController TelegraphVisual => _telegraphVisual;
@@ -178,8 +183,10 @@ namespace TomatoFighters.World
         {
             _enemyBase = GetComponent<EnemyBase>();
             _rb = GetComponent<Rigidbody2D>();
+            _animator = GetComponentInChildren<Animator>();
             _telegraphVisual = GetComponent<TelegraphVisualController>();
             _spawnPosition = transform.position;
+            _lastPosition = transform.position;
         }
 
         private void Start()
@@ -217,6 +224,29 @@ namespace TomatoFighters.World
             if (_isDead) return;
 
             _currentState?.Tick(Time.deltaTime);
+
+            // Drive animator Speed parameter from actual movement
+            if (_animator != null)
+            {
+                Vector2 pos = _rb.position;
+                float speed = ((pos - _lastPosition) / Time.deltaTime).magnitude;
+                float maxSpeed = _data != null ? _data.movementSpeed : 5f;
+                float normalizedSpeed = maxSpeed > 0f ? Mathf.Clamp01(speed / maxSpeed) : 0f;
+                _animator.SetFloat("Speed", normalizedSpeed);
+                _lastPosition = pos;
+
+                // Flip sprite to face movement/target direction
+                var spriteTransform = _animator.transform;
+                if (CurrentTarget != null)
+                {
+                    float dirX = CurrentTarget.position.x - transform.position.x;
+                    if (Mathf.Abs(dirX) > 0.01f)
+                        spriteTransform.localScale = new Vector3(
+                            dirX > 0f ? -Mathf.Abs(spriteTransform.localScale.x) : Mathf.Abs(spriteTransform.localScale.x),
+                            spriteTransform.localScale.y,
+                            spriteTransform.localScale.z);
+                }
+            }
 
             // Periodic target updates
             _targetUpdateTimer -= Time.deltaTime;

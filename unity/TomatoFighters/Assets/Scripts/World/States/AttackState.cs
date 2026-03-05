@@ -130,7 +130,7 @@ namespace TomatoFighters.World.States
             Context.SetActiveAttack(attack);
 
             // Fire animator trigger based on position in EnemyData.attacks[]
-            var animator = Context.GetComponent<Animator>();
+            var animator = Context.Animator;
             if (animator != null)
             {
                 int triggerIndex = Context.GetAttackTriggerIndex(attack);

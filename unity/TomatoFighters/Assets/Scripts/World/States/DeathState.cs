@@ -12,6 +12,10 @@ namespace TomatoFighters.World.States
         {
             Context.SetActiveAttack(null);
             Context.Rb.linearVelocity = UnityEngine.Vector2.zero;
+
+            var animator = Context.Animator;
+            if (animator != null)
+                animator.SetTrigger("Death");
         }
 
         public override void Tick(float dt)

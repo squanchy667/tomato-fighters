@@ -21,6 +21,9 @@ namespace TomatoFighters.Editor
         private const string SCENE_FOLDER = "Assets/Scenes";
         private const string SCENE_PATH = SCENE_FOLDER + "/Phase1Demo.unity";
         private const string ENEMY_PREFAB_PATH = "Assets/Prefabs/Enemies/BasicMeleeEnemy.prefab";
+        private const string TOMATO_PREFAB_PATH = "Assets/Prefabs/Enemies/Tomato.prefab";
+        private const string CORNKNIGHT_PREFAB_PATH = "Assets/Prefabs/Enemies/CornKnight.prefab";
+        private const string EGGPLANT_PREFAB_PATH = "Assets/Prefabs/Enemies/EggplantWizard.prefab";
         private const string HUD_PREFAB_PATH = "Assets/Prefabs/UI/PlayerHUD.prefab";
         private const string ENEMY_HEALTH_BAR_PATH = "Assets/Prefabs/UI/EnemyHealthBar.prefab";
         private const string ART_FOLDER = "Assets/Art/Environment/TestArena";
@@ -333,22 +336,29 @@ namespace TomatoFighters.Editor
 
         private static void CreateAIEnemies()
         {
-            var prefab = AssetDatabase.LoadAssetAtPath<GameObject>(ENEMY_PREFAB_PATH);
-            if (prefab == null)
+            var tomatoPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(TOMATO_PREFAB_PATH);
+            var cornKnightPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(CORNKNIGHT_PREFAB_PATH);
+            var eggplantPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(EGGPLANT_PREFAB_PATH);
+            var basicPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ENEMY_PREFAB_PATH);
+
+            if (basicPrefab == null && tomatoPrefab == null && cornKnightPrefab == null && eggplantPrefab == null)
             {
-                Debug.LogWarning("[DemoScene] BasicMeleeEnemy prefab not found. Run 'Create BasicMeleeEnemy Prefab' first.");
+                Debug.LogWarning("[DemoScene] No enemy prefabs found. Run enemy creator scripts first.");
                 return;
             }
 
             var root = new GameObject("Enemies");
+            int placed = 0;
 
-            PlaceEnemy(prefab, root.transform, "Enemy_1", new Vector3(2f, FLOOR_MID_Y, 0f));
-            PlaceEnemy(prefab, root.transform, "Enemy_2", new Vector3(5f, FLOOR_TOP_Y - 0.5f, 0f));
-            PlaceEnemy(prefab, root.transform, "Enemy_3", new Vector3(7f, FLOOR_BOTTOM_Y + 0.5f, 0f));
-            PlaceEnemy(prefab, root.transform, "Enemy_4", new Vector3(-5f, FLOOR_MID_Y, 0f));
-            PlaceEnemy(prefab, root.transform, "Enemy_5", new Vector3(-7f, FLOOR_TOP_Y - 0.3f, 0f));
+            // 2 Tomatoes front and center
+            if (tomatoPrefab != null)
+            {
+                PlaceEnemy(tomatoPrefab, root.transform, "Tomato_1", new Vector3(3f, FLOOR_MID_Y, 0f));
+                PlaceEnemy(tomatoPrefab, root.transform, "Tomato_2", new Vector3(6f, FLOOR_MID_Y, 0f));
+                placed += 2;
+            }
 
-            Debug.Log("[DemoScene] Placed 5 AI enemies.");
+            Debug.Log($"[DemoScene] Placed {placed} AI enemies.");
         }
 
         private static void PlaceEnemy(GameObject prefab, Transform parent, string name, Vector3 position)
@@ -413,8 +423,11 @@ namespace TomatoFighters.Editor
                 spawnPointsProp.GetArrayElementAtIndex(i).objectReferenceValue = sp.transform;
             }
 
-            // 1 test wave with 3 AI enemy spawns
-            var enemyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ENEMY_PREFAB_PATH);
+            // 1 test wave with Tomato enemies
+            var tomatoPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(TOMATO_PREFAB_PATH);
+            var basicPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(ENEMY_PREFAB_PATH);
+            var wavePrefab = tomatoPrefab ?? basicPrefab;
+
             var wavesProp = wmSO.FindProperty("waves");
             wavesProp.arraySize = 1;
             var wave0 = wavesProp.GetArrayElementAtIndex(0);
@@ -425,7 +438,7 @@ namespace TomatoFighters.Editor
             for (int i = 0; i < 3; i++)
             {
                 var group = groupsProp.GetArrayElementAtIndex(i);
-                group.FindPropertyRelative("enemyPrefab").objectReferenceValue = enemyPrefab;
+                group.FindPropertyRelative("enemyPrefab").objectReferenceValue = wavePrefab;
                 group.FindPropertyRelative("spawnCount").intValue = 1;
                 group.FindPropertyRelative("spawnDelay").floatValue = 0.5f;
                 group.FindPropertyRelative("spawnPointIndex").intValue = i;

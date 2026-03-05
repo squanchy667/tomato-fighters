@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b130aa0473f07840b228e772226f652, type: 3}
+  m_Name: CornKnight_EnemyData
+  m_EditorClassIdentifier: 
+  maxHealth: 90
+  pressureThreshold: 45
+  stunDuration: 1.2
+  invulnerabilityDuration: 0.7
+  knockbackResistance: 0.3
+  movementSpeed: 3.5
+  attacks:
+  - {fileID: 11400000, guid: 9c35138a27a694e42a1b2ef2d4ba9906, type: 2}
+  attackPatterns: []
+  aggroRange: 7
+  attackRange: 1.6
+  patrolRadius: 2
+  leashRange: 12
+  idleDuration: 0.8
+  attackCooldown: 1
+  aggression: 0.6
+  hitReactDuration: 0.2
+  telegraphDuration: 0.35

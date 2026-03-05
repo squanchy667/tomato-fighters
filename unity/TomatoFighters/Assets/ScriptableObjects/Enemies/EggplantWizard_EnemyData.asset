@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b130aa0473f07840b228e772226f652, type: 3}
+  m_Name: EggplantWizard_EnemyData
+  m_EditorClassIdentifier: 
+  maxHealth: 50
+  pressureThreshold: 25
+  stunDuration: 2
+  invulnerabilityDuration: 0.5
+  knockbackResistance: 0.05
+  movementSpeed: 3
+  attacks:
+  - {fileID: 11400000, guid: cf98eb51039d54544b3c9ec96380731e, type: 2}
+  attackPatterns: []
+  aggroRange: 10
+  attackRange: 2
+  patrolRadius: 3
+  leashRange: 14
+  idleDuration: 1.2
+  attackCooldown: 1.5
+  aggression: 0.4
+  hitReactDuration: 0.3
+  telegraphDuration: 0.4
