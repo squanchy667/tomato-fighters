@@ -5,11 +5,11 @@ using UnityEngine.InputSystem;
 namespace TomatoFighters.Characters
 {
     /// <summary>
-    /// Reads Unity Input System actions and drives the CharacterMotor and ComboController.
-    /// Routes dash/jump inputs through the combo cancel system when a combo is active.
-    /// Wire InputActionReferences in the inspector from the project's InputActions asset.
-    /// If references are null at runtime (e.g. after prefab instantiation), self-wires
-    /// from a Resources-loaded InputActionAsset.
+    /// Reads Unity Input System actions and drives the CharacterMotor, ComboController,
+    /// and PathAbilityExecutor. Routes dash/jump inputs through the combo cancel system
+    /// when a combo is active. Wire InputActionReferences in the inspector from the
+    /// project's InputActions asset. If references are null at runtime (e.g. after prefab
+    /// instantiation), self-wires from a Resources-loaded InputActionAsset.
     /// </summary>
     public class CharacterInputHandler : MonoBehaviour
     {
@@ -19,6 +19,9 @@ namespace TomatoFighters.Characters
         [Header("Combo")]
         [SerializeField] private ComboController comboController;
 
+        [Header("Abilities")]
+        [SerializeField] private PathAbilityExecutor abilityExecutor;
+
         [Header("Input Actions")]
         [SerializeField] private InputActionReference moveAction;
         [SerializeField] private InputActionReference jumpAction;
@@ -26,6 +29,8 @@ namespace TomatoFighters.Characters
         [SerializeField] private InputActionReference lightAttackAction;
         [SerializeField] private InputActionReference heavyAttackAction;
         [SerializeField] private InputActionReference runAction;
+        [SerializeField] private InputActionReference ability1Action;
+        [SerializeField] private InputActionReference ability2Action;
 
         // Runtime-created asset kept alive so actions aren't GC'd
         private InputActionAsset _runtimeAsset;
@@ -36,6 +41,8 @@ namespace TomatoFighters.Characters
                 motor = GetComponent<CharacterMotor>();
             if (comboController == null)
                 comboController = GetComponent<ComboController>();
+            if (abilityExecutor == null)
+                abilityExecutor = GetComponent<PathAbilityExecutor>();
 
             if (moveAction == null)
                 SelfWireInputActions();
@@ -53,6 +60,16 @@ namespace TomatoFighters.Characters
                 heavyAttackAction.action.performed += OnHeavyAttack;
             if (runAction != null)
                 runAction.action.performed += OnRun;
+            if (ability1Action != null)
+            {
+                ability1Action.action.performed += OnAbility1;
+                ability1Action.action.canceled += OnAbility1Released;
+            }
+            if (ability2Action != null)
+            {
+                ability2Action.action.performed += OnAbility2;
+                ability2Action.action.canceled += OnAbility2Released;
+            }
 
             EnableActions();
         }
@@ -69,6 +86,16 @@ namespace TomatoFighters.Characters
                 heavyAttackAction.action.performed -= OnHeavyAttack;
             if (runAction != null)
                 runAction.action.performed -= OnRun;
+            if (ability1Action != null)
+            {
+                ability1Action.action.performed -= OnAbility1;
+                ability1Action.action.canceled -= OnAbility1Released;
+            }
+            if (ability2Action != null)
+            {
+                ability2Action.action.performed -= OnAbility2;
+                ability2Action.action.canceled -= OnAbility2Released;
+            }
         }
 
         private void Update()
@@ -128,6 +155,30 @@ namespace TomatoFighters.Characters
                 motor.RequestRun();
         }
 
+        private void OnAbility1(InputAction.CallbackContext ctx)
+        {
+            if (abilityExecutor != null)
+                abilityExecutor.ActivateMainAbility();
+        }
+
+        private void OnAbility1Released(InputAction.CallbackContext ctx)
+        {
+            if (abilityExecutor != null)
+                abilityExecutor.ReleaseMainAbility();
+        }
+
+        private void OnAbility2(InputAction.CallbackContext ctx)
+        {
+            if (abilityExecutor != null)
+                abilityExecutor.ActivateSecondaryAbility();
+        }
+
+        private void OnAbility2Released(InputAction.CallbackContext ctx)
+        {
+            if (abilityExecutor != null)
+                abilityExecutor.ReleaseSecondaryAbility();
+        }
+
         private void EnableActions()
         {
             moveAction?.action.Enable();
@@ -136,6 +187,8 @@ namespace TomatoFighters.Characters
             lightAttackAction?.action.Enable();
             heavyAttackAction?.action.Enable();
             runAction?.action.Enable();
+            ability1Action?.action.Enable();
+            ability2Action?.action.Enable();
         }
 
         /// <summary>
@@ -163,6 +216,14 @@ namespace TomatoFighters.Characters
             var runActionFound = _runtimeAsset.FindAction("Player/Run");
             if (runActionFound != null)
                 runAction = InputActionReference.Create(runActionFound);
+
+            var ability1Found = _runtimeAsset.FindAction("Player/Ability1");
+            if (ability1Found != null)
+                ability1Action = InputActionReference.Create(ability1Found);
+
+            var ability2Found = _runtimeAsset.FindAction("Player/Ability2");
+            if (ability2Found != null)
+                ability2Action = InputActionReference.Create(ability2Found);
 
             Debug.Log("[CharacterInputHandler] Self-wired input actions from Resources.");
         }

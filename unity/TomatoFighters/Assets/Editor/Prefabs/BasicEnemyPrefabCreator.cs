@@ -314,6 +314,9 @@ namespace TomatoFighters.Editor.Prefabs
             }
             aiSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // StatusEffectTracker (T028) — enables abilities to apply status effects
+            EnsureComponent<StatusEffectTracker>(root);
+
             // TelegraphVisualController — wired to the sprite child's SpriteRenderer
             var telegraphCtrl = EnsureComponent<TelegraphVisualController>(root);
             var telegraphSO = new SerializedObject(telegraphCtrl);

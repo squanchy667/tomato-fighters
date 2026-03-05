@@ -5,6 +5,7 @@ using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Events;
+using TomatoFighters.Shared.Interfaces;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -232,6 +233,31 @@ namespace TomatoFighters.Editor.Prefabs
             if (config.passiveConfig != null)
                 psSO.FindProperty("passiveConfig").objectReferenceValue = config.passiveConfig;
             psSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- PathAbilityExecutor (T028) --
+            var abilityExecutor = EnsureComponent<PathAbilityExecutor>(root);
+            var aeSO = new SerializedObject(abilityExecutor);
+            aeSO.FindProperty("motor").objectReferenceValue = motor;
+            aeSO.FindProperty("comboController").objectReferenceValue = comboController;
+            aeSO.FindProperty("hitboxManager").objectReferenceValue = hitboxManager;
+            aeSO.FindProperty("manaTracker").objectReferenceValue = manaTracker;
+            aeSO.FindProperty("playerDamageable").objectReferenceValue = playerDamageable;
+            // Set enemy layer mask
+            int enemyHurtboxLayer = LayerMask.NameToLayer("EnemyHurtbox");
+            if (enemyHurtboxLayer >= 0)
+                aeSO.FindProperty("enemyLayer").intValue = 1 << enemyHurtboxLayer;
+            aeSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- Wire PathAbilityExecutor on CharacterInputHandler --
+            var inputSO2 = new SerializedObject(inputHandler);
+            inputSO2.FindProperty("abilityExecutor").objectReferenceValue = abilityExecutor;
+            // Wire Ability1 (Q) and Ability2 (E) input actions
+            if (config.inputActions != null)
+            {
+                WireInputAction(config.inputActions, inputSO2, "ability1Action", "Player/Ability1");
+                WireInputAction(config.inputActions, inputSO2, "ability2Action", "Player/Ability2");
+            }
+            inputSO2.ApplyModifiedPropertiesWithoutUndo();
 
             // -- Clean up missing scripts (e.g. old HitboxDamage refs after move to Shared) --
             RemoveMissingScripts(root);

@@ -31,10 +31,19 @@ namespace TomatoFighters.Shared.Data
     }
 
     /// <summary>
-    /// Path ability data placeholder. Represents an unlocked path ability for combat execution.
-    /// Will be fleshed out in T028 (PathAbilityExecutor).
+    /// Path ability runtime data. Represents an unlocked path ability for combat execution.
+    /// Used by <see cref="TomatoFighters.Shared.Interfaces.IBuffProvider.GetActivePathAbilities"/>.
+    /// Fully implemented by PathAbilityExecutor (T028).
     /// </summary>
     public class PathAbility
     {
+        /// <summary>Ability identifier matching PathData.tierXAbilityId.</summary>
+        public string abilityId;
+
+        /// <summary>Which path type this ability belongs to.</summary>
+        public Enums.PathType pathType;
+
+        /// <summary>Whether the ability is currently active (toggle on, channeling, etc.).</summary>
+        public bool isActive;
     }
 }
