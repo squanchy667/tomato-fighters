@@ -18,6 +18,8 @@ namespace TomatoFighters.Characters
 
         [Header("Spawn Settings")]
         [SerializeField] private Transform spawnPoint;
+        [Tooltip("When true, skip auto-spawn in Awake. Use with CharacterSelectUI.")]
+        [SerializeField] private bool deferSpawn;
 
         [Header("Runtime")]
         [Tooltip("The currently spawned player instance. Read-only at runtime.")]
@@ -31,7 +33,8 @@ namespace TomatoFighters.Characters
 
         private void Awake()
         {
-            SpawnSelected();
+            if (!deferSpawn)
+                SpawnSelected();
         }
 
         /// <summary>

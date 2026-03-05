@@ -59,7 +59,7 @@ namespace TomatoFighters.Editor
             CreateWaveManager();
             CreateLevelBounds();
             CreatePlayerHUD();
-            CreateControlsHint();
+            // Controls hint removed — CharacterSelectUI shows controls on the selection screen
 
             // Wire CameraController2D to follow spawner's spawn point
             // (camera will track the spawned player at runtime)
@@ -294,6 +294,7 @@ namespace TomatoFighters.Editor
             var so = new SerializedObject(spawner);
             so.FindProperty("registry").objectReferenceValue = registry;
             so.FindProperty("selectedCharacter").enumValueIndex = (int)CharacterType.Brutor;
+            so.FindProperty("deferSpawn").boolValue = true;
             so.ApplyModifiedPropertiesWithoutUndo();
 
             var spawnPoint = new GameObject("SpawnPoint");
@@ -304,6 +305,14 @@ namespace TomatoFighters.Editor
             spawnSO.FindProperty("spawnPoint").objectReferenceValue = spawnPoint.transform;
             spawnSO.ApplyModifiedPropertiesWithoutUndo();
 
+            // Character select screen — pauses game until player picks
+            var selectUI = spawnerGO.AddComponent<CharacterSelectUI>();
+            var selectSO = new SerializedObject(selectUI);
+            selectSO.FindProperty("spawner").objectReferenceValue = spawner;
+            selectSO.FindProperty("registry").objectReferenceValue = registry;
+            selectSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Keep debug switch UI for runtime character switching (1-4 after selection)
             spawnerGO.AddComponent<CharacterSwitchDebugUI>();
             return spawnerGO;
         }
@@ -465,21 +474,6 @@ namespace TomatoFighters.Editor
 
             PrefabUtility.InstantiatePrefab(hudPrefab);
             Debug.Log("[DemoScene] PlayerHUD instantiated.");
-        }
-
-        // ── Controls Hint ───────────────────────────────────────────────
-
-        private static void CreateControlsHint()
-        {
-            var go = new GameObject("ControlsHint");
-            var tm = go.AddComponent<TextMesh>();
-            tm.text = "1=Brutor 2=Slasher 3=Mystica 4=Viper | WASD:Move Space:Jump Shift:Dash LMB:Light C:Heavy Ctrl:Run";
-            tm.fontSize = 24;
-            tm.characterSize = 0.12f;
-            tm.anchor = TextAnchor.UpperCenter;
-            tm.alignment = TextAlignment.Center;
-            tm.color = new Color(1f, 1f, 1f, 0.5f);
-            go.transform.position = new Vector3(0f, ARENA_HEIGHT / 2f - 0.5f, 0f);
         }
 
         // ── Helpers ─────────────────────────────────────────────────────
