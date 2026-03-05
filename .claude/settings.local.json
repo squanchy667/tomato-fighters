@@ -25,7 +25,11 @@
       "Bash(grep:*)",
       "Bash(wc:*)",
       "Bash(python:*)",
-      "Bash(echo EXIT_CODE=$?:*)"
+      "Bash(echo EXIT_CODE=$?:*)",
+      "Bash(cp:*)",
+      "Read(//tmp/**)",
+      "Bash(comm:*)",
+      "Bash(do:*)"
     ]
   }
 }

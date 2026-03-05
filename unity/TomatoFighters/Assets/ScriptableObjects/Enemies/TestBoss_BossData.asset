@@ -1,0 +1,46 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a14711ca86d8e5408190d8ab4fa4cc3, type: 3}
+  m_Name: TestBoss_BossData
+  m_EditorClassIdentifier: 
+  phases:
+  - phaseName: "Phase 1 \u2014 Cautious"
+    hpThreshold: 1
+    attacks:
+    - {fileID: 11400000, guid: 148ccb00c384d4a459a7105484e44762, type: 2}
+    - {fileID: 11400000, guid: 26565082dd16d2047b9ffa52d390a8ed, type: 2}
+    tempoMultiplier: 1
+    attackCooldownOverride: -1
+    enableEnrage: 0
+  - phaseName: "Phase 2 \u2014 Aggressive"
+    hpThreshold: 0.6
+    attacks:
+    - {fileID: 11400000, guid: 148ccb00c384d4a459a7105484e44762, type: 2}
+    - {fileID: 11400000, guid: 26565082dd16d2047b9ffa52d390a8ed, type: 2}
+    - {fileID: 11400000, guid: 5bf06cd6677f0ae4a9e3eb3b0df65a7f, type: 2}
+    - {fileID: 11400000, guid: c5343fcbda7ac43418f484a1ebe24adf, type: 2}
+    tempoMultiplier: 1.3
+    attackCooldownOverride: -1
+    enableEnrage: 0
+  - phaseName: "Phase 3 \u2014 Enraged"
+    hpThreshold: 0.3
+    attacks:
+    - {fileID: 11400000, guid: 4a64b983c53b1f84280a086a6270a0f2, type: 2}
+    - {fileID: 11400000, guid: 5bf06cd6677f0ae4a9e3eb3b0df65a7f, type: 2}
+    - {fileID: 11400000, guid: c5343fcbda7ac43418f484a1ebe24adf, type: 2}
+    - {fileID: 11400000, guid: 75c88c0a70f96da4186fd87d141b5301, type: 2}
+    tempoMultiplier: 1.6
+    attackCooldownOverride: -1
+    enableEnrage: 1
+  phaseTransitionDuration: 1.5
+  transitionBlinkCount: 5
+  enrageColor: {r: 1, g: 0.15, b: 0.15, a: 1}

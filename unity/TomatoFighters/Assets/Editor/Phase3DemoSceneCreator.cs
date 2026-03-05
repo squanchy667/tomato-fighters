@@ -232,18 +232,21 @@ namespace TomatoFighters.Editor
             camGO.tag = "MainCamera";
             var cam = camGO.AddComponent<Camera>();
             cam.orthographic = true;
-            cam.orthographicSize = 7f;
+            cam.orthographicSize = 5f;
             cam.backgroundColor = new Color(0.12f, 0.1f, 0.18f); // Darker, more dramatic
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGO.transform.position = new Vector3(0f, 0f, -10f);
 
             var camController = camGO.AddComponent<CameraController2D>();
             var camSO = new SerializedObject(camController);
-            camSO.FindProperty("boundsMinX").floatValue = -ARENA_WIDTH / 2f;
-            camSO.FindProperty("boundsMaxX").floatValue = ARENA_WIDTH / 2f;
-            camSO.FindProperty("boundsMinY").floatValue = FLOOR_BOTTOM_Y;
-            camSO.FindProperty("boundsMaxY").floatValue = FLOOR_TOP_Y;
-            camSO.FindProperty("defaultOrthoSize").floatValue = 7f;
+            // OrthoSize 5 → halfHeight=5, halfWidth≈8.9 at 16:9
+            // Clamp camera center so edges stay within the arena
+            float halfWidth = 5f * 16f / 9f; // ~8.89
+            camSO.FindProperty("boundsMinX").floatValue = -ARENA_WIDTH / 2f + halfWidth;
+            camSO.FindProperty("boundsMaxX").floatValue = ARENA_WIDTH / 2f - halfWidth;
+            camSO.FindProperty("boundsMinY").floatValue = -ARENA_HEIGHT / 2f + 5f;
+            camSO.FindProperty("boundsMaxY").floatValue = ARENA_HEIGHT / 2f - 5f;
+            camSO.FindProperty("defaultOrthoSize").floatValue = 5f;
 
             WireSORef<VoidEventChannel>(camSO, "onCameraLock", EVT_CAMERA_LOCK);
             WireSORef<VoidEventChannel>(camSO, "onCameraUnlock", EVT_CAMERA_UNLOCK);
@@ -256,20 +259,8 @@ namespace TomatoFighters.Editor
 
         private static void WireCameraToSpawner(GameObject camGO, GameObject spawnerGO)
         {
-            var spawnPoint = spawnerGO.transform.Find("SpawnPoint");
-            if (spawnPoint == null || camGO == null) return;
-
-            var camController = camGO.GetComponent<CameraController2D>();
-            if (camController == null) return;
-
-            var camSO = new SerializedObject(camController);
-            var targetsProp = camSO.FindProperty("targets");
-            if (targetsProp != null)
-            {
-                targetsProp.arraySize = 1;
-                targetsProp.GetArrayElementAtIndex(0).objectReferenceValue = spawnPoint;
-                camSO.ApplyModifiedPropertiesWithoutUndo();
-            }
+            // Camera auto-discovers the Player-tagged object at runtime.
+            // No static wiring needed — CameraController2D.AutoDiscoverPlayer() handles it.
         }
 
         // ── Forest Background ───────────────────────────────────────────────

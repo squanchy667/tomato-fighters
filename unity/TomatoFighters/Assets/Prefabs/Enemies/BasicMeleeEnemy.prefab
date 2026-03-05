@@ -405,6 +405,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   enemyData: {fileID: 11400000, guid: 1b33019d5aa71433a864148df017a0fe, type: 2}
-  healthBarPrefab: {fileID: 0}
+  healthBarPrefab: {fileID: 3507493924251747858, guid: 491a2520a41c54e7bb7abac10989835b, type: 3}
   healthBarOffset: {x: 0, y: 1.2, z: 0}
   defenseProviderComponent: {fileID: 0}

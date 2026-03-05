@@ -78,6 +78,7 @@ namespace TomatoFighters.Characters
             Vector3 pos = spawnPoint != null ? spawnPoint.position : transform.position;
             currentPlayer = Instantiate(entry.prefab, pos, Quaternion.identity);
             currentPlayer.name = $"Player_{type}";
+            currentPlayer.tag = "Player";
 
             Debug.Log($"[CharacterSpawner] Spawned {type} at {pos}.");
         }

@@ -6,6 +6,7 @@
         "TomatoFighters.Combat",
         "TomatoFighters.Shared",
         "TomatoFighters.Paths",
+        "TomatoFighters.Roguelite",
         "TomatoFighters.World"
     ],
     "includePlatforms": [

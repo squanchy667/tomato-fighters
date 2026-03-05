@@ -142,6 +142,7 @@ namespace TomatoFighters.World
             if (_camera == null) return;
 
             UpdateZoom();
+            AutoDiscoverPlayer();
 
             if (targets.Count == 0) return;
 
@@ -151,24 +152,13 @@ namespace TomatoFighters.World
             // Preserve Z so the camera stays at its rendering depth
             desiredPosition.z = transform.position.z;
 
-            if (_isLocked)
-            {
-                // Smooth transition toward lock position (don't snap)
-                _lockPosition.z = transform.position.z;
-                transform.position = Vector3.SmoothDamp(
-                    transform.position,
-                    _lockPosition,
-                    ref _velocity,
-                    smoothTime);
-            }
-            else
-            {
-                transform.position = Vector3.SmoothDamp(
-                    transform.position,
-                    desiredPosition,
-                    ref _velocity,
-                    smoothTime);
-            }
+            // Follow the player whether locked or not — bounds clamping
+            // already constrains the camera to the combat zone.
+            transform.position = Vector3.SmoothDamp(
+                transform.position,
+                desiredPosition,
+                ref _velocity,
+                smoothTime);
         }
 
         // ── Follow Calculation ─────────────────────────────────────
@@ -234,6 +224,38 @@ namespace TomatoFighters.World
             }
 
             return new Vector3(center.x, center.y + verticalOffset, transform.position.z);
+        }
+
+        // ── Auto-Discovery ──────────────────────────────────────────
+
+        /// <summary>
+        /// Replaces null/destroyed targets with the current Player-tagged object.
+        /// Runs each frame so the camera picks up the player after CharacterSpawner instantiates it.
+        /// </summary>
+        private void AutoDiscoverPlayer()
+        {
+            // Check if we already have a valid target
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] != null && targets[i].CompareTag("Player"))
+                    return;
+            }
+
+            var playerGO = GameObject.FindWithTag("Player");
+            if (playerGO == null) return;
+
+            // Replace first null slot, or add
+            for (int i = 0; i < targets.Count; i++)
+            {
+                if (targets[i] == null)
+                {
+                    targets[i] = playerGO.transform;
+                    return;
+                }
+            }
+
+            targets.Clear();
+            targets.Add(playerGO.transform);
         }
 
         // ── Bounds ─────────────────────────────────────────────────

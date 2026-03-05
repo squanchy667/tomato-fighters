@@ -52,6 +52,9 @@ namespace TomatoFighters.Editor.Prefabs
             else
                 root = new GameObject("Player");
 
+            // -- Tag: required for LevelBound trigger detection --
+            root.tag = "Player";
+
             // -- Layer: root is PlayerHurtbox (enemy attacks detect this) --
             int hurtboxLayer = LayerMask.NameToLayer(PLAYER_HURTBOX_LAYER);
             if (hurtboxLayer >= 0)
