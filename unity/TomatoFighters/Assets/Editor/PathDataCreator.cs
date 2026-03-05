@@ -182,7 +182,7 @@ namespace TomatoFighters.Editor
                 t1AbilityId = "Sage_MendingAura",
 
                 t2Bonuses = new PathTierBonuses { healthBonus = 40, manaBonus = 30, manaRegenBonus = 3f },
-                t2AbilityId = "Sage_PurifyingBurst",
+                t2AbilityId = "Sage_PurifyingPresence",
 
                 t3Bonuses = new PathTierBonuses { healthBonus = 50, manaBonus = 40, manaRegenBonus = 4f },
                 t3AbilityId = "Sage_Resurrection",
@@ -220,7 +220,7 @@ namespace TomatoFighters.Editor
                 t1AbilityId = "Conjurer_SummonSproutling",
 
                 t2Bonuses = new PathTierBonuses { healthBonus = 30, attackBonus = 0.2f, manaBonus = 30 },
-                t2AbilityId = "Conjurer_DeployTotem",
+                t2AbilityId = "Conjurer_TotemPulse",
 
                 t3Bonuses = new PathTierBonuses { healthBonus = 40, attackBonus = 0.3f, manaBonus = 40, manaRegenBonus = 2f },
                 t3AbilityId = "Conjurer_SummonGolem",
@@ -246,7 +246,7 @@ namespace TomatoFighters.Editor
                 t1AbilityId = "Marksman_PiercingShots",
 
                 t2Bonuses = new PathTierBonuses { healthBonus = 10, rangedAttackBonus = 0.4f, critChanceBonus = 0.08f },
-                t2AbilityId = "Marksman_RapidFire",
+                t2AbilityId = "Marksman_RapidVolleys",
 
                 t3Bonuses = new PathTierBonuses { rangedAttackBonus = 0.5f, speedBonus = 0.1f, critChanceBonus = 0.12f },
                 t3AbilityId = "Marksman_Killshot",
@@ -265,7 +265,7 @@ namespace TomatoFighters.Editor
                 t1AbilityId = "Trapper_HarpoonShot",
 
                 t2Bonuses = new PathTierBonuses { healthBonus = 30, speedBonus = 0.2f, stunRateBonus = 0.3f },
-                t2AbilityId = "Trapper_TrapNet",
+                t2AbilityId = "Trapper_TrapDeployment",
 
                 t3Bonuses = new PathTierBonuses { healthBonus = 40, speedBonus = 0.2f, manaBonus = 15, stunRateBonus = 0.5f },
                 t3AbilityId = "Trapper_AnchorChain",
