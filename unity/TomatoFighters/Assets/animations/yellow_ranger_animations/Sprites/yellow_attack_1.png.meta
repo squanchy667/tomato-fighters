@@ -113,7 +113,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
+        y: 256
         width: 128
         height: 256
       alignment: 9
@@ -135,7 +135,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 128
-        y: 0
+        y: 256
         width: 128
         height: 256
       alignment: 9
@@ -157,7 +157,7 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 256
-        y: 0
+        y: 256
         width: 128
         height: 256
       alignment: 9
@@ -178,7 +178,7 @@ TextureImporter:
       name: attack_1_3
       rect:
         serializedVersion: 2
-        x: 384
+        x: 0
         y: 0
         width: 128
         height: 256
@@ -200,7 +200,7 @@ TextureImporter:
       name: attack_1_4
       rect:
         serializedVersion: 2
-        x: 512
+        x: 128
         y: 0
         width: 128
         height: 256
@@ -222,7 +222,7 @@ TextureImporter:
       name: attack_1_5
       rect:
         serializedVersion: 2
-        x: 640
+        x: 256
         y: 0
         width: 128
         height: 256
