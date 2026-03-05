@@ -15,7 +15,7 @@ MonoBehaviour:
   steps:
   - attackData: {fileID: 11400000, guid: dc18baf6504ab4542ac98848b49ff366, type: 2}
     attackType: 0
-    animationTrigger: attack_light_1
+    animationTrigger: attack_1Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 1
@@ -25,7 +25,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: f43bc38333874d04fb760fce6f724f2e, type: 2}
     attackType: 0
-    animationTrigger: attack_light_2
+    animationTrigger: attack_1Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 2
@@ -35,7 +35,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: 2b577354bcb24bc4c9bcd62527afa7b5, type: 2}
     attackType: 0
-    animationTrigger: finisher_light
+    animationTrigger: attack_3Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
@@ -45,7 +45,7 @@ MonoBehaviour:
     isFinisher: 1
   - attackData: {fileID: 11400000, guid: 23ac87cb07becf64c96c23c44175b833, type: 2}
     attackType: 1
-    animationTrigger: attack_branch_heavy
+    animationTrigger: attack_2Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
@@ -55,7 +55,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: 0f5989b26d65d8a45ae476f7b1b90c9a, type: 2}
     attackType: 1
-    animationTrigger: finisher_heavy
+    animationTrigger: attack_3Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
@@ -65,7 +65,7 @@ MonoBehaviour:
     isFinisher: 1
   - attackData: {fileID: 11400000, guid: ab23f0822758eb4499437d64a1dad932, type: 2}
     attackType: 1
-    animationTrigger: attack_heavy_1
+    animationTrigger: attack_2Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
@@ -75,7 +75,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: 37991df7ca925ac4792b063035ff420a, type: 2}
     attackType: 1
-    animationTrigger: finisher_heavy_2
+    animationTrigger: attack_3Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1

@@ -115,46 +115,46 @@ namespace TomatoFighters.Editor
 
             def.steps = new ComboStep[]
             {
-                // 0: L1 Shield Bash 1
+                // 0: L1 Shield Bash 1 — light (attack_1 = real art)
                 MakeStep(
                     LoadAttack(af, "BrutorShieldBash1"), AttackType.Light,
-                    "attack_light_1", nextL: 1, nextH: 3,
+                    "attack_1Trigger", nextL: 1, nextH: 3,
                     dashCancel: true, jumpCancel: false),
 
-                // 1: L2 Shield Bash 2
+                // 1: L2 Shield Bash 2 — light (reuses attack_1)
                 MakeStep(
                     LoadAttack(af, "BrutorShieldBash2"), AttackType.Light,
-                    "attack_light_2", nextL: 2, nextH: -1,
+                    "attack_1Trigger", nextL: 2, nextH: -1,
                     dashCancel: true, jumpCancel: false),
 
-                // 2: L3 Shield Sweep Finisher
+                // 2: L3 Shield Sweep Finisher (attack_3 = real art)
                 MakeStep(
                     LoadAttack(af, "BrutorSweep"), AttackType.Light,
-                    "finisher_light", isFinisher: true,
+                    "attack_3Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: true),
 
-                // 3: Uppercut Launcher (L1→H branch)
+                // 3: Uppercut Launcher (L1→H branch — heavy, attack_2 = real art)
                 MakeStep(
                     LoadAttack(af, "BrutorLauncher"), AttackType.Heavy,
-                    "attack_branch_heavy", nextL: -1, nextH: 4,
+                    "attack_2Trigger", nextL: -1, nextH: 4,
                     dashCancel: false, jumpCancel: false),
 
-                // 4: Air Slam (Launcher follow-up finisher)
+                // 4: Air Slam (Launcher follow-up finisher — attack_3 = real art)
                 MakeStep(
                     LoadAttack(af, "BrutorLauncherSlam"), AttackType.Heavy,
-                    "finisher_heavy", isFinisher: true,
+                    "attack_3Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: true),
 
-                // 5: H1 Overhead Slam
+                // 5: H1 Overhead Slam — heavy (attack_2 = real art)
                 MakeStep(
                     LoadAttack(af, "BrutorOverheadSlam"), AttackType.Heavy,
-                    "attack_heavy_1", nextL: -1, nextH: 6,
+                    "attack_2Trigger", nextL: -1, nextH: 6,
                     dashCancel: true, jumpCancel: false),
 
-                // 6: H2 Ground Pound Finisher
+                // 6: H2 Ground Pound Finisher (attack_3 = real art)
                 MakeStep(
                     LoadAttack(af, "BrutorGroundPound"), AttackType.Heavy,
-                    "finisher_heavy_2", isFinisher: true,
+                    "attack_3Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: true),
             };
 
@@ -185,52 +185,52 @@ namespace TomatoFighters.Editor
 
             def.steps = new ComboStep[]
             {
-                // 0: L1 Quick Slash 1
+                // 0: L1 Quick Slash 1 — light opener (attack_1 = real art)
                 MakeStep(
                     LoadAttack(af, "SlasherSlash1"), AttackType.Light,
-                    "attack_light_1", nextL: 1, nextH: -1,
+                    "attack_1Trigger", nextL: 1, nextH: -1,
                     dashCancel: true, jumpCancel: true),
 
-                // 1: L2 Quick Slash 2
+                // 1: L2 Quick Slash 2 — light (reuses attack_1)
                 MakeStep(
                     LoadAttack(af, "SlasherSlash2"), AttackType.Light,
-                    "attack_light_2", nextL: 2, nextH: 4,
+                    "attack_1Trigger", nextL: 2, nextH: 4,
                     dashCancel: true, jumpCancel: true),
 
-                // 2: L3 Cross Slash
+                // 2: L3 Cross Slash — light (reuses attack_1)
                 MakeStep(
                     LoadAttack(af, "SlasherSlash3"), AttackType.Light,
-                    "attack_light_3", nextL: 3, nextH: -1,
+                    "attack_1Trigger", nextL: 3, nextH: -1,
                     dashCancel: true, jumpCancel: true),
 
-                // 3: L4 Spinning Finisher
+                // 3: L4 Spinning Finisher — light finisher (placeholder until finisher art)
                 MakeStep(
                     LoadAttack(af, "SlasherSpinFinisher"), AttackType.Light,
-                    "finisher_light", isFinisher: true,
+                    "attack_3Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: true),
 
-                // 4: Lunge Thrust (L2→H branch, standalone)
+                // 4: Lunge Thrust (L2→H branch) — heavy (attack_2 = real art)
                 MakeStep(
                     LoadAttack(af, "SlasherLunge"), AttackType.Heavy,
-                    "attack_branch_heavy", nextL: -1, nextH: -1,
+                    "attack_2Trigger", nextL: -1, nextH: -1,
                     dashCancel: true, jumpCancel: true),
 
-                // 5: H1 Heavy Slash
+                // 5: H1 Heavy Slash — heavy opener (attack_2 = real art)
                 MakeStep(
                     LoadAttack(af, "SlasherHeavySlash"), AttackType.Heavy,
-                    "attack_heavy_1", nextL: 7, nextH: 6,
+                    "attack_2Trigger", nextL: 7, nextH: 6,
                     dashCancel: true, jumpCancel: true),
 
-                // 6: H2 Piercing Lunge Finisher
+                // 6: H2 Piercing Lunge Finisher — heavy finisher (placeholder until finisher art)
                 MakeStep(
                     LoadAttack(af, "SlasherLungeFinisher"), AttackType.Heavy,
-                    "finisher_heavy", isFinisher: true,
+                    "attack_4Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: true),
 
-                // 7: Quick Re-entry Slash (H1→L, re-enters light chain at L2)
+                // 7: Quick Re-entry Slash (H1→L) — light (reuses attack_1)
                 MakeStep(
                     LoadAttack(af, "SlasherQuickSlash"), AttackType.Light,
-                    "attack_branch_light", nextL: 1, nextH: -1,
+                    "attack_1Trigger", nextL: 1, nextH: -1,
                     dashCancel: true, jumpCancel: true),
             };
 
@@ -258,34 +258,34 @@ namespace TomatoFighters.Editor
 
             def.steps = new ComboStep[]
             {
-                // 0: L1 Magic Burst 1
+                // 0: L1 Magic Burst 1 — light opener (attack_1 = placeholder until art)
                 MakeStep(
                     LoadAttack(af, "MysticaStrike1"), AttackType.Light,
-                    "attack_light_1", nextL: 1, nextH: -1,
+                    "attack_1Trigger", nextL: 1, nextH: -1,
                     dashCancel: false, jumpCancel: true),
 
-                // 1: L2 Magic Burst 2
+                // 1: L2 Magic Burst 2 — light (reuses attack_1)
                 MakeStep(
                     LoadAttack(af, "MysticaStrike2"), AttackType.Light,
-                    "attack_light_2", nextL: 2, nextH: -1,
+                    "attack_1Trigger", nextL: 2, nextH: -1,
                     dashCancel: false, jumpCancel: true),
 
-                // 2: L3 Magic Burst 3 (burst finisher)
+                // 2: L3 Magic Burst 3 — light finisher (placeholder until finisher art)
                 MakeStep(
                     LoadAttack(af, "MysticaStrike3"), AttackType.Light,
-                    "finisher_light", isFinisher: true,
+                    "attack_3Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: true),
 
-                // 3: H1 Arcane Bolt
+                // 3: H1 Arcane Bolt — heavy opener (attack_2 = placeholder until art)
                 MakeStep(
                     LoadAttack(af, "MysticaArcaneBolt"), AttackType.Heavy,
-                    "attack_heavy_1", nextL: -1, nextH: 4,
+                    "attack_2Trigger", nextL: -1, nextH: 4,
                     dashCancel: false, jumpCancel: true),
 
-                // 4: H2 Empowered Arcane Bolt (finisher)
+                // 4: H2 Empowered Arcane Bolt — heavy finisher (placeholder until finisher art)
                 MakeStep(
                     LoadAttack(af, "MysticaEmpoweredBolt"), AttackType.Heavy,
-                    "finisher_heavy", isFinisher: true,
+                    "attack_4Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: true),
             };
 
@@ -314,40 +314,40 @@ namespace TomatoFighters.Editor
 
             def.steps = new ComboStep[]
             {
-                // 0: L1 Quick Shot 1
+                // 0: L1 Quick Shot 1 — light opener (attack_1 = real art)
                 MakeStep(
                     LoadAttack(af, "ViperShot1"), AttackType.Light,
-                    "attack_light_1", nextL: 1, nextH: -1,
+                    "attack_1Trigger", nextL: 1, nextH: -1,
                     dashCancel: true, jumpCancel: false),
 
-                // 1: L2 Quick Shot 2
+                // 1: L2 Quick Shot 2 — light follow-up (reuses attack_1 until finisher art arrives)
                 MakeStep(
                     LoadAttack(af, "ViperShot2"), AttackType.Light,
-                    "attack_light_2", nextL: 2, nextH: 3,
+                    "attack_1Trigger", nextL: 2, nextH: 3,
                     dashCancel: true, jumpCancel: false),
 
-                // 2: L3 Rapid Burst (finisher)
+                // 2: L3 Rapid Burst (finisher — placeholder until finisher art arrives)
                 MakeStep(
                     LoadAttack(af, "ViperRapidBurst"), AttackType.Light,
-                    "finisher_light", isFinisher: true,
+                    "attack_3Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: false),
 
-                // 3: Quick Charged Shot (L2→H branch, standalone)
+                // 3: Quick Charged Shot (L2→H branch — reuses attack_2 heavy art)
                 MakeStep(
                     LoadAttack(af, "ViperQuickCharged"), AttackType.Heavy,
-                    "attack_branch_heavy", nextL: -1, nextH: -1,
+                    "attack_2Trigger", nextL: -1, nextH: -1,
                     dashCancel: true, jumpCancel: false),
 
-                // 4: H1 Charged Shot
+                // 4: H1 Charged Shot — heavy opener (attack_2 = real art)
                 MakeStep(
                     LoadAttack(af, "ViperChargedShot"), AttackType.Heavy,
-                    "attack_heavy_1", nextL: -1, nextH: 5,
+                    "attack_2Trigger", nextL: -1, nextH: 5,
                     dashCancel: true, jumpCancel: false),
 
-                // 5: H2 Piercing Shot (finisher)
+                // 5: H2 Piercing Shot (finisher — placeholder until finisher art arrives)
                 MakeStep(
                     LoadAttack(af, "ViperPiercingShot"), AttackType.Heavy,
-                    "finisher_heavy", isFinisher: true,
+                    "attack_5Trigger", isFinisher: true,
                     dashCancel: true, jumpCancel: false),
             };
 

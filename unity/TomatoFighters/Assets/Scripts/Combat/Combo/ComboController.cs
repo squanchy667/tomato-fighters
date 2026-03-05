@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TomatoFighters.Shared.Enums;
 using UnityEngine;
 
@@ -85,6 +86,7 @@ namespace TomatoFighters.Combat
 
             stateMachine = new ComboStateMachine();
             stateMachine.SetDefinition(comboDefinition);
+            ValidateAnimationTriggers();
 
             stateMachine.StepStarted += HandleStepStarted;
             stateMachine.ComboDropped += HandleComboDropped;
@@ -322,6 +324,74 @@ namespace TomatoFighters.Combat
         private void UnlockMovement()
         {
             motor?.SetAttackLock(false);
+        }
+
+        /// <summary>
+        /// Validates that combo step animation triggers match Animator Controller parameters.
+        /// Warns on missing or unused attack triggers; errors when both exist (naming mismatch).
+        /// </summary>
+        private void ValidateAnimationTriggers()
+        {
+            if (animator == null || comboDefinition == null || comboDefinition.steps == null) return;
+
+            // Collect attack trigger parameters from the Animator
+            var animatorTriggers = new HashSet<string>();
+            foreach (var param in animator.parameters)
+            {
+                if (param.type == AnimatorControllerParameterType.Trigger
+                    && param.name.StartsWith("attack_"))
+                {
+                    animatorTriggers.Add(param.name);
+                }
+            }
+
+            // Collect triggers referenced by combo steps
+            var comboTriggers = new HashSet<string>();
+            foreach (var step in comboDefinition.steps)
+            {
+                if (!string.IsNullOrEmpty(step.animationTrigger))
+                    comboTriggers.Add(step.animationTrigger);
+            }
+
+            // Find mismatches
+            var missing = new List<string>();  // combo references it but animator doesn't have it
+            var unused = new List<string>();   // animator has it but no combo step uses it
+
+            foreach (var trigger in comboTriggers)
+            {
+                if (!animatorTriggers.Contains(trigger))
+                    missing.Add(trigger);
+            }
+
+            foreach (var trigger in animatorTriggers)
+            {
+                if (!comboTriggers.Contains(trigger))
+                    unused.Add(trigger);
+            }
+
+            if (missing.Count > 0 && unused.Count > 0)
+            {
+                Debug.LogError(
+                    $"[ComboController] {gameObject.name}: Animation trigger MISMATCH — " +
+                    $"combo expects [{string.Join(", ", missing)}] but Animator has [{string.Join(", ", unused)}] instead. " +
+                    "Check trigger names in ComboDefinition vs AnimatorController.", this);
+            }
+            else
+            {
+                if (missing.Count > 0)
+                {
+                    Debug.LogWarning(
+                        $"[ComboController] {gameObject.name}: Missing Animator triggers: " +
+                        $"[{string.Join(", ", missing)}]. These attack animations will not play.", this);
+                }
+
+                if (unused.Count > 0)
+                {
+                    Debug.LogWarning(
+                        $"[ComboController] {gameObject.name}: Unused Animator attack triggers: " +
+                        $"[{string.Join(", ", unused)}]. These animation slots have no combo step.", this);
+                }
+            }
         }
 
         private void TriggerStepAnimation(int stepIndex)

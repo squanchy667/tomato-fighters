@@ -1,0 +1,95 @@
+{
+  "character_name": "corn",
+  "animator_controller": "corn_AnimatorController",
+  "parameters": [
+    {
+      "name": "Speed",
+      "type": "Float",
+      "default": 0.0
+    },
+    {
+      "name": "IsGrounded",
+      "type": "Bool",
+      "default": true
+    },
+    {
+      "name": "AttackTrigger",
+      "type": "Trigger",
+      "default": null
+    },
+    {
+      "name": "HurtTrigger",
+      "type": "Trigger",
+      "default": null
+    },
+    {
+      "name": "DeathTrigger",
+      "type": "Trigger",
+      "default": null
+    }
+  ],
+  "layers": [
+    {
+      "name": "Base Layer",
+      "states": [
+        {
+          "name": "death",
+          "motion": "corn_death",
+          "speed": 1.0,
+          "no_exit": true
+        },
+        {
+          "name": "block",
+          "motion": "corn_block",
+          "speed": 1.0
+        },
+        {
+          "name": "hurt",
+          "motion": "corn_hurt",
+          "speed": 1.0
+        },
+        {
+          "name": "guard",
+          "motion": "corn_guard",
+          "speed": 1.0
+        },
+        {
+          "name": "jump",
+          "motion": "corn_jump",
+          "speed": 1.0
+        },
+        {
+          "name": "kneel",
+          "motion": "corn_kneel",
+          "speed": 1.0
+        },
+        {
+          "name": "walk",
+          "motion": "corn_walk",
+          "speed": 1.0
+        }
+      ],
+      "transitions": [
+        {
+          "from": "Any",
+          "to": "hurt",
+          "condition": {
+            "parameter": "HurtTrigger",
+            "mode": "Trigger"
+          }
+        },
+        {
+          "from": "Any",
+          "to": "death",
+          "condition": {
+            "parameter": "DeathTrigger",
+            "mode": "Trigger"
+          }
+        }
+      ],
+      "default_state": "death"
+    }
+  ],
+  "generated_by": "Animation Forge v0.1.0",
+  "generated_at": "2026-03-05T12:38:13.307162+00:00"
+}

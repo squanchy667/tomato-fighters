@@ -150,45 +150,50 @@ namespace TomatoFighters.Editor.Characters
 
             def.steps = new ComboStep[]
             {
+                // 0: L1 — light opener (attack_1, placeholder until art)
                 new ComboStep
                 {
                     attackType = AttackType.Light,
-                    animationTrigger = "Light1",
+                    animationTrigger = "attack_1Trigger",
                     damageMultiplier = 1.0f,
                     nextOnLight = 1, nextOnHeavy = -1,
                     isFinisher = false
                 },
+                // 1: L2 — light (reuses attack_1)
                 new ComboStep
                 {
                     attackType = AttackType.Light,
-                    animationTrigger = "Light2",
+                    animationTrigger = "attack_1Trigger",
                     damageMultiplier = 1.1f,
                     nextOnLight = 2, nextOnHeavy = -1,
                     canDashCancelOnHit = true,
                     isFinisher = false
                 },
+                // 2: L3 — light finisher (placeholder until finisher art)
                 new ComboStep
                 {
                     attackType = AttackType.Light,
-                    animationTrigger = "LightFinisher",
+                    animationTrigger = "attack_3Trigger",
                     damageMultiplier = 1.4f,
                     nextOnLight = -1, nextOnHeavy = -1,
                     isFinisher = true
                 },
+                // 3: H1 — heavy opener (attack_2, placeholder until art)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
-                    animationTrigger = "Heavy1",
+                    animationTrigger = "attack_2Trigger",
                     damageMultiplier = 1.8f,
                     comboWindowDuration = 0.6f,
                     nextOnLight = -1, nextOnHeavy = 4,
                     canDashCancelOnHit = true, canJumpCancelOnHit = true,
                     isFinisher = false
                 },
+                // 4: H2 — heavy finisher (placeholder until finisher art)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
-                    animationTrigger = "HeavyFinisher",
+                    animationTrigger = "attack_4Trigger",
                     damageMultiplier = 2.5f,
                     nextOnLight = -1, nextOnHeavy = -1,
                     isFinisher = true
@@ -257,20 +262,21 @@ namespace TomatoFighters.Editor.Characters
         {
             if (comboDef == null || comboDef.steps == null) return;
 
-            // Step index → (attack SO name, hitboxId)
-            var mapping = new (string soName, string hitboxId)[]
+            // Step index → (attack SO name, hitboxId, clashStart, clashEnd)
+            // Clash windows: 0/0 = no clash (light attacks). Heavy attacks get clash before hitbox.
+            var mapping = new (string soName, string hitboxId, float clashStart, float clashEnd)[]
             {
-                ("MysticaStrike1",       "Burst"),
-                ("MysticaStrike2",       "Burst"),
-                ("MysticaStrike3",       "BigBurst"),
-                ("MysticaArcaneBolt",    "Bolt"),
-                ("MysticaEmpoweredBolt", "Bolt"),
+                ("MysticaStrike1",       "Burst",    0f, 0f),    // 0: light — no clash
+                ("MysticaStrike2",       "Burst",    0f, 0f),    // 1: light — no clash
+                ("MysticaStrike3",       "BigBurst", 0f, 0f),    // 2: light finisher — no clash
+                ("MysticaArcaneBolt",    "Bolt",     0f, 0.15f), // 3: heavy — hitbox frame 6 (~100ms)
+                ("MysticaEmpoweredBolt", "Bolt",     0f, 0.15f), // 4: heavy finisher — hitbox frame 7 (~117ms)
             };
 
             bool dirty = false;
             for (int i = 0; i < mapping.Length && i < comboDef.steps.Length; i++)
             {
-                var (soName, hitboxId) = mapping[i];
+                var (soName, hitboxId, clashStart, clashEnd) = mapping[i];
                 string path = $"{ATTACKS_FOLDER}/{soName}.asset";
                 var attack = AssetDatabase.LoadAssetAtPath<AttackData>(path);
 
@@ -280,19 +286,31 @@ namespace TomatoFighters.Editor.Characters
                     continue;
                 }
 
-                // Wire into combo step
                 if (comboDef.steps[i].attackData != attack)
                 {
                     comboDef.steps[i].attackData = attack;
                     dirty = true;
                 }
 
-                // Ensure hitboxId is set
+                bool attackDirty = false;
+
                 if (attack.hitboxId != hitboxId)
                 {
                     attack.hitboxId = hitboxId;
+                    attackDirty = true;
+                }
+
+                if (attack.clashWindowStart != clashStart || attack.clashWindowEnd != clashEnd)
+                {
+                    attack.clashWindowStart = clashStart;
+                    attack.clashWindowEnd = clashEnd;
+                    attackDirty = true;
+                }
+
+                if (attackDirty)
+                {
                     EditorUtility.SetDirty(attack);
-                    Debug.Log($"[MysticaCreator] {soName} → hitboxId='{hitboxId}'");
+                    Debug.Log($"[MysticaCreator] {soName} → hitboxId='{hitboxId}', clash=[{clashStart:F2}s, {clashEnd:F2}s]");
                 }
             }
 

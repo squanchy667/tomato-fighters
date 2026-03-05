@@ -15,7 +15,7 @@ MonoBehaviour:
   steps:
   - attackData: {fileID: 11400000, guid: c2ea5078ead30a54f933b5b5bbeb5c55, type: 2}
     attackType: 0
-    animationTrigger: attack_light_1
+    animationTrigger: attack_1Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 1
@@ -25,7 +25,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: ac3fd95c4cd67d94d9e7ae14c404e494, type: 2}
     attackType: 0
-    animationTrigger: attack_light_2
+    animationTrigger: attack_1Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 2
@@ -35,7 +35,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: 805e6876b0dd120488bb21139c6670e3, type: 2}
     attackType: 0
-    animationTrigger: attack_light_3
+    animationTrigger: attack_1Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 3
@@ -45,7 +45,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: 9c52e4a9939abde4f99d4f8a3f8afbbb, type: 2}
     attackType: 0
-    animationTrigger: finisher_light
+    animationTrigger: attack_3Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
@@ -55,7 +55,7 @@ MonoBehaviour:
     isFinisher: 1
   - attackData: {fileID: 11400000, guid: f9c13ed04c86ad948817caea9b293a95, type: 2}
     attackType: 1
-    animationTrigger: attack_branch_heavy
+    animationTrigger: attack_2Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
@@ -65,7 +65,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: 5449b904f18ab9e4cba0ddbda64a0dd4, type: 2}
     attackType: 1
-    animationTrigger: attack_heavy_1
+    animationTrigger: attack_2Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 7
@@ -75,7 +75,7 @@ MonoBehaviour:
     isFinisher: 0
   - attackData: {fileID: 11400000, guid: 09461a76058535a49a3efe073f2a5f43, type: 2}
     attackType: 1
-    animationTrigger: finisher_heavy
+    animationTrigger: attack_4Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: -1
@@ -85,7 +85,7 @@ MonoBehaviour:
     isFinisher: 1
   - attackData: {fileID: 11400000, guid: 89e484d8bfacdbc44a08d446d76e8424, type: 2}
     attackType: 0
-    animationTrigger: attack_branch_light
+    animationTrigger: attack_1Trigger
     damageMultiplier: 1
     comboWindowDuration: 0
     nextOnLight: 1

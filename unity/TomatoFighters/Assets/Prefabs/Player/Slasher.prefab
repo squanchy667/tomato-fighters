@@ -554,6 +554,7 @@ GameObject:
   - component: {fileID: 9211690648916772274}
   - component: {fileID: 600444095393855003}
   - component: {fileID: 8385738781385175512}
+  - component: {fileID: 6342018132281170240}
   m_Layer: 9
   m_Name: Slasher
   m_TagString: Untagged
@@ -854,6 +855,7 @@ MonoBehaviour:
   useTimerFallback: 1
   fallbackActiveDuration: 0.25
   baseAttack: 20
+  stunRate: 1
 --- !u!114 &8385738781385175512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -866,6 +868,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2365c5a803774644a8d1f1042f61ec66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &6342018132281170240
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6032175914044303788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d69ec45aab2449bc9db4507285cf0ee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  passiveConfig: {fileID: 11400000, guid: 2075920b02d0c4a579ac575e49aa5766, type: 2}
+  characterType: 1
+  hitboxManager: {fileID: 600444095393855003}
+  comboController: {fileID: 2306810785495217506}
 --- !u!1 &6341040756435245659
 GameObject:
   m_ObjectHideFlags: 0
@@ -1225,7 +1243,7 @@ Animator:
   m_GameObject: {fileID: 8721950407614830697}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 4617683f874cbe74c9b3bc9a482a49d9, type: 2}
+  m_Controller: {fileID: 22100000, guid: 874544504376409489237dc12f6a929d, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

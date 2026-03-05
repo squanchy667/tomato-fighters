@@ -231,7 +231,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   comboDefinition: {fileID: 11400000, guid: 4bf7d0801927a614b9bcea21a8eabc83, type: 2}
-  interactionConfig: {fileID: 0}
+  interactionConfig: {fileID: 11400000, guid: a969e25f98fa0cd4dabbd65b4f34e0ec, type: 2}
   characterType: 2
   animator: {fileID: 7643402031157261407}
   motor: {fileID: 2861447664385703623}
@@ -383,9 +383,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   comboController: {fileID: 6939669992788416737}
   ownerDefenseSystem: {fileID: 618079417979342889}
+  ownerClashTracker: {fileID: 0}
   useTimerFallback: 1
   fallbackActiveDuration: 0.3
   baseAttack: 10
+  stunRate: 1
 --- !u!114 &618079417979342889
 MonoBehaviour:
   m_ObjectHideFlags: 0

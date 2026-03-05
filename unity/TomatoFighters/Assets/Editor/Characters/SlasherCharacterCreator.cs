@@ -166,81 +166,81 @@ namespace TomatoFighters.Editor.Characters
 
             def.steps = new ComboStep[]
             {
-                // 0: SlasherSlash1 — fast opening jab
+                // 0: SlasherSlash1 — light opener (attack_1 = real art)
                 new ComboStep
                 {
                     attackType = AttackType.Light,
-                    animationTrigger = "Light1",
+                    animationTrigger = "attack_1Trigger",
                     damageMultiplier = 1.0f,
                     nextOnLight = 1, nextOnHeavy = 6,
                     isFinisher = false
                 },
-                // 1: SlasherSlash2 — follow-up cross
+                // 1: SlasherSlash2 — light (reuses attack_1)
                 new ComboStep
                 {
                     attackType = AttackType.Light,
-                    animationTrigger = "Light2",
+                    animationTrigger = "attack_1Trigger",
                     damageMultiplier = 1.1f,
                     nextOnLight = 2, nextOnHeavy = 7,
                     canDashCancelOnHit = true,
                     isFinisher = false
                 },
-                // 2: SlasherSlash3 — light chain finisher
+                // 2: SlasherSlash3 — light finisher (placeholder until finisher art)
                 new ComboStep
                 {
                     attackType = AttackType.Light,
-                    animationTrigger = "LightFinisher",
+                    animationTrigger = "attack_3Trigger",
                     damageMultiplier = 1.5f,
                     nextOnLight = -1, nextOnHeavy = -1,
                     isFinisher = true
                 },
-                // 3: SlasherHeavySlash — powerful opening heavy
+                // 3: SlasherHeavySlash — heavy opener (attack_2 = real art)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
-                    animationTrigger = "Heavy1",
+                    animationTrigger = "attack_2Trigger",
                     damageMultiplier = 1.8f,
                     comboWindowDuration = 0.5f,
                     nextOnLight = -1, nextOnHeavy = 4,
                     canDashCancelOnHit = true, canJumpCancelOnHit = true,
                     isFinisher = false
                 },
-                // 4: SlasherLunge — forward rush attack
+                // 4: SlasherLunge — heavy (reuses attack_2)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
-                    animationTrigger = "Heavy2",
+                    animationTrigger = "attack_2Trigger",
                     damageMultiplier = 1.6f,
                     comboWindowDuration = 0.4f,
                     nextOnLight = -1, nextOnHeavy = 5,
                     canDashCancelOnHit = true,
                     isFinisher = false
                 },
-                // 5: SlasherLungeFinisher — big thrust finish
+                // 5: SlasherLungeFinisher — heavy finisher (placeholder until finisher art)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
-                    animationTrigger = "HeavyFinisher",
+                    animationTrigger = "attack_4Trigger",
                     damageMultiplier = 2.5f,
                     nextOnLight = -1, nextOnHeavy = -1,
                     isFinisher = true
                 },
-                // 6: SlasherQuickSlash — fast poke from L1→H, chains back into L2
+                // 6: SlasherQuickSlash — heavy poke from L1→H (reuses attack_2)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
-                    animationTrigger = "Heavy1",
+                    animationTrigger = "attack_2Trigger",
                     damageMultiplier = 1.3f,
                     comboWindowDuration = 0.35f,
                     nextOnLight = 1, nextOnHeavy = -1,
                     canDashCancelOnHit = true,
                     isFinisher = false
                 },
-                // 7: SlasherSpinFinisher — AoE finisher from L2→H
+                // 7: SlasherSpinFinisher — heavy finisher from L2→H (placeholder until finisher art)
                 new ComboStep
                 {
                     attackType = AttackType.Heavy,
-                    animationTrigger = "HeavyFinisher",
+                    animationTrigger = "attack_4Trigger",
                     damageMultiplier = 2.2f,
                     nextOnLight = -1, nextOnHeavy = -1,
                     isFinisher = true

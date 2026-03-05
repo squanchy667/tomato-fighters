@@ -198,21 +198,22 @@ namespace TomatoFighters.Editor.Characters
         {
             if (comboDef == null || comboDef.steps == null) return;
 
-            // Step index -> (attack SO name, hitboxId)
-            var mapping = new (string soName, string hitboxId)[]
+            // Step index → (attack SO name, hitboxId, clashStart, clashEnd)
+            // Clash windows: 0/0 = no clash (light attacks). Heavy attacks get clash before hitbox.
+            var mapping = new (string soName, string hitboxId, float clashStart, float clashEnd)[]
             {
-                ("ViperShot1",        "Lunge"), // 0: light opener
-                ("ViperShot2",        "Lunge"), // 1: light follow-up
-                ("ViperRapidBurst",   "Sweep"), // 2: light finisher
-                ("ViperQuickCharged", "Lunge"), // 3: branch heavy
-                ("ViperChargedShot",  "Lunge"), // 4: heavy opener
-                ("ViperPiercingShot", "Lunge"), // 5: heavy finisher
+                ("ViperShot1",        "Lunge", 0f, 0f),    // 0: light — no clash
+                ("ViperShot2",        "Lunge", 0f, 0f),    // 1: light — no clash
+                ("ViperRapidBurst",   "Sweep", 0f, 0f),    // 2: light finisher — no clash
+                ("ViperQuickCharged", "Lunge", 0f, 0.15f), // 3: heavy — hitbox frame 3 (~50ms)
+                ("ViperChargedShot",  "Lunge", 0f, 0.20f), // 4: heavy — hitbox frame 5 (~83ms)
+                ("ViperPiercingShot", "Lunge", 0f, 0.20f), // 5: heavy finisher — hitbox frame 5 (~83ms)
             };
 
             bool dirty = false;
             for (int i = 0; i < mapping.Length && i < comboDef.steps.Length; i++)
             {
-                var (soName, hitboxId) = mapping[i];
+                var (soName, hitboxId, clashStart, clashEnd) = mapping[i];
                 string path = $"{ATTACKS_FOLDER}/{soName}.asset";
                 var attack = AssetDatabase.LoadAssetAtPath<AttackData>(path);
 
@@ -228,11 +229,25 @@ namespace TomatoFighters.Editor.Characters
                     dirty = true;
                 }
 
+                bool attackDirty = false;
+
                 if (attack.hitboxId != hitboxId)
                 {
                     attack.hitboxId = hitboxId;
+                    attackDirty = true;
+                }
+
+                if (attack.clashWindowStart != clashStart || attack.clashWindowEnd != clashEnd)
+                {
+                    attack.clashWindowStart = clashStart;
+                    attack.clashWindowEnd = clashEnd;
+                    attackDirty = true;
+                }
+
+                if (attackDirty)
+                {
                     EditorUtility.SetDirty(attack);
-                    Debug.Log($"[ViperCreator] {soName} -> hitboxId='{hitboxId}'");
+                    Debug.Log($"[ViperCreator] {soName} → hitboxId='{hitboxId}', clash=[{clashStart:F2}s, {clashEnd:F2}s]");
                 }
             }
 

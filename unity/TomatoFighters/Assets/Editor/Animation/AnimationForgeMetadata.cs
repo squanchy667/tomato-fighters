@@ -210,6 +210,60 @@ namespace TomatoFighters.Editor.Animation
             }
         };
 
+        /// <summary>Registry of known enemy character animation configs (7 entries: 6 real + TestDummy).</summary>
+        public static readonly Dictionary<string, CharacterAnimConfig> EnemyCharacters = new Dictionary<string, CharacterAnimConfig>
+        {
+            ["TomatoBerserker"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/tomato_berserker_animations",
+                outputFolder = "Assets/Animations/Enemies/TomatoBerserker"
+            },
+            ["CornKnight"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/corn_animations",
+                outputFolder = "Assets/Animations/Enemies/CornKnight"
+            },
+            ["OnionCrybabyKnight"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/onion_crybaby_knight_animations",
+                outputFolder = "Assets/Animations/Enemies/OnionCrybabyKnight"
+            },
+            ["GarlicVampire"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/garlic_vampire_animations",
+                outputFolder = "Assets/Animations/Enemies/GarlicVampire"
+            },
+            ["EggplantWizard"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/eggplant_wizard_animations",
+                outputFolder = "Assets/Animations/Enemies/EggplantWizard"
+            },
+            ["MushroomGhost"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/mushroom_ghost_animations",
+                outputFolder = "Assets/Animations/Enemies/MushroomGhost"
+            },
+            ["TestDummy"] = new CharacterAnimConfig
+            {
+                sourceFolder = "", // No source folder — all placeholders (DD-8)
+                outputFolder = "Assets/Animations/Enemies/TestDummy"
+            }
+        };
+
+        /// <summary>
+        /// Per-enemy mapping of canonical attack slot name to AttackData asset name.
+        /// Starts empty — populated incrementally as enemy attack sets are designed (DD-6).
+        /// </summary>
+        public static readonly Dictionary<string, Dictionary<string, string>> EnemyAttackSlotMappings = new Dictionary<string, Dictionary<string, string>>
+        {
+            // Populated incrementally. Example:
+            // ["TomatoBerserker"] = new Dictionary<string, string>
+            // {
+            //     ["attack_1"] = "TomatoBerserkerHeadbutt",
+            //     ["attack_2"] = "TomatoBerserkerGroundPound",
+            // },
+        };
+
         /// <summary>
         /// Loads metadata.json from the default source folder (tomato_fighter_animations).
         /// Returns null if the file is missing or unparseable.

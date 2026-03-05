@@ -195,22 +195,23 @@ namespace TomatoFighters.Editor.Characters
         {
             if (comboDef == null || comboDef.steps == null) return;
 
-            // Step index -> (attack SO name, hitboxId)
-            var mapping = new (string soName, string hitboxId)[]
+            // Step index → (attack SO name, hitboxId, clashStart, clashEnd)
+            // Clash windows: 0/0 = no clash (light attacks). Heavy attacks get clash before hitbox.
+            var mapping = new (string soName, string hitboxId, float clashStart, float clashEnd)[]
             {
-                ("BrutorShieldBash1",  "Jab"),      // 0: light opener
-                ("BrutorShieldBash2",  "Jab"),      // 1: light follow-up
-                ("BrutorSweep",        "Sweep"),    // 2: light finisher
-                ("BrutorLauncher",     "Uppercut"), // 3: branch heavy
-                ("BrutorLauncherSlam", "Slam"),     // 4: branch finisher
-                ("BrutorOverheadSlam", "Slam"),     // 5: heavy opener
-                ("BrutorGroundPound",  "Slam"),     // 6: heavy finisher
+                ("BrutorShieldBash1",  "Jab",      0f, 0f),    // 0: light — no clash
+                ("BrutorShieldBash2",  "Jab",      0f, 0f),    // 1: light — no clash
+                ("BrutorSweep",        "Sweep",    0f, 0f),    // 2: light finisher — no clash
+                ("BrutorLauncher",     "Uppercut", 0f, 0.25f), // 3: heavy — hitbox frame 5 (~83ms)
+                ("BrutorLauncherSlam", "Slam",     0f, 0.30f), // 4: heavy finisher — hitbox frame 6 (~100ms)
+                ("BrutorOverheadSlam", "Slam",     0f, 0.25f), // 5: heavy — hitbox frame 6 (~100ms)
+                ("BrutorGroundPound",  "Slam",     0f, 0.30f), // 6: heavy finisher — hitbox frame 7 (~117ms)
             };
 
             bool dirty = false;
             for (int i = 0; i < mapping.Length && i < comboDef.steps.Length; i++)
             {
-                var (soName, hitboxId) = mapping[i];
+                var (soName, hitboxId, clashStart, clashEnd) = mapping[i];
                 string path = $"{ATTACKS_FOLDER}/{soName}.asset";
                 var attack = AssetDatabase.LoadAssetAtPath<AttackData>(path);
 
@@ -226,11 +227,25 @@ namespace TomatoFighters.Editor.Characters
                     dirty = true;
                 }
 
+                bool attackDirty = false;
+
                 if (attack.hitboxId != hitboxId)
                 {
                     attack.hitboxId = hitboxId;
+                    attackDirty = true;
+                }
+
+                if (attack.clashWindowStart != clashStart || attack.clashWindowEnd != clashEnd)
+                {
+                    attack.clashWindowStart = clashStart;
+                    attack.clashWindowEnd = clashEnd;
+                    attackDirty = true;
+                }
+
+                if (attackDirty)
+                {
                     EditorUtility.SetDirty(attack);
-                    Debug.Log($"[BrutorCreator] {soName} -> hitboxId='{hitboxId}'");
+                    Debug.Log($"[BrutorCreator] {soName} → hitboxId='{hitboxId}', clash=[{clashStart:F2}s, {clashEnd:F2}s]");
                 }
             }
 

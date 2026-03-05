@@ -64,8 +64,8 @@ namespace TomatoFighters.Combat
         {
             if (comboController != null)
             {
-                comboController.ComboDropped += DeactivateActiveHitbox;
-                comboController.ComboEnded += DeactivateActiveHitbox;
+                comboController.ComboDropped += HandleComboReset;
+                comboController.ComboEnded += HandleComboReset;
 
                 if (useTimerFallback)
                     comboController.AttackStarted += OnAttackStartedFallback;
@@ -76,8 +76,8 @@ namespace TomatoFighters.Combat
         {
             if (comboController != null)
             {
-                comboController.ComboDropped -= DeactivateActiveHitbox;
-                comboController.ComboEnded -= DeactivateActiveHitbox;
+                comboController.ComboDropped -= HandleComboReset;
+                comboController.ComboEnded -= HandleComboReset;
 
                 if (useTimerFallback)
                     comboController.AttackStarted -= OnAttackStartedFallback;
@@ -129,6 +129,17 @@ namespace TomatoFighters.Combat
             yield return new WaitForSeconds(fallbackActiveDuration);
             DeactivateActiveHitbox();
             _fallbackCoroutine = null;
+        }
+
+        /// <summary>
+        /// Stops any in-flight fallback coroutine and deactivates the hitbox.
+        /// Subscribed to ComboDropped and ComboEnded to prevent stale coroutines
+        /// from activating hitboxes after the combo has already reset to Idle.
+        /// </summary>
+        private void HandleComboReset()
+        {
+            StopFallbackCoroutine();
+            DeactivateActiveHitbox();
         }
 
         private void StopFallbackCoroutine()
