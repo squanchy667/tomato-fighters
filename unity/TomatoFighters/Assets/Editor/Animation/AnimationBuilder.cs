@@ -56,6 +56,8 @@ namespace TomatoFighters.Editor.Animation
             ["death"] = TomatoFighterAnimatorParams.DEATHTRIGGER,
             ["block"] = TomatoFighterAnimatorParams.BLOCKTRIGGER,
             ["guard"] = TomatoFighterAnimatorParams.GUARDTRIGGER,
+            ["stun"] = TomatoFighterAnimatorParams.STUNTRIGGER,
+            ["knockback"] = TomatoFighterAnimatorParams.KNOCKBACKTRIGGER,
         };
 
         // ── Menu Items ──
@@ -95,9 +97,42 @@ namespace TomatoFighters.Editor.Animation
                 BuildOverrideController(charName, kvp.Value.outputFolder, clips, metadata);
             }
 
+            // ── Enemy pipeline ──
+            // Step 4: Build clips for all enemies
+            var allEnemyClips = new Dictionary<string, Dictionary<string, AnimationClip>>();
+
+            foreach (var kvp in AnimationForgeMetadata.EnemyCharacters)
+            {
+                if (string.IsNullOrEmpty(kvp.Value.sourceFolder)) continue; // TestDummy
+                Debug.Log($"[AnimationBuilder] Building enemy clips for {kvp.Key}...");
+                var clips = BuildEnemyClips(kvp.Key, kvp.Value.sourceFolder, kvp.Value.outputFolder);
+                if (clips != null && clips.Count > 0)
+                    allEnemyClips[kvp.Key] = clips;
+            }
+
+            // Step 5: Build base enemy controller using first available enemy's clips
+            string baseEnemyKey = null;
+            Dictionary<string, AnimationClip> baseEnemyClips = null;
+            foreach (var kvp in allEnemyClips)
+            {
+                baseEnemyKey = kvp.Key;
+                baseEnemyClips = kvp.Value;
+                break;
+            }
+            BuildBaseEnemyController(baseEnemyClips, baseEnemyKey);
+
+            // Step 6: Build enemy override controllers
+            foreach (var kvp in AnimationForgeMetadata.EnemyCharacters)
+            {
+                Dictionary<string, AnimationClip> clips = null;
+                allEnemyClips.TryGetValue(kvp.Key, out clips);
+                BuildEnemyOverrideController(kvp.Key, kvp.Value.outputFolder, clips);
+            }
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
-            Debug.Log("[AnimationBuilder] Done — base controller + 4 override controllers built.");
+            int enemyCount = AnimationForgeMetadata.EnemyCharacters.Count;
+            Debug.Log($"[AnimationBuilder] Done — base controller + 4 player overrides + base enemy controller + {enemyCount} enemy overrides built.");
         }
 
         [MenuItem("TomatoFighters/Build Animations/Mystica")]
@@ -655,6 +690,354 @@ namespace TomatoFighters.Editor.Animation
             if (states.ContainsKey("run") && states.ContainsKey("idle"))
             {
                 var t = states["run"].AddTransition(states["idle"]);
+                t.hasExitTime = false;
+                t.duration = TRANSITION_DURATION;
+                t.AddCondition(AnimatorConditionMode.Less, WALK_THRESHOLD, speedParam);
+            }
+        }
+
+        // ── Enemy Pipeline ──
+
+        private const string ENEMY_BASE_OUTPUT_FOLDER = "Assets/Animations/Enemies/Base";
+
+        // Enemy locomotion: idle + walk only (no run)
+        private static readonly string[] ENEMY_LOCOMOTION_ORDER = { "idle", "walk" };
+
+        // Enemy attack slots: 5 max (DD-2 from T024B)
+        private static readonly string[] ENEMY_ATTACK_SLOTS = { "attack_1", "attack_2", "attack_3", "attack_4", "attack_5" };
+
+        // Enemy reaction states
+        private static readonly HashSet<string> ENEMY_REACTION_STATES = new HashSet<string> { "hurt", "death", "stun", "knockback" };
+
+        // Enemy trigger name overrides (DD-3 from T024B: shorter names to match EnemyBase.cs)
+        private static readonly Dictionary<string, string> ENEMY_TRIGGER_OVERRIDES = new Dictionary<string, string>
+        {
+            ["hurt"] = "Hurt",
+            ["death"] = "Death",
+            ["stun"] = "StunTrigger",
+            ["knockback"] = "KnockbackTrigger",
+            ["guard"] = "guardTrigger",
+        };
+
+        /// <summary>
+        /// Builds animation clips for an enemy from their metadata.json.
+        /// Applies EnemyAnimNameAliases to remap non-canonical names (e.g., "attack" → "attack_1").
+        /// </summary>
+        private static Dictionary<string, AnimationClip> BuildEnemyClips(string enemyKey, string sourceFolder, string outputFolder)
+        {
+            var metadata = AnimationForgeMetadata.Load(sourceFolder);
+            if (metadata == null) return null;
+
+            EnsureFolderExists(outputFolder);
+
+            string spritesFolder = $"{sourceFolder}/Sprites";
+            var clips = new Dictionary<string, AnimationClip>();
+
+            // Get alias mappings for this enemy
+            Dictionary<string, string> aliases = null;
+            AnimationForgeMetadata.EnemyAnimNameAliases.TryGetValue(enemyKey, out aliases);
+
+            foreach (var kvp in metadata.animations)
+            {
+                string animName = kvp.Key;
+                var entry = kvp.Value;
+
+                // Apply alias remapping (e.g., EggplantWizard "attack" → "attack_1")
+                string canonicalName = animName;
+                if (aliases != null && aliases.ContainsKey(animName) && aliases[animName] != animName)
+                    canonicalName = aliases[animName];
+
+                string sheetPath = AnimationForgeMetadata.GetSheetPath(spritesFolder, metadata.characterName, animName);
+                var clip = CreateClip(canonicalName, entry, sheetPath, metadata.characterName, outputFolder);
+                if (clip != null)
+                    clips[canonicalName] = clip;
+            }
+
+            if (clips.Count == 0)
+            {
+                Debug.LogError($"[AnimationBuilder] No clips created for enemy {enemyKey}. Ensure sprite sheets are imported.");
+                return null;
+            }
+
+            // Generate placeholder clips for missing enemy canonical states
+            GenerateEnemyPlaceholderClips(enemyKey, metadata.characterName, clips, spritesFolder, outputFolder, metadata);
+
+            Debug.Log($"[AnimationBuilder] Enemy {enemyKey}: {clips.Count} total clips built.");
+            return clips;
+        }
+
+        /// <summary>
+        /// Generates placeholder clips for enemy canonical states that lack real art.
+        /// </summary>
+        private static void GenerateEnemyPlaceholderClips(
+            string enemyKey,
+            string characterName,
+            Dictionary<string, AnimationClip> existingClips,
+            string spritesFolder,
+            string outputFolder,
+            AnimationForgeMetadata.MetadataRoot metadata)
+        {
+            var neededStates = new List<string>();
+
+            // Attack slots for this enemy
+            if (AnimationForgeMetadata.EnemyAttackSlotMappings.ContainsKey(enemyKey))
+            {
+                foreach (var slot in AnimationForgeMetadata.EnemyAttackSlotMappings[enemyKey].Keys)
+                {
+                    if (!existingClips.ContainsKey(slot))
+                        neededStates.Add(slot);
+                }
+            }
+
+            // Reaction states
+            foreach (var state in ENEMY_REACTION_STATES)
+            {
+                if (!existingClips.ContainsKey(state))
+                    neededStates.Add(state);
+            }
+
+            // Guard (defense)
+            if (!existingClips.ContainsKey("guard"))
+                neededStates.Add("guard");
+
+            if (neededStates.Count == 0) return;
+
+            string idleSheetPath = AnimationForgeMetadata.GetSheetPath(spritesFolder, characterName, "idle");
+            var idleSprites = AssetDatabase.LoadAllAssetsAtPath(idleSheetPath)
+                .OfType<Sprite>()
+                .OrderBy(s => s.name)
+                .ToArray();
+
+            if (idleSprites.Length == 0)
+            {
+                Debug.LogError($"[AnimationBuilder] Cannot create placeholders for {enemyKey}: no idle sprites at {idleSheetPath}");
+                return;
+            }
+
+            Sprite placeholderSprite = idleSprites[0];
+            int fps = metadata.animations.ContainsKey("idle") ? metadata.animations["idle"].fps : 12;
+
+            foreach (string stateName in neededStates)
+            {
+                bool isLooping = stateName == "guard" || stateName == "stun";
+                var clip = CreatePlaceholderClip(characterName, stateName, placeholderSprite, fps, isLooping);
+                if (clip != null)
+                {
+                    string clipPath = $"{outputFolder}/{characterName}_{stateName}_placeholder.anim";
+                    var existing = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+                    if (existing != null)
+                        AssetDatabase.DeleteAsset(clipPath);
+
+                    AssetDatabase.CreateAsset(clip, clipPath);
+                    existingClips[stateName] = clip;
+                }
+            }
+
+            Debug.Log($"[AnimationBuilder] Enemy {enemyKey}: generated {neededStates.Count} placeholder clips.");
+        }
+
+        /// <summary>
+        /// Builds the base enemy AnimatorController with enemy canonical states.
+        /// Uses the first available enemy's clips as the template.
+        /// </summary>
+        private static void BuildBaseEnemyController(
+            Dictionary<string, AnimationClip> templateClips,
+            string templateKey)
+        {
+            EnsureFolderExists(ENEMY_BASE_OUTPUT_FOLDER);
+            string controllerPath = $"{ENEMY_BASE_OUTPUT_FOLDER}/BaseEnemy_Controller.controller";
+
+            if (AssetDatabase.LoadAssetAtPath<AnimatorController>(controllerPath) != null)
+                AssetDatabase.DeleteAsset(controllerPath);
+
+            var controller = AnimatorController.CreateAnimatorControllerAtPath(controllerPath);
+            var rootSM = controller.layers[0].stateMachine;
+
+            // Parameters
+            controller.AddParameter(TomatoFighterAnimatorParams.SPEED, AnimatorControllerParameterType.Float);
+
+            // Classify template clips
+            var locomotion = new Dictionary<string, AnimationClip>();
+            var actionClips = new Dictionary<string, AnimationClip>();
+
+            if (templateClips != null)
+            {
+                foreach (var kvp in templateClips)
+                {
+                    if (kvp.Key == "idle" || kvp.Key == "walk")
+                        locomotion[kvp.Key] = kvp.Value;
+                    else
+                        actionClips[kvp.Key] = kvp.Value;
+                }
+            }
+
+            // Locomotion states (idle + walk only)
+            var locoStates = new Dictionary<string, AnimatorState>();
+            float yOffset = 0f;
+
+            foreach (string name in ENEMY_LOCOMOTION_ORDER)
+            {
+                AnimationClip clip = null;
+                locomotion.TryGetValue(name, out clip);
+                if (clip == null) continue;
+
+                var state = rootSM.AddState(name, new Vector3(300, yOffset, 0));
+                state.motion = clip;
+                locoStates[name] = state;
+                yOffset += 80f;
+            }
+
+            if (locoStates.ContainsKey("idle"))
+                rootSM.defaultState = locoStates["idle"];
+
+            // Wire locomotion: idle <-> walk at threshold 0.1
+            WireEnemyLocomotionTransitions(locoStates);
+
+            // Action states: 5 attack slots + guard + reactions
+            var idleState = locoStates.ContainsKey("idle") ? locoStates["idle"] : null;
+            float actionY = 0f;
+
+            var allEnemyActionStates = new List<string>();
+            allEnemyActionStates.AddRange(ENEMY_ATTACK_SLOTS);
+            allEnemyActionStates.Add("guard");
+            allEnemyActionStates.AddRange(ENEMY_REACTION_STATES);
+
+            foreach (string stateName in allEnemyActionStates)
+            {
+                string triggerName;
+                if (ENEMY_TRIGGER_OVERRIDES.ContainsKey(stateName))
+                    triggerName = ENEMY_TRIGGER_OVERRIDES[stateName];
+                else
+                    triggerName = stateName + "Trigger";
+
+                controller.AddParameter(triggerName, AnimatorControllerParameterType.Trigger);
+
+                var state = rootSM.AddState(stateName, new Vector3(600, actionY, 0));
+                actionY += 60f;
+
+                if (actionClips.ContainsKey(stateName))
+                    state.motion = actionClips[stateName];
+
+                var triggerTransition = rootSM.AddAnyStateTransition(state);
+                triggerTransition.hasExitTime = false;
+                triggerTransition.duration = 0f;
+                triggerTransition.AddCondition(AnimatorConditionMode.If, 0, triggerName);
+
+                // Guard and stun loop; all others return to idle via exit time
+                bool isLooping = stateName == "guard" || stateName == "stun";
+                if (!isLooping && idleState != null)
+                {
+                    var exitTransition = state.AddTransition(idleState);
+                    exitTransition.hasExitTime = true;
+                    exitTransition.exitTime = 1f;
+                    exitTransition.duration = 0.05f;
+                }
+            }
+
+            EditorUtility.SetDirty(controller);
+            Debug.Log($"[AnimationBuilder] Base enemy controller built at {controllerPath}: " +
+                      $"{locoStates.Count} locomotion, {allEnemyActionStates.Count} action states " +
+                      $"(template: {templateKey ?? "none"}).");
+        }
+
+        /// <summary>
+        /// Builds an AnimatorOverrideController for a single enemy.
+        /// </summary>
+        private static void BuildEnemyOverrideController(
+            string enemyKey,
+            string outputFolder,
+            Dictionary<string, AnimationClip> enemyClips)
+        {
+            EnsureFolderExists(outputFolder);
+
+            string baseControllerPath = $"{ENEMY_BASE_OUTPUT_FOLDER}/BaseEnemy_Controller.controller";
+            var baseController = AssetDatabase.LoadAssetAtPath<AnimatorController>(baseControllerPath);
+            if (baseController == null)
+            {
+                Debug.LogError($"[AnimationBuilder] Base enemy controller not found at {baseControllerPath}.");
+                return;
+            }
+
+            string overridePath = $"{outputFolder}/{enemyKey}_Override.overrideController";
+
+            if (AssetDatabase.LoadAssetAtPath<AnimatorOverrideController>(overridePath) != null)
+                AssetDatabase.DeleteAsset(overridePath);
+
+            var overrideController = new AnimatorOverrideController(baseController);
+            overrideController.name = $"{enemyKey}_Override";
+
+            if (enemyClips != null && enemyClips.Count > 0)
+            {
+                var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
+                overrideController.GetOverrides(overrides);
+
+                var clipsByState = new Dictionary<string, AnimationClip>();
+                foreach (var kvp in enemyClips)
+                    clipsByState[kvp.Key] = kvp.Value;
+
+                for (int i = 0; i < overrides.Count; i++)
+                {
+                    var baseClip = overrides[i].Key;
+                    if (baseClip == null) continue;
+
+                    string stateName = ExtractEnemyStateName(baseClip.name);
+                    if (stateName != null && clipsByState.ContainsKey(stateName))
+                    {
+                        overrides[i] = new KeyValuePair<AnimationClip, AnimationClip>(
+                            baseClip, clipsByState[stateName]);
+                    }
+                }
+
+                overrideController.ApplyOverrides(overrides);
+            }
+
+            AssetDatabase.CreateAsset(overrideController, overridePath);
+            EditorUtility.SetDirty(overrideController);
+
+            Debug.Log($"[AnimationBuilder] Enemy override controller built for {enemyKey} at {overridePath}.");
+        }
+
+        /// <summary>
+        /// Extracts the canonical state name from an enemy clip asset name.
+        /// </summary>
+        private static string ExtractEnemyStateName(string clipName)
+        {
+            string name = clipName;
+            if (name.EndsWith("_placeholder"))
+                name = name.Substring(0, name.Length - "_placeholder".Length);
+
+            // Enemy canonical states: locomotion + attacks + guard + reactions
+            var candidateStates = new List<string>();
+            candidateStates.AddRange(ENEMY_LOCOMOTION_ORDER);
+            candidateStates.AddRange(ENEMY_ATTACK_SLOTS);
+            candidateStates.Add("guard");
+            candidateStates.AddRange(ENEMY_REACTION_STATES);
+
+            // Sort by length descending to match attack_5 before attack_1, etc.
+            candidateStates.Sort((a, b) => b.Length.CompareTo(a.Length));
+
+            foreach (string state in candidateStates)
+            {
+                if (name.EndsWith("_" + state))
+                    return state;
+            }
+
+            return null;
+        }
+
+        /// <summary>Wires Speed-based transitions for enemy locomotion (idle + walk).</summary>
+        private static void WireEnemyLocomotionTransitions(Dictionary<string, AnimatorState> states)
+        {
+            if (states.ContainsKey("idle") && states.ContainsKey("walk"))
+            {
+                string speedParam = TomatoFighterAnimatorParams.SPEED;
+
+                var t = states["idle"].AddTransition(states["walk"]);
+                t.hasExitTime = false;
+                t.duration = TRANSITION_DURATION;
+                t.AddCondition(AnimatorConditionMode.Greater, WALK_THRESHOLD, speedParam);
+
+                t = states["walk"].AddTransition(states["idle"]);
                 t.hasExitTime = false;
                 t.duration = TRANSITION_DURATION;
                 t.AddCondition(AnimatorConditionMode.Less, WALK_THRESHOLD, speedParam);

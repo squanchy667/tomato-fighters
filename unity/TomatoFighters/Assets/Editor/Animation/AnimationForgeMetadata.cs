@@ -61,7 +61,7 @@ namespace TomatoFighters.Editor.Animation
         public static readonly HashSet<string> DefenseStates = new HashSet<string> { "block", "guard" };
 
         /// <summary>Reaction states on the base controller.</summary>
-        public static readonly HashSet<string> ReactionStates = new HashSet<string> { "hurt", "death" };
+        public static readonly HashSet<string> ReactionStates = new HashSet<string> { "hurt", "death", "stun", "knockback" };
 
         /// <summary>All canonical states that appear on the base controller (attacks + defense + reaction + actions).</summary>
         public static readonly HashSet<string> AllCanonicalStates;
@@ -210,9 +210,38 @@ namespace TomatoFighters.Editor.Animation
             }
         };
 
-        /// <summary>Registry of known enemy character animation configs (7 entries: 6 real + TestDummy).</summary>
+        /// <summary>
+        /// Per-enemy mapping of non-canonical animation names to canonical state names.
+        /// Applied during clip building to map Animation Forge output names to the state machine.
+        /// </summary>
+        public static readonly Dictionary<string, Dictionary<string, string>> EnemyAnimNameAliases = new Dictionary<string, Dictionary<string, string>>
+        {
+            ["Tomato"] = new Dictionary<string, string>
+            {
+                ["idle_angry"] = "idle_angry", // kept as extra clip, not remapped
+            },
+            ["EggplantWizard"] = new Dictionary<string, string>
+            {
+                ["attack"] = "attack_1", // remap single attack to canonical slot
+            },
+            ["GarlicVampire"] = new Dictionary<string, string>
+            {
+                ["attack"] = "attack_1", // remap single attack to canonical slot
+            },
+            ["MushroomGhost"] = new Dictionary<string, string>
+            {
+                ["attack"] = "attack_1", // remap single attack to canonical slot
+            },
+        };
+
+        /// <summary>Registry of known enemy character animation configs (8 entries: 7 real + TestDummy).</summary>
         public static readonly Dictionary<string, CharacterAnimConfig> EnemyCharacters = new Dictionary<string, CharacterAnimConfig>
         {
+            ["Tomato"] = new CharacterAnimConfig
+            {
+                sourceFolder = "Assets/animations/tomato_animations",
+                outputFolder = "Assets/Animations/Enemies/Tomato"
+            },
             ["TomatoBerserker"] = new CharacterAnimConfig
             {
                 sourceFolder = "Assets/animations/tomato_berserker_animations",
@@ -256,12 +285,22 @@ namespace TomatoFighters.Editor.Animation
         /// </summary>
         public static readonly Dictionary<string, Dictionary<string, string>> EnemyAttackSlotMappings = new Dictionary<string, Dictionary<string, string>>
         {
-            // Populated incrementally. Example:
-            // ["TomatoBerserker"] = new Dictionary<string, string>
-            // {
-            //     ["attack_1"] = "TomatoBerserkerHeadbutt",
-            //     ["attack_2"] = "TomatoBerserkerGroundPound",
-            // },
+            ["Tomato"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "TomatoSmash",
+            },
+            ["EggplantWizard"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "EggplantWizardSpell",
+            },
+            ["GarlicVampire"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "GarlicVampireScare",
+            },
+            ["MushroomGhost"] = new Dictionary<string, string>
+            {
+                ["attack_1"] = "MushroomGhostHaunt",
+            },
         };
 
         /// <summary>

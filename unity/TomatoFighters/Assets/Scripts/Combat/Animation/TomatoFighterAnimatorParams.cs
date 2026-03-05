@@ -59,6 +59,8 @@ namespace TomatoFighters.Combat
         // ── Reaction triggers ──
         public const string HURTTRIGGER = "HurtTrigger";
         public const string DEATHTRIGGER = "DeathTrigger";
+        public const string STUNTRIGGER = "StunTrigger";
+        public const string KNOCKBACKTRIGGER = "KnockbackTrigger";
 
         // ── Animator state names (must match states created by AnimationBuilder) ──
         // Locomotion
@@ -92,5 +94,7 @@ namespace TomatoFighters.Combat
         // Reactions
         public const string STATE_HURT = "hurt";
         public const string STATE_DEATH = "death";
+        public const string STATE_STUN = "stun";
+        public const string STATE_KNOCKBACK = "knockback";
     }
 }

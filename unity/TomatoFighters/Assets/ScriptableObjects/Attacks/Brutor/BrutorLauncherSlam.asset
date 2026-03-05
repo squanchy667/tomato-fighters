@@ -15,7 +15,7 @@ MonoBehaviour:
   attackId: brutor_launcher_slam
   attackName: Air Slam
   damageMultiplier: 1.5
-  knockbackForce: {x: 6, y: -3}
+  knockbackForce: {x: 3, y: -2}
   launchForce: {x: 0, y: 0}
   causesWallBounce: 0
   causesLaunch: 0
@@ -26,12 +26,10 @@ MonoBehaviour:
   totalFrames: 28
   animationSpeed: 1
   clashWindowStart: 0
-  clashWindowEnd: 0
+  clashWindowEnd: 0.3
   telegraphType: 0
   isOTGCapable: 0
   isAirAttack: 1
-  hasPunishWindow: 0
-  punishWindowDuration: 1
   hitEffectPrefab: {fileID: 0}
   swingSound: {fileID: 0}
   hitSound: {fileID: 0}

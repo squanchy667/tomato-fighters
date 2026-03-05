@@ -8,22 +8,4 @@ AnimatorOverrideController:
   m_PrefabAsset: {fileID: 0}
   m_Name: TomatoBerserker_Override
   m_Controller: {fileID: 9100000, guid: 73b1aacfb34f0f5459f61e0c5f84a27a, type: 2}
-  m_Clips:
-  - m_OriginalClip: {fileID: 7400000, guid: 81506742750178741a62fe5c494bdc58, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: c2eda8dbff4498d45b3c2c81d23c47ce, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 0090cdd7759f9b4408fabcb0f0894eb1, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: b53a031e58935ce479b1dddb079d7c28, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: affb88ee066b2534792a3f7740da747e, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: c42329a49843b6242a4d0481fe7615d3, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 4b1da097747ad22428346366961108a9, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: b9c421c475a7cff468cab73ee9e28626, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: a91a75ce8559d174698d5b6b62848d2d, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: ef7a43e4310b7ed469d5bd3fe153a879, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: cafc86fa34c7cab40bc0d7b8814d5950, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 67dd345f9682c834a9d8705eec508029, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 278483c2c102c914791a21bbfa527f0d, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 7e1193bfede346746af8936af1bc11ca, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 75e2b115f7878e04ab8d870303a76dcc, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 794efbddabec040438fc36af220e3f6f, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 67d2e245fd09c5947872ef9496f2ae18, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 41dfed5bea6d343429a8e664c0bbab1c, type: 2}
+  m_Clips: []

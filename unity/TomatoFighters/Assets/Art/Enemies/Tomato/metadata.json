@@ -1,0 +1,164 @@
+{
+  "character_name": "tomato",
+  "generated_at": "2026-03-05T17:30:31.663868+00:00",
+  "generated_by": "Animation Forge v0.2.0",
+  "bg_removal_method": "rembg_isnet-anime",
+  "game_profile": {
+    "game_type": "2d_platformer",
+    "art_style": "painted",
+    "export_target": "unity",
+    "filter_mode": "bilinear"
+  },
+  "animations": {
+    "idle": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_idle.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "idle_angry": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_idle_angry.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "walk": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_walk.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 3,
+      "n_frames": 8,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "run": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_run.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 3,
+      "n_frames": 8,
+      "fps": 12,
+      "loop": true,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "attack_1": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_attack_1.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "jump": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_jump.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 5,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "hurt": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_hurt.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 2,
+      "rows": 2,
+      "n_frames": 4,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "knockback": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_knockback.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "death": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_death.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 3,
+      "n_frames": 8,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    },
+    "stun": {
+      "spritesheet": "/Users/ofek/Projects/Claude/AnimationForge/animation-forge/output/session_tomato/export/Sprites/tomato_stun.png",
+      "frame_w": 128,
+      "frame_h": 256,
+      "cols": 3,
+      "rows": 2,
+      "n_frames": 6,
+      "fps": 12,
+      "loop": false,
+      "pivot": [
+        0.5,
+        0.0
+      ],
+      "ppu": 128
+    }
+  }
+}

@@ -46,6 +46,13 @@ namespace TomatoFighters.Editor.Animation
                 Debug.Log($"[SpriteSheetImporter] Importing {kvp.Key}...");
                 ImportSpriteSheets(kvp.Value.sourceFolder);
             }
+
+            foreach (var kvp in AnimationForgeMetadata.EnemyCharacters)
+            {
+                if (string.IsNullOrEmpty(kvp.Value.sourceFolder)) continue; // TestDummy has no source
+                Debug.Log($"[SpriteSheetImporter] Importing enemy {kvp.Key}...");
+                ImportSpriteSheets(kvp.Value.sourceFolder);
+            }
         }
 
         [MenuItem("TomatoFighters/Import Sprite Sheets/Mystica")]

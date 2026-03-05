@@ -145,8 +145,6 @@ namespace TomatoFighters.Roguelite
         /// <remarks>
         /// Iterates all active rituals and multiplies their per-type damage contributions.
         /// No cache — ritual list changes infrequently; query overhead is negligible (DD-4).
-        /// TODO [T029]: Replace <c>entry.GetDamageContribution()</c> with RitualStackCalculator.Compute()
-        /// for full level × stacking × ritualPower formula.
         /// </remarks>
         public float GetDamageMultiplier(DamageType type)
         {
@@ -394,17 +392,18 @@ namespace TomatoFighters.Roguelite
             /// <summary>
             /// Damage multiplier contribution of this ritual for <paramref name="type"/>.
             /// Returns 1.0 if this ritual does not produce damage of <paramref name="type"/>.
-            ///
-            /// <para>TODO [T029]: Replace with <c>RitualStackCalculator.Compute()</c> for the full
-            /// level × stacking × ritualPower formula. Currently uses base contribution only.</para>
+            /// Uses <see cref="RitualStackCalculator.Compute"/> for the full
+            /// level × stacking × ritualPower formula.
             /// </summary>
             public float GetDamageContribution(DamageType type)
             {
                 if (FamilyToDamageType(data.family) != type) return 1f;
 
                 var ld = data.GetLevelData(level);
-                // TODO [T029]: apply stacking formula: baseValue × levelMult × stackMult^stacks × ritualPower
-                return 1f + (ld.baseValue / 100f);
+                float effect = RitualStackCalculator.Compute(
+                    ld.baseValue, level, currentStacks,
+                    ld.stackingMultiplier, ld.ritualPower);
+                return 1f + (effect / 100f);
             }
 
             /// <summary>

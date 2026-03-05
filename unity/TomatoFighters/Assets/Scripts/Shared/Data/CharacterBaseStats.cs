@@ -95,5 +95,28 @@ namespace TomatoFighters.Shared.Data
                  "1.0 = baseline. Slasher (1.5) staggers quickly; Mystica (0.5) barely.\n" +
                  "Maps to StatType.StunRate. Design docs label this 'PRS' (Pressure Rate).")]
         public float stunRate = 1.0f;
+
+        /// <summary>
+        /// Returns the base value for the given <paramref name="stat"/>.
+        /// Used by <c>TrinketStackCalculator</c> to convert flat modifiers into multipliers.
+        /// Returns 0f for <c>StatType.CancelWindow</c> (no base value defined).
+        /// </summary>
+        public float GetStat(StatType stat)
+        {
+            return stat switch
+            {
+                StatType.Health         => health,
+                StatType.Defense        => defense,
+                StatType.Attack         => attack,
+                StatType.RangedAttack   => rangedAttack,
+                StatType.ThrowableAttack => throwableAttack,
+                StatType.Speed          => speed,
+                StatType.Mana           => mana,
+                StatType.ManaRegen      => manaRegen,
+                StatType.CritChance     => critChance,
+                StatType.StunRate       => stunRate,
+                _                       => 0f
+            };
+        }
     }
 }

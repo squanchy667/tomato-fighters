@@ -96,8 +96,93 @@ namespace TomatoFighters.Editor.Animation
                 totalStamped += charStamped;
             }
 
+            // ── Enemy clips ──
+            foreach (var kvp in AnimationForgeMetadata.EnemyCharacters)
+            {
+                string enemyKey = kvp.Key;
+                string outputFolder = kvp.Value.outputFolder;
+
+                if (!AnimationForgeMetadata.EnemyAttackSlotMappings.ContainsKey(enemyKey))
+                    continue;
+
+                var slotMapping = AnimationForgeMetadata.EnemyAttackSlotMappings[enemyKey];
+                int enemyStamped = 0;
+
+                foreach (var slot in slotMapping)
+                {
+                    string slotName = slot.Key;
+                    string attackAssetName = slot.Value;
+
+                    // Load from Attacks/Enemy/ subfolder
+                    var attackData = LoadEnemyAttackData(enemyKey, attackAssetName);
+                    if (attackData == null)
+                    {
+                        totalSkipped++;
+                        continue;
+                    }
+
+                    var clip = FindClipForSlot(enemyKey, slotName, outputFolder);
+                    if (clip == null || clip.name.EndsWith("_placeholder"))
+                    {
+                        totalSkipped++;
+                        continue;
+                    }
+
+                    // Enemies only get ActivateHitbox/DeactivateHitbox — no combo events
+                    StampEnemyEventsOnClip(clip, attackData);
+                    enemyStamped++;
+                }
+
+                if (enemyStamped > 0)
+                    Debug.Log($"[AnimationEventStamper] Enemy {enemyKey}: stamped events on {enemyStamped} attack clips.");
+                totalStamped += enemyStamped;
+            }
+
             AssetDatabase.SaveAssets();
             Debug.Log($"[AnimationEventStamper] Done — {totalStamped} clips stamped, {totalSkipped} skipped.");
+        }
+
+        /// <summary>
+        /// Stamps hitbox-only events on enemy attack clips (no combo window or finisher events).
+        /// </summary>
+        private static void StampEnemyEventsOnClip(AnimationClip clip, AttackData attackData)
+        {
+            float fps = clip.frameRate;
+            if (fps <= 0) fps = 12f;
+
+            float frameDuration = 1f / fps;
+            var events = new List<AnimationEvent>();
+
+            int startFrame = attackData.hitboxStartFrame;
+            events.Add(new AnimationEvent
+            {
+                time = startFrame * frameDuration,
+                functionName = "ActivateHitbox"
+            });
+
+            int endFrame = startFrame + attackData.hitboxActiveFrames;
+            events.Add(new AnimationEvent
+            {
+                time = endFrame * frameDuration,
+                functionName = "DeactivateHitbox"
+            });
+
+            events.Sort((a, b) => a.time.CompareTo(b.time));
+            AnimationUtility.SetAnimationEvents(clip, events.ToArray());
+            EditorUtility.SetDirty(clip);
+        }
+
+        /// <summary>Loads an AttackData SO from the Enemy subfolder.</summary>
+        private static AttackData LoadEnemyAttackData(string enemyKey, string assetName)
+        {
+            // Try Attacks/Enemy/{enemyKey}/{assetName}.asset first
+            string path = $"{ATTACKS_ROOT}/Enemy/{enemyKey}/{assetName}.asset";
+            var data = AssetDatabase.LoadAssetAtPath<AttackData>(path);
+            if (data != null) return data;
+
+            // Fallback: Attacks/Enemy/{assetName}.asset
+            path = $"{ATTACKS_ROOT}/Enemy/{assetName}.asset";
+            return AssetDatabase.LoadAssetAtPath<AttackData>(path);
         }
 
         /// <summary>

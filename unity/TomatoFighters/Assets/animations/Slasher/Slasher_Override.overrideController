@@ -9,6 +9,10 @@ AnimatorOverrideController:
   m_Name: Slasher_Override
   m_Controller: {fileID: 9100000, guid: 3f8a5b3df8c165a4a8d78cdc9af01e32, type: 2}
   m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 1938f1c890f554f0d89d1960644dd695, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: c871cb76d7c5a420c946304d8de0ec2f, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 900672d68e58941ecb4785d795a2357e, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 5c03a3f9f36c14dbb9365b590b87e552, type: 2}
   - m_OriginalClip: {fileID: 7400000, guid: a6cfa95c0afb168428343e43122fd1f0, type: 2}
     m_OverrideClip: {fileID: 7400000, guid: a9c563acb48fc6948b6b61f98e3cd7ce, type: 2}
   - m_OriginalClip: {fileID: 7400000, guid: c95904cdd5683d24fa9825037489470b, type: 2}

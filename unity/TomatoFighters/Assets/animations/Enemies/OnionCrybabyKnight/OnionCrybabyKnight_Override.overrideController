@@ -8,22 +8,4 @@ AnimatorOverrideController:
   m_PrefabAsset: {fileID: 0}
   m_Name: OnionCrybabyKnight_Override
   m_Controller: {fileID: 9100000, guid: 73b1aacfb34f0f5459f61e0c5f84a27a, type: 2}
-  m_Clips:
-  - m_OriginalClip: {fileID: 7400000, guid: 81506742750178741a62fe5c494bdc58, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 0b4a94a70b6e07941a0318d6d0ef483b, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 0090cdd7759f9b4408fabcb0f0894eb1, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 0dc9a2fd7eea9aa4ea8ed5656bb7f4ce, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: affb88ee066b2534792a3f7740da747e, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 996572ddef6773b479f1a2f9f35ab54f, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 4b1da097747ad22428346366961108a9, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 1a3b68abed1c793409fea85c0f197111, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: a91a75ce8559d174698d5b6b62848d2d, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 4579ed32fddb1574980be4057cdfedfd, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: cafc86fa34c7cab40bc0d7b8814d5950, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 1f305fbea4ee9144099f24374a00a1b2, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 278483c2c102c914791a21bbfa527f0d, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: 8c76e0ade1f9a2d4d84405cd73392a07, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 75e2b115f7878e04ab8d870303a76dcc, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: e0204288b055fa348a37a5ef7e732899, type: 2}
-  - m_OriginalClip: {fileID: 7400000, guid: 67d2e245fd09c5947872ef9496f2ae18, type: 2}
-    m_OverrideClip: {fileID: 7400000, guid: dd1314ce438964b4db93e156b5f9beae, type: 2}
+  m_Clips: []

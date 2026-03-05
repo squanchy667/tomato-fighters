@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!221 &22100000
+AnimatorOverrideController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Tomato_Override
+  m_Controller: {fileID: 9100000, guid: 73b1aacfb34f0f5459f61e0c5f84a27a, type: 2}
+  m_Clips:
+  - m_OriginalClip: {fileID: 7400000, guid: 3234b580cbf42493bb8f4a27722cb691, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 3234b580cbf42493bb8f4a27722cb691, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 79fdc707af0e64683a132522703c3851, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 79fdc707af0e64683a132522703c3851, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 950d2262dc90b43cdb89a861ababe984, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 950d2262dc90b43cdb89a861ababe984, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 9bf98e8d53c64459e9975481536d2cb0, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 9bf98e8d53c64459e9975481536d2cb0, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 63a371c92a6e4418888a671b887f511e, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 63a371c92a6e4418888a671b887f511e, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 6b8bf4ce0e84c4be3982239a07374b61, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 6b8bf4ce0e84c4be3982239a07374b61, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: 18d76ceaa87c34a47a2429e814674593, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: 18d76ceaa87c34a47a2429e814674593, type: 2}
+  - m_OriginalClip: {fileID: 7400000, guid: e20cb4310bfec4daeb1e1f9070b684e1, type: 2}
+    m_OverrideClip: {fileID: 7400000, guid: e20cb4310bfec4daeb1e1f9070b684e1, type: 2}

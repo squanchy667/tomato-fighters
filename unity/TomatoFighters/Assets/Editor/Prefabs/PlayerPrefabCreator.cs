@@ -105,6 +105,9 @@ namespace TomatoFighters.Editor.Prefabs
                 EditorUtility.SetDirty(animator);
             }
 
+            // -- AnimationEventRelay on Sprite child (bridges animation events to root) --
+            EnsureComponent<AnimationEventRelay>(spriteChild);
+
             // -- Shadow child (preserved if exists) --
             var shadowChild = FindOrCreateChild(root, "Shadow");
             shadowChild.transform.localPosition = new Vector3(0f, -0.1f, 0f);
