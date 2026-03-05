@@ -20,10 +20,10 @@ namespace TomatoFighters.Shared.Interfaces
         float GetDefenseMultiplier();
 
         /// <summary>Get all on-hit effects from active rituals to apply on each hit.</summary>
-        List<OnHitEffect> GetAdditionalOnHitEffects();
+        List<RitualEffect> GetAdditionalOnHitEffects();
 
         /// <summary>Get all trigger-based effects for a specific ritual trigger.</summary>
-        List<OnTriggerEffect> GetTriggerEffects(RitualTrigger trigger);
+        List<RitualEffect> GetTriggerEffects(RitualTrigger trigger);
 
         /// <summary>Whether the repetitive action penalty is overridden by a buff or ritual.</summary>
         bool IsRepetitivePenaltyOverridden();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TomatoFighters.Shared.Enums;
+using TomatoFighters.Shared.Events;
 using UnityEngine;
 
 namespace TomatoFighters.Combat
@@ -20,6 +21,11 @@ namespace TomatoFighters.Combat
         [Header("References")]
         [SerializeField] private Animator animator;
         [SerializeField] private CharacterMotor motor;
+
+        [Header("HUD Events")]
+        [SerializeField]
+        [Tooltip("Fires with current combo length on every hit-confirm. HUD subscribes.")]
+        private IntEventChannel onComboHitConfirmed;
 
         [Header("Cancel Buffering")]
         [SerializeField]
@@ -127,6 +133,11 @@ namespace TomatoFighters.Combat
         {
             stateMachine.OnHitConfirmed();
             TryConsumeBufferedCancels();
+
+            if (onComboHitConfirmed != null)
+            {
+                onComboHitConfirmed.Raise(ComboLength);
+            }
         }
 
         /// <summary>

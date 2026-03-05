@@ -3,6 +3,7 @@ using System.Collections;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Interfaces;
+using TomatoFighters.World.UI;
 using UnityEngine;
 
 namespace TomatoFighters.World
@@ -17,6 +18,16 @@ namespace TomatoFighters.World
     {
         [Header("Data")]
         [SerializeField] private EnemyData enemyData;
+
+        [Header("HUD")]
+        [SerializeField]
+        [Tooltip("Prefab for the world-space health bar. Spawned above the enemy. " +
+                 "Null is safe — no health bar will be shown.")]
+        private GameObject healthBarPrefab;
+
+        [SerializeField]
+        [Tooltip("Offset above the enemy sprite for the health bar.")]
+        private Vector3 healthBarOffset = new Vector3(0f, 1.2f, 0f);
 
         [Header("Defense")]
         [Tooltip("Assign a DefenseSystem component (implements IDefenseProvider). Null = no defense.")]
@@ -65,6 +76,11 @@ namespace TomatoFighters.World
         /// <inheritdoc/>
         public bool IsStunned => _isStunned;
 
+        /// <summary>Pressure fill as a normalized ratio (0-1) for UI display.</summary>
+        public float PressureRatio => enemyData.pressureThreshold > 0f
+            ? Mathf.Clamp01(_pressureFill / enemyData.pressureThreshold)
+            : 0f;
+
         // ── Invulnerability ───────────────────────────────────────────────
 
         private bool _isInvulnerable;
@@ -108,6 +124,22 @@ namespace TomatoFighters.World
             }
 
             _currentHealth = enemyData.maxHealth;
+
+            SpawnHealthBar();
+        }
+
+        private void SpawnHealthBar()
+        {
+            if (healthBarPrefab == null) return;
+
+            var barGO = Instantiate(healthBarPrefab, transform);
+            barGO.transform.localPosition = healthBarOffset;
+
+            var barUI = barGO.GetComponent<EnemyHealthBarUI>();
+            if (barUI != null)
+            {
+                barUI.Initialize(this);
+            }
         }
 
         // ── IDamageable Implementation ────────────────────────────────────
