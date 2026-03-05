@@ -31,7 +31,7 @@ namespace TomatoFighters.Editor.Prefabs
         public CharacterType characterType;
         public MovementConfig movementConfig;
         public ComboDefinition comboDefinition;
-        public AnimatorController animatorController;
+        public RuntimeAnimatorController animatorController;
         public InputActionAsset inputActions;
         public HitboxDefinition[] hitboxes;
         public DefenseConfig defenseConfig;

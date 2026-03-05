@@ -36,20 +36,61 @@ namespace TomatoFighters.Combat
         // Bool: true when grounded (set by CharacterAnimationBridge)
         public const string ISGROUNDED = "IsGrounded";
 
-        // Trigger: fired per combo step (set by ComboController.TriggerStepAnimation)
+        // Trigger: legacy single-trigger approach (kept for backward compatibility)
         public const string ATTACKTRIGGER = "AttackTrigger";
 
-        // Trigger: reserved for hit-reaction system (T016+)
-        public const string HURTTRIGGER = "HurtTrigger";
+        // ── Per-slot attack triggers (attack_1 through attack_10) ──
+        // Each combo step maps to one of these via ComboStep.animationTrigger.
+        public const string ATTACK_1_TRIGGER = "attack_1Trigger";
+        public const string ATTACK_2_TRIGGER = "attack_2Trigger";
+        public const string ATTACK_3_TRIGGER = "attack_3Trigger";
+        public const string ATTACK_4_TRIGGER = "attack_4Trigger";
+        public const string ATTACK_5_TRIGGER = "attack_5Trigger";
+        public const string ATTACK_6_TRIGGER = "attack_6Trigger";
+        public const string ATTACK_7_TRIGGER = "attack_7Trigger";
+        public const string ATTACK_8_TRIGGER = "attack_8Trigger";
+        public const string ATTACK_9_TRIGGER = "attack_9Trigger";
+        public const string ATTACK_10_TRIGGER = "attack_10Trigger";
 
-        // Trigger: reserved for death animation (T016+)
+        // ── Defense triggers ──
+        public const string BLOCKTRIGGER = "blockTrigger";
+        public const string GUARDTRIGGER = "guardTrigger";
+
+        // ── Reaction triggers ──
+        public const string HURTTRIGGER = "HurtTrigger";
         public const string DEATHTRIGGER = "DeathTrigger";
 
-        // Animator state names (must match states created by AnimationBuilder)
+        // ── Animator state names (must match states created by AnimationBuilder) ──
+        // Locomotion
         public const string STATE_IDLE = "idle";
         public const string STATE_WALK = "walk";
         public const string STATE_RUN = "run";
+
+        // Airborne
         public const string STATE_JUMP = "jump";
         public const string STATE_LAND = "land";
+
+        // Actions
+        public const string STATE_DASH = "dash";
+
+        // Attack slots
+        public const string STATE_ATTACK_1 = "attack_1";
+        public const string STATE_ATTACK_2 = "attack_2";
+        public const string STATE_ATTACK_3 = "attack_3";
+        public const string STATE_ATTACK_4 = "attack_4";
+        public const string STATE_ATTACK_5 = "attack_5";
+        public const string STATE_ATTACK_6 = "attack_6";
+        public const string STATE_ATTACK_7 = "attack_7";
+        public const string STATE_ATTACK_8 = "attack_8";
+        public const string STATE_ATTACK_9 = "attack_9";
+        public const string STATE_ATTACK_10 = "attack_10";
+
+        // Defense
+        public const string STATE_BLOCK = "block";
+        public const string STATE_GUARD = "guard";
+
+        // Reactions
+        public const string STATE_HURT = "hurt";
+        public const string STATE_DEATH = "death";
     }
 }

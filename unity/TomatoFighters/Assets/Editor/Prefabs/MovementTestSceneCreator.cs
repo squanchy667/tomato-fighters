@@ -3,6 +3,7 @@ using TomatoFighters.Combat;
 using TomatoFighters.Shared.Components;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
+using TomatoFighters.Shared.Events;
 using TomatoFighters.World;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -44,6 +45,15 @@ namespace TomatoFighters.Editor.Prefabs
         private const float ARENA_HEIGHT = 10f;
         private const float WALL_THICKNESS = 1f;
 
+        // Walkable floor strip — characters are constrained to this vertical band
+        private const float FLOOR_HEIGHT = ARENA_HEIGHT * 0.2f;                  // 2 units (matches floor sprite)
+        private const float FLOOR_BOTTOM_Y = -ARENA_HEIGHT / 2f;                 // -5
+        private const float FLOOR_TOP_Y = FLOOR_BOTTOM_Y + FLOOR_HEIGHT;         // -3
+        private const float FLOOR_MID_Y = (FLOOR_BOTTOM_Y + FLOOR_TOP_Y) / 2f;  // -4
+
+        // SO event channel asset paths (created by WaveManagerAssetsCreator)
+        private const string EVENTS_ROOT = "Assets/ScriptableObjects/Events";
+
         /// <summary>
         /// Creates a movement test scene for a specific character prefab.
         /// Called by per-character scene creators.
@@ -53,12 +63,17 @@ namespace TomatoFighters.Editor.Prefabs
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
 
             SetupLayerCollisionMatrix();
-            SetupCamera();
+            var camGO = SetupCamera();
             CreateArenaBackground();
             CreateArenaWalls();
-            CreatePlayerFromPrefab(prefabPath, characterType);
+            var player = CreatePlayerFromPrefab(prefabPath, characterType);
             CreateTestDummies();
+            CreateWaveManager();
+            CreateLevelBounds();
             CreateDebugCanvas();
+
+            // Wire CameraController2D → player follow target
+            WireCameraToPlayer(camGO, player);
 
             PlayerPrefabCreator.EnsureFolderExists(SCENE_FOLDER);
             EditorSceneManager.SaveScene(scene, scenePath);
@@ -86,6 +101,11 @@ namespace TomatoFighters.Editor.Prefabs
             Physics2D.IgnoreLayerCollision(playerHitbox, enemyHurtbox, false);
             Physics2D.IgnoreLayerCollision(enemyHitbox, playerHurtbox, false);
 
+            // Enable wall (Default layer) collisions with player/enemy bodies
+            int defaultLayer = 0;
+            Physics2D.IgnoreLayerCollision(defaultLayer, playerHurtbox, false);
+            Physics2D.IgnoreLayerCollision(defaultLayer, enemyHurtbox, false);
+
             // Disable same-team and self collisions
             Physics2D.IgnoreLayerCollision(playerHitbox, playerHurtbox, true);
             Physics2D.IgnoreLayerCollision(enemyHitbox, enemyHurtbox, true);
@@ -97,7 +117,7 @@ namespace TomatoFighters.Editor.Prefabs
             Debug.Log("[MovementTestScene] Layer collision matrix configured.");
         }
 
-        private static void SetupCamera()
+        private static GameObject SetupCamera()
         {
             var camGO = new GameObject("Main Camera");
             camGO.tag = "MainCamera";
@@ -108,41 +128,135 @@ namespace TomatoFighters.Editor.Prefabs
             cam.clearFlags = CameraClearFlags.SolidColor;
             camGO.transform.position = new Vector3(0f, 0f, -10f);
 
+            // CameraController2D — smooth follow with bounds and stun zoom
+            var camController = camGO.AddComponent<CameraController2D>();
+            var camSO = new SerializedObject(camController);
+            camSO.FindProperty("boundsMinX").floatValue = -ARENA_WIDTH / 2f;
+            camSO.FindProperty("boundsMaxX").floatValue = ARENA_WIDTH / 2f;
+            camSO.FindProperty("boundsMinY").floatValue = FLOOR_BOTTOM_Y;
+            camSO.FindProperty("boundsMaxY").floatValue = FLOOR_TOP_Y;
+            camSO.FindProperty("defaultOrthoSize").floatValue = 7f;
+
+            // Wire SO event channels for camera lock/unlock and stun zoom
+            var onCameraLock = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnCameraLock.asset");
+            var onCameraUnlock = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnCameraUnlock.asset");
+            if (onCameraLock != null)
+                camSO.FindProperty("onCameraLock").objectReferenceValue = onCameraLock;
+            if (onCameraUnlock != null)
+                camSO.FindProperty("onCameraUnlock").objectReferenceValue = onCameraUnlock;
+
+            // Stun zoom events (from PressureSystem T026)
+            var onStunTriggered = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnStunTriggered.asset");
+            var onStunRecovered = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnStunRecovered.asset");
+            if (onStunTriggered != null)
+                camSO.FindProperty("onStunTriggered").objectReferenceValue = onStunTriggered;
+            if (onStunRecovered != null)
+                camSO.FindProperty("onStunRecovered").objectReferenceValue = onStunRecovered;
+
+            camSO.ApplyModifiedPropertiesWithoutUndo();
+
             // Runtime diagnostic — validates damage pipeline on Play
             var diagType = System.Type.GetType("DamagePipelineDiagnostic, Assembly-CSharp");
             if (diagType != null)
                 camGO.AddComponent(diagType);
             else
                 Debug.LogWarning("[MovementTestScene] DamagePipelineDiagnostic not found — skipping.");
+
+            Debug.Log("[MovementTestScene] Camera with CameraController2D configured.");
+            return camGO;
         }
+
+        private const string ART_FOLDER = "Assets/Art/Environment/TestArena";
 
         private static void CreateArenaBackground()
         {
-            var ground = new GameObject("Ground");
-            var sr = ground.AddComponent<SpriteRenderer>();
-            sr.sprite = CreateRectSprite();
-            sr.color = new Color(0.25f, 0.3f, 0.2f);
-            ground.transform.localScale = new Vector3(ARENA_WIDTH, ARENA_HEIGHT, 1f);
-            ground.transform.position = Vector3.zero;
-            sr.sortingOrder = -10;
+            var environment = new GameObject("Environment");
 
-            for (int i = -4; i <= 4; i++)
+            // Background layers — full arena, stacked by sorting order
+            CreateArtLayer(environment.transform, $"{ART_FOLDER}/bg_forest_distant.png",
+                "BG_Distant", -100, Vector3.zero, ARENA_WIDTH, ARENA_HEIGHT);
+            CreateArtLayer(environment.transform, $"{ART_FOLDER}/bg_forest_midground.png",
+                "BG_Midground", -90, Vector3.zero, ARENA_WIDTH, ARENA_HEIGHT);
+            CreateArtLayer(environment.transform, $"{ART_FOLDER}/bg_forest_foreground.png",
+                "BG_Foreground", -80, Vector3.zero, ARENA_WIDTH, ARENA_HEIGHT);
+
+            // Ground floor — anchored at bottom of arena
+            var floorSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ART_FOLDER}/ground_forest_floor.png");
+            if (floorSprite != null)
             {
-                var line = new GameObject($"GridLine_H_{i}");
-                var lineSR = line.AddComponent<SpriteRenderer>();
-                lineSR.sprite = CreateRectSprite();
-                lineSR.color = new Color(1f, 1f, 1f, 0.05f);
-                line.transform.localScale = new Vector3(ARENA_WIDTH, 0.02f, 1f);
-                line.transform.position = new Vector3(0f, i * 1.2f, 0f);
-                lineSR.sortingOrder = -9;
-                line.transform.SetParent(ground.transform);
+                float floorScaleY = ARENA_HEIGHT * 0.2f / floorSprite.bounds.size.y;
+                float floorHeight = floorSprite.bounds.size.y * floorScaleY;
+                CreateArtLayer(environment.transform, $"{ART_FOLDER}/ground_forest_floor.png",
+                    "Ground_Floor", -50,
+                    new Vector3(0f, -ARENA_HEIGHT / 2f + floorHeight / 2f, 0f),
+                    ARENA_WIDTH, ARENA_HEIGHT * 0.2f);
             }
+
+            // Stone wall visuals — visual only, no colliders (DD-6)
+            var wallLeftSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ART_FOLDER}/wall_left_stone.png");
+            if (wallLeftSprite != null)
+            {
+                float wallScaleX = ARENA_WIDTH * 0.05f / wallLeftSprite.bounds.size.x;
+                float wallWidth = wallLeftSprite.bounds.size.x * wallScaleX;
+                CreateArtLayer(environment.transform, $"{ART_FOLDER}/wall_left_stone.png",
+                    "Wall_Left_Visual", -40,
+                    new Vector3(-ARENA_WIDTH / 2f + wallWidth / 2f, 0f, 0f),
+                    ARENA_WIDTH * 0.05f, ARENA_HEIGHT);
+            }
+
+            var wallRightSprite = AssetDatabase.LoadAssetAtPath<Sprite>($"{ART_FOLDER}/wall_right_stone.png");
+            if (wallRightSprite != null)
+            {
+                float wallScaleX = ARENA_WIDTH * 0.05f / wallRightSprite.bounds.size.x;
+                float wallWidth = wallRightSprite.bounds.size.x * wallScaleX;
+                CreateArtLayer(environment.transform, $"{ART_FOLDER}/wall_right_stone.png",
+                    "Wall_Right_Visual", -40,
+                    new Vector3(ARENA_WIDTH / 2f - wallWidth / 2f, 0f, 0f),
+                    ARENA_WIDTH * 0.05f, ARENA_HEIGHT);
+            }
+
+            Debug.Log("[MovementTestScene] Art layer background created (6 sprites).");
+        }
+
+        /// <summary>
+        /// Creates a SpriteRenderer child scaled to fit the target dimensions using sprite.bounds.size (DD-7).
+        /// </summary>
+        private static void CreateArtLayer(Transform parent, string spritePath, string goName,
+            int sortingOrder, Vector3 position, float targetWidth, float targetHeight)
+        {
+            var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(spritePath);
+            if (sprite == null)
+            {
+                Debug.LogWarning($"[MovementTestScene] Sprite not found: {spritePath} — using fallback color.");
+                var fallback = new GameObject(goName);
+                fallback.transform.SetParent(parent);
+                fallback.transform.position = position;
+                var fallbackSR = fallback.AddComponent<SpriteRenderer>();
+                fallbackSR.sprite = CreateRectSprite();
+                fallbackSR.color = new Color(0.2f, 0.25f, 0.15f);
+                fallback.transform.localScale = new Vector3(targetWidth, targetHeight, 1f);
+                fallbackSR.sortingOrder = sortingOrder;
+                return;
+            }
+
+            var go = new GameObject(goName);
+            go.transform.SetParent(parent);
+            go.transform.position = position;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = sortingOrder;
+
+            // Scale sprite to fit target dimensions (DD-7)
+            float scaleX = targetWidth / sprite.bounds.size.x;
+            float scaleY = targetHeight / sprite.bounds.size.y;
+            go.transform.localScale = new Vector3(scaleX, scaleY, 1f);
         }
 
         private static void CreateArenaWalls()
         {
             var walls = new GameObject("Walls");
 
+            // Left/right walls — full arena height (catches knockback/launch above floor)
             CreateWall("Wall_Left", walls.transform,
                 new Vector3(-ARENA_WIDTH / 2f - WALL_THICKNESS / 2f, 0f, 0f),
                 new Vector2(WALL_THICKNESS, ARENA_HEIGHT + WALL_THICKNESS * 2));
@@ -151,12 +265,14 @@ namespace TomatoFighters.Editor.Prefabs
                 new Vector3(ARENA_WIDTH / 2f + WALL_THICKNESS / 2f, 0f, 0f),
                 new Vector2(WALL_THICKNESS, ARENA_HEIGHT + WALL_THICKNESS * 2));
 
+            // Top wall — caps walkable area at floor top (characters can't walk into background)
             CreateWall("Wall_Top", walls.transform,
-                new Vector3(0f, ARENA_HEIGHT / 2f + WALL_THICKNESS / 2f, 0f),
+                new Vector3(0f, FLOOR_TOP_Y + WALL_THICKNESS / 2f, 0f),
                 new Vector2(ARENA_WIDTH + WALL_THICKNESS * 2, WALL_THICKNESS));
 
+            // Bottom wall — floor bottom
             CreateWall("Wall_Bottom", walls.transform,
-                new Vector3(0f, -ARENA_HEIGHT / 2f - WALL_THICKNESS / 2f, 0f),
+                new Vector3(0f, FLOOR_BOTTOM_Y - WALL_THICKNESS / 2f, 0f),
                 new Vector2(ARENA_WIDTH + WALL_THICKNESS * 2, WALL_THICKNESS));
         }
 
@@ -169,7 +285,7 @@ namespace TomatoFighters.Editor.Prefabs
             col.size = size;
         }
 
-        private static void CreatePlayerFromPrefab(string prefabPath, CharacterType characterType)
+        private static GameObject CreatePlayerFromPrefab(string prefabPath, CharacterType characterType)
         {
             // Force reimport to ensure the Library cache is current
             AssetDatabase.ImportAsset(prefabPath, ImportAssetOptions.ForceUpdate);
@@ -178,12 +294,11 @@ namespace TomatoFighters.Editor.Prefabs
             if (prefab == null)
             {
                 Debug.LogWarning("[MovementTestScene] Player prefab not found. Run 'Create Player Prefab' first. Building inline fallback.");
-                BuildInlineFallbackPlayer();
-                return;
+                return BuildInlineFallbackPlayer();
             }
 
             var player = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
-            player.transform.position = new Vector3(-3f, 0f, 0f);
+            player.transform.position = new Vector3(-3f, FLOOR_MID_Y, 0f);
 
             // InputActionReferences created via InputActionReference.Create() don't survive
             // prefab serialization — wire them on the scene instance directly.
@@ -230,6 +345,7 @@ namespace TomatoFighters.Editor.Prefabs
             }
 
             Debug.Log("[MovementTestScene] Player instantiated with input actions + PlayerDamageable + DebugHealthBar + DefenseDebugUI.");
+            return player;
         }
 
         // ── 5 Tiered Dummies ─────────────────────────────────────────────
@@ -278,7 +394,7 @@ namespace TomatoFighters.Editor.Prefabs
                     bodyScale = new Vector2(1.0f, 1.5f),
                     hitboxSize = new Vector2(2.4f, 1.0f),
                     hitboxOffset = new Vector2(0f, 0.1f),         // Centered — hits both sides
-                    position = new Vector3(0f, 2.5f, 0f)
+                    position = new Vector3(0f, FLOOR_MID_Y, 0f)
                 },
                 // Tier 2 — Heavy
                 new DummyTierConfig
@@ -299,7 +415,7 @@ namespace TomatoFighters.Editor.Prefabs
                     bodyScale = new Vector2(0.9f, 1.35f),
                     hitboxSize = new Vector2(1.0f, 0.8f),
                     hitboxOffset = new Vector2(-0.7f, 0.1f),
-                    position = new Vector3(5f, -1.5f, 0f)
+                    position = new Vector3(5f, FLOOR_BOTTOM_Y + 0.5f, 0f)
                 },
                 // Tier 3 — Fighter
                 new DummyTierConfig
@@ -320,7 +436,7 @@ namespace TomatoFighters.Editor.Prefabs
                     bodyScale = new Vector2(0.8f, 1.2f),
                     hitboxSize = new Vector2(0.8f, 0.6f),
                     hitboxOffset = new Vector2(-0.6f, 0.1f),
-                    position = new Vector3(3f, 1f, 0f)
+                    position = new Vector3(3f, FLOOR_TOP_Y - 0.5f, 0f)
                 },
                 // Tier 4 — Scrapper
                 new DummyTierConfig
@@ -341,7 +457,7 @@ namespace TomatoFighters.Editor.Prefabs
                     bodyScale = new Vector2(0.7f, 1.1f),
                     hitboxSize = new Vector2(0.6f, 0.5f),
                     hitboxOffset = new Vector2(-0.5f, 0.1f),
-                    position = new Vector3(7f, 1.5f, 0f)
+                    position = new Vector3(7f, FLOOR_TOP_Y - 0.3f, 0f)
                 },
                 // Tier 5 — Weakling (weakest)
                 new DummyTierConfig
@@ -362,7 +478,7 @@ namespace TomatoFighters.Editor.Prefabs
                     bodyScale = new Vector2(0.65f, 1.0f),
                     hitboxSize = new Vector2(0.5f, 0.4f),
                     hitboxOffset = new Vector2(-0.4f, 0.1f),
-                    position = new Vector3(7f, -2.5f, 0f)
+                    position = new Vector3(7f, FLOOR_BOTTOM_Y + 0.3f, 0f)
                 }
             };
         }
@@ -478,12 +594,12 @@ namespace TomatoFighters.Editor.Prefabs
             tm.color = tier.spriteColor;
         }
 
-        private static void BuildInlineFallbackPlayer()
+        private static GameObject BuildInlineFallbackPlayer()
         {
             var inputActions = AssetDatabase.LoadAssetAtPath<InputActionAsset>(INPUT_ACTIONS_PATH);
 
             var root = new GameObject("Player");
-            root.transform.position = new Vector3(-3f, 0f, 0f);
+            root.transform.position = new Vector3(-3f, FLOOR_MID_Y, 0f);
 
             var rb = root.AddComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
@@ -564,6 +680,8 @@ namespace TomatoFighters.Editor.Prefabs
             if (fcProp != null)
                 fcProp.colorValue = new Color(0.2f, 0.8f, 0.3f);
             hpBarSO.ApplyModifiedPropertiesWithoutUndo();
+
+            return root;
         }
 
         private static void WireAction(InputActionAsset asset, SerializedObject so,
@@ -573,6 +691,148 @@ namespace TomatoFighters.Editor.Prefabs
             if (action == null) return;
             so.FindProperty(propertyName).objectReferenceValue = InputActionReference.Create(action);
         }
+
+        // ── Camera → Player Wiring ───────────────────────────────────────
+
+        private static void WireCameraToPlayer(GameObject camGO, GameObject player)
+        {
+            if (camGO == null || player == null) return;
+
+            var camController = camGO.GetComponent<CameraController2D>();
+            if (camController == null) return;
+
+            var camSO = new SerializedObject(camController);
+            var targetsProp = camSO.FindProperty("targets");
+            if (targetsProp != null)
+            {
+                targetsProp.arraySize = 1;
+                targetsProp.GetArrayElementAtIndex(0).objectReferenceValue = player.transform;
+                camSO.ApplyModifiedPropertiesWithoutUndo();
+            }
+
+            Debug.Log("[MovementTestScene] CameraController2D wired to player follow target.");
+        }
+
+        // ── WaveManager ─────────────────────────────────────────────────
+
+        private static void CreateWaveManager()
+        {
+            var wmGO = new GameObject("WaveManager");
+            var wm = wmGO.AddComponent<WaveManager>();
+            var wmSO = new SerializedObject(wm);
+
+            // Create 3 spawn points spread across the arena
+            var spawnRoot = new GameObject("SpawnPoints");
+            spawnRoot.transform.SetParent(wmGO.transform);
+
+            var spawnPositions = new Vector3[]
+            {
+                new Vector3(-5f, FLOOR_MID_Y, 0f),  // Left
+                new Vector3(0f, FLOOR_MID_Y, 0f),   // Center
+                new Vector3(5f, FLOOR_MID_Y, 0f)    // Right
+            };
+
+            var spawnTransforms = new Transform[spawnPositions.Length];
+            for (int i = 0; i < spawnPositions.Length; i++)
+            {
+                var sp = new GameObject($"SpawnPoint_{i}");
+                sp.transform.SetParent(spawnRoot.transform);
+                sp.transform.position = spawnPositions[i];
+                spawnTransforms[i] = sp.transform;
+            }
+
+            // Wire spawn points array
+            var spawnPointsProp = wmSO.FindProperty("spawnPoints");
+            spawnPointsProp.arraySize = spawnTransforms.Length;
+            for (int i = 0; i < spawnTransforms.Length; i++)
+                spawnPointsProp.GetArrayElementAtIndex(i).objectReferenceValue = spawnTransforms[i];
+
+            // Configure 1 test wave with 3 enemy spawns (1 per spawn point)
+            var dummyPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(DUMMY_PREFAB_PATH);
+            var wavesProp = wmSO.FindProperty("waves");
+            wavesProp.arraySize = 1;
+            var wave0 = wavesProp.GetArrayElementAtIndex(0);
+            wave0.FindPropertyRelative("waveName").stringValue = "Test Wave 1";
+            wave0.FindPropertyRelative("isOptional").boolValue = false;
+
+            var groupsProp = wave0.FindPropertyRelative("enemyGroups");
+            groupsProp.arraySize = 3;
+            for (int i = 0; i < 3; i++)
+            {
+                var group = groupsProp.GetArrayElementAtIndex(i);
+                group.FindPropertyRelative("enemyPrefab").objectReferenceValue = dummyPrefab;
+                group.FindPropertyRelative("spawnCount").intValue = 1;
+                group.FindPropertyRelative("spawnDelay").floatValue = 0.3f;
+                group.FindPropertyRelative("spawnPointIndex").intValue = i;
+            }
+
+            // Wire SO event channels
+            var onWaveStart = AssetDatabase.LoadAssetAtPath<IntEventChannel>($"{EVENTS_ROOT}/OnWaveStart.asset");
+            var onWaveCleared = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnWaveCleared.asset");
+            var onAreaComplete = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnAreaComplete.asset");
+            var onCameraLock = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnCameraLock.asset");
+            var onCameraUnlock = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnCameraUnlock.asset");
+            var onBoundReached = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnBoundReached.asset");
+
+            if (onWaveStart != null) wmSO.FindProperty("onWaveStart").objectReferenceValue = onWaveStart;
+            if (onWaveCleared != null) wmSO.FindProperty("onWaveCleared").objectReferenceValue = onWaveCleared;
+            if (onAreaComplete != null) wmSO.FindProperty("onAreaComplete").objectReferenceValue = onAreaComplete;
+            if (onCameraLock != null) wmSO.FindProperty("onCameraLock").objectReferenceValue = onCameraLock;
+            if (onCameraUnlock != null) wmSO.FindProperty("onCameraUnlock").objectReferenceValue = onCameraUnlock;
+            if (onBoundReached != null) wmSO.FindProperty("onBoundReached").objectReferenceValue = onBoundReached;
+
+            wmSO.ApplyModifiedPropertiesWithoutUndo();
+
+            if (dummyPrefab == null)
+                Debug.LogWarning("[MovementTestScene] TestDummy prefab not found — WaveManager wave has null enemy prefab.");
+
+            Debug.Log("[MovementTestScene] WaveManager created with 1 test wave (3 spawns) and SO event channels.");
+        }
+
+        // ── Level Bounds ────────────────────────────────────────────────
+
+        private static void CreateLevelBounds()
+        {
+            var onBoundReached = AssetDatabase.LoadAssetAtPath<VoidEventChannel>($"{EVENTS_ROOT}/OnBoundReached.asset");
+
+            var boundsRoot = new GameObject("LevelBounds");
+
+            // Left bound — trigger collider just inside the left wall
+            CreateLevelBound("LevelBound_Left", boundsRoot.transform,
+                new Vector3(-ARENA_WIDTH / 2f + 1.5f, 0f, 0f),
+                new Vector2(0.5f, ARENA_HEIGHT),
+                onBoundReached);
+
+            // Right bound — trigger collider just inside the right wall
+            CreateLevelBound("LevelBound_Right", boundsRoot.transform,
+                new Vector3(ARENA_WIDTH / 2f - 1.5f, 0f, 0f),
+                new Vector2(0.5f, ARENA_HEIGHT),
+                onBoundReached);
+
+            Debug.Log("[MovementTestScene] LevelBounds created (L/R trigger colliders).");
+        }
+
+        private static void CreateLevelBound(string name, Transform parent,
+            Vector3 position, Vector2 size, VoidEventChannel onBoundReached)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent);
+            go.transform.position = position;
+
+            var col = go.AddComponent<BoxCollider2D>();
+            col.size = size;
+            col.isTrigger = true;
+
+            var bound = go.AddComponent<LevelBound>();
+            if (onBoundReached != null)
+            {
+                var boundSO = new SerializedObject(bound);
+                boundSO.FindProperty("onBoundReached").objectReferenceValue = onBoundReached;
+                boundSO.ApplyModifiedPropertiesWithoutUndo();
+            }
+        }
+
+        // ── Debug Canvas ────────────────────────────────────────────────
 
         private static void CreateDebugCanvas()
         {
