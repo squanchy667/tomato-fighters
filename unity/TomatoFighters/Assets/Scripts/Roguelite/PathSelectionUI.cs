@@ -1,6 +1,7 @@
 using TomatoFighters.Paths;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
+using TomatoFighters.Shared.Events;
 using UnityEngine;
 
 namespace TomatoFighters.Roguelite
@@ -25,6 +26,10 @@ namespace TomatoFighters.Roguelite
         [SerializeField] private PathSystem pathSystem;
         [SerializeField] private PathData[] availablePaths; // All 3 paths for character
 
+        [Header("Event Channels")]
+        [Tooltip("When raised, opens the path selection screen in Main mode. Used by mediators to trigger the shrine.")]
+        [SerializeField] private VoidEventChannel onShowPathSelection;
+
         [Header("Test")]
         [Tooltip("If true, automatically calls Show(Main) on Start. For test scenes only.")]
         [SerializeField] private bool showOnStart;
@@ -36,6 +41,20 @@ namespace TomatoFighters.Roguelite
         private Texture2D _whiteTexture;
 
         // -- Unity lifecycle -------------------------------------------------
+        private void OnEnable()
+        {
+            if (onShowPathSelection != null)
+                onShowPathSelection.Register(HandleShowMainPath);
+        }
+
+        private void OnDisable()
+        {
+            if (onShowPathSelection != null)
+                onShowPathSelection.Unregister(HandleShowMainPath);
+        }
+
+        private void HandleShowMainPath() => Show(PathSelectionMode.Main);
+
         private void Start()
         {
             _whiteTexture = new Texture2D(1, 1);
