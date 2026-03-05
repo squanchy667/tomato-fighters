@@ -27,7 +27,7 @@ namespace TomatoFighters.Characters
         private void Start()
         {
             if (spawner == null)
-                spawner = FindObjectOfType<CharacterSpawner>();
+                spawner = FindAnyObjectByType<CharacterSpawner>();
 
             Time.timeScale = 0f;
             _isSelecting = true;
