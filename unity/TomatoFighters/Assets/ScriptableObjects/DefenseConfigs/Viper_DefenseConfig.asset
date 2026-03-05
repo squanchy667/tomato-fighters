@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1320adf118e05ab4b8d7b999d5318855, type: 3}
+  m_Name: Viper_DefenseConfig
+  m_EditorClassIdentifier: 
+  deflectWindowDuration: 0.14
+  clashWindowStart: 0
+  clashWindowEnd: 0.4
+  dodgeIFrameStart: 0.04
+  dodgeIFrameEnd: 0.3
+  defenseBonus: {fileID: 11400000, guid: 00663b072c2604bac9881c57b1ade74b, type: 2}
