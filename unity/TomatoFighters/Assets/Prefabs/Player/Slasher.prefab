@@ -555,6 +555,8 @@ GameObject:
   - component: {fileID: 600444095393855003}
   - component: {fileID: 8385738781385175512}
   - component: {fileID: 5998571255702295101}
+  - component: {fileID: 6219638099818459276}
+  - component: {fileID: 6785580028167092047}
   m_Layer: 9
   m_Name: Slasher
   m_TagString: Untagged
@@ -688,7 +690,7 @@ MonoBehaviour:
   characterType: 1
   animator: {fileID: 3562241588573624623}
   motor: {fileID: 379365512287438545}
-  onComboHitConfirmed: {fileID: 0}
+  onComboHitConfirmed: {fileID: 11400000, guid: 1841b01ec0cbd4894b644c17084b6806, type: 2}
   cancelBufferWindow: 0.15
 --- !u!114 &7103504854341034314
 MonoBehaviour:
@@ -730,12 +732,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   motor: {fileID: 379365512287438545}
   comboController: {fileID: 2306810785495217506}
+  abilityExecutor: {fileID: 6785580028167092047}
   moveAction: {fileID: 0}
   jumpAction: {fileID: 0}
   dashAction: {fileID: 0}
   lightAttackAction: {fileID: 0}
   heavyAttackAction: {fileID: 0}
   runAction: {fileID: 0}
+  ability1Action: {fileID: 0}
+  ability2Action: {fileID: 0}
 --- !u!114 &5109954097164946588
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -820,7 +825,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxHealth: 100
   defenseSystem: {fileID: 5109954097164946588}
-  onHealthChanged: {fileID: 0}
+  onHealthChanged: {fileID: 11400000, guid: 36bb00e459c694668884f1d802af4a9a, type: 2}
   flashColor: {r: 1, g: 0, b: 0, a: 1}
   flashDuration: 0.15
 --- !u!114 &9211690648916772274
@@ -886,6 +891,41 @@ MonoBehaviour:
   characterType: 1
   hitboxManager: {fileID: 600444095393855003}
   comboController: {fileID: 2306810785495217506}
+--- !u!114 &6219638099818459276
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6032175914044303788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e3a95c85940d04ac2ba2632c725b32e8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  baseStats: {fileID: 11400000, guid: 2e6a1d4f8b3c7e9a5d1f3b8c2e6d4a1f, type: 2}
+  onManaChanged: {fileID: 11400000, guid: 441b89007dbfe4d2bbae26990445b4bb, type: 2}
+--- !u!114 &6785580028167092047
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6032175914044303788}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6c187c0b740ebe48a03b78f9f8d1229, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  motor: {fileID: 379365512287438545}
+  comboController: {fileID: 2306810785495217506}
+  hitboxManager: {fileID: 600444095393855003}
+  manaTracker: {fileID: 6219638099818459276}
+  playerDamageable: {fileID: 354698604782890477}
+  pathProviderComponent: {fileID: 0}
+  enemyLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!1 &6341040756435245659
 GameObject:
   m_ObjectHideFlags: 0
@@ -1245,7 +1285,7 @@ Animator:
   m_GameObject: {fileID: 8721950407614830697}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 4617683f874cbe74c9b3bc9a482a49d9, type: 2}
+  m_Controller: {fileID: 22100000, guid: 874544504376409489237dc12f6a929d, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0

@@ -132,6 +132,19 @@ TextureImporter:
     ignorePlatformSupport: 0
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
     serializedVersion: 2
     sprites:
@@ -434,7 +447,20 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      bg_forest_foreground_0: -7564533569919570049
+      bg_forest_foreground_1: 5980773667644999198
+      bg_forest_foreground_10: -2044632172908266559
+      bg_forest_foreground_11: 1048982832828594599
+      bg_forest_foreground_12: 7160100282289836697
+      bg_forest_foreground_2: 3547110420442688727
+      bg_forest_foreground_3: -4564655949271351599
+      bg_forest_foreground_4: 7154424738124062460
+      bg_forest_foreground_5: 60334534406044030
+      bg_forest_foreground_6: 7035423129995500468
+      bg_forest_foreground_7: -8568168481737605478
+      bg_forest_foreground_8: 702250177125233252
+      bg_forest_foreground_9: -9085011096476627384
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
