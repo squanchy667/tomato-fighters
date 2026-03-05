@@ -8,8 +8,10 @@ using UnityEngine;
 namespace TomatoFighters.World.States
 {
     /// <summary>
-    /// Picks an attack from EnemyData.attacks[], runs the telegraph -> clash window ->
-    /// hitbox -> cooldown sequence via coroutine, then transitions back to Chase.
+    /// Executes attacks via either multi-step patterns (EnemyAttackPattern) or
+    /// single random attacks from EnemyData.attacks[] as fallback.
+    /// Delegates telegraph visuals to <see cref="TelegraphVisualController"/> when available.
+    /// Handles clean early-exit on stun/death mid-pattern.
     /// </summary>
     public class AttackState : EnemyStateBase
     {
@@ -23,18 +25,26 @@ namespace TomatoFighters.World.States
             _attackFinished = false;
             Context.Rb.linearVelocity = Vector2.zero;
 
+            // Try pattern-based execution first
+            var pattern = Context.SelectPattern();
+            if (pattern != null && pattern.steps != null && pattern.steps.Length > 0)
+            {
+                Context.RecordPatternUsed(pattern);
+                _attackCoroutine = Context.StartCoroutine(PerformPattern(pattern));
+                return;
+            }
+
+            // Fallback: single random attack from attacks[]
             var attacks = Context.Data.attacks;
             if (attacks == null || attacks.Length == 0)
             {
-                Debug.LogWarning("[AttackState] No attacks configured on EnemyData.", Context);
+                Debug.LogWarning("[AttackState] No attacks or patterns configured.", Context);
                 _attackFinished = true;
                 return;
             }
 
-            // Pick a random attack
             var attack = attacks[Random.Range(0, attacks.Length)];
-            Debug.Log($"[AttackState] Starting attack: {attack.attackName}, hitboxId={attack.hitboxId}");
-            _attackCoroutine = Context.StartCoroutine(PerformAttack(attack));
+            _attackCoroutine = Context.StartCoroutine(PerformSingleAttack(attack));
         }
 
         public override void Tick(float dt)
@@ -53,14 +63,65 @@ namespace TomatoFighters.World.States
                 _attackCoroutine = null;
             }
 
+            // Clean up telegraph visuals and attack state
+            Context.TelegraphVisual?.CancelTelegraph();
             Context.SetActiveAttack(null);
         }
 
-        private IEnumerator PerformAttack(AttackData attack)
+        // ── Pattern Execution ───────────────────────────────────────────
+
+        private IEnumerator PerformPattern(EnemyAttackPattern pattern)
+        {
+            for (int i = 0; i < pattern.steps.Length; i++)
+            {
+                // Early-exit check between steps
+                if (ShouldAbort()) yield break;
+
+                var step = pattern.steps[i];
+                if (step.attack == null) continue;
+
+                // Per-step delay
+                if (step.delayBeforeStep > 0f)
+                {
+                    yield return WaitWithAbortCheck(step.delayBeforeStep);
+                    if (ShouldAbort()) yield break;
+                }
+
+                yield return ExecuteAttack(step.attack);
+
+                if (ShouldAbort()) yield break;
+            }
+
+            // Cooldown after full pattern
+            yield return WaitWithAbortCheck(Context.Data.attackCooldown);
+            _attackFinished = true;
+        }
+
+        private IEnumerator PerformSingleAttack(AttackData attack)
+        {
+            yield return ExecuteAttack(attack);
+
+            // Cooldown before next action
+            yield return WaitWithAbortCheck(Context.Data.attackCooldown);
+            _attackFinished = true;
+        }
+
+        // ── Core Attack Execution (shared by both paths) ────────────────
+
+        private IEnumerator ExecuteAttack(AttackData attack)
         {
             Context.SetActiveAttack(attack);
 
-            // Open clash window during telegraph (mirrors TestDummyEnemy)
+            // Fire animator trigger based on position in EnemyData.attacks[]
+            var animator = Context.GetComponent<Animator>();
+            if (animator != null)
+            {
+                int triggerIndex = Context.GetAttackTriggerIndex(attack);
+                string triggerName = $"attack_{triggerIndex + 1}Trigger";
+                animator.SetTrigger(triggerName);
+            }
+
+            // Open clash window during telegraph
             var defenseProvider = Context.EnemyBase.GetComponent<IDefenseProvider>();
             float telegraphDuration = Context.Data.telegraphDuration;
 
@@ -70,27 +131,45 @@ namespace TomatoFighters.World.States
                 defenseProvider.OpenClashWindow(telegraphDuration, facingDir);
             }
 
-            // Telegraph phase — visual warning
-            var sprite = Context.EnemyBase.GetComponentInChildren<SpriteRenderer>();
-            Color originalColor = sprite != null ? sprite.color : Color.white;
-
+            // Telegraph phase — delegate to TelegraphVisualController if available
             bool isUnstoppable = attack.telegraphType == TelegraphType.Unstoppable;
-            yield return TelegraphPhase(sprite, originalColor, telegraphDuration, isUnstoppable);
+            var telegraphCtrl = Context.TelegraphVisual;
+
+            if (telegraphCtrl != null)
+            {
+                if (isUnstoppable)
+                    telegraphCtrl.PlayUnstoppableTelegraph(telegraphDuration);
+                else
+                    telegraphCtrl.PlayNormalTelegraph(telegraphDuration);
+
+                yield return new WaitForSeconds(telegraphDuration);
+            }
+            else
+            {
+                // Inline fallback for enemies without TelegraphVisualController
+                yield return InlineTelegraphFallback(telegraphDuration, isUnstoppable);
+            }
+
+            if (ShouldAbort()) yield break;
 
             // Hitbox activation phase
             var hitbox = FindHitbox(attack);
-            Debug.Log($"[AttackState] Hitbox lookup: {(hitbox != null ? hitbox.name : "NULL")}");
             if (hitbox != null)
             {
-                // Clear clash immunity for new attack
                 var clashTracker = Context.EnemyBase.GetComponent<ClashTracker>();
                 clashTracker?.ClearImmunities();
 
                 hitbox.OnHitDetected += OnHitDetected;
                 hitbox.gameObject.SetActive(true);
 
-                if (sprite != null)
-                    sprite.color = new Color(1f, 0.2f, 0f); // Red-orange during swing
+                // Visual: red-orange during active swing
+                if (telegraphCtrl != null)
+                    telegraphCtrl.SetActiveSwingColor();
+                else
+                {
+                    var sprite = Context.EnemyBase.GetComponentInChildren<SpriteRenderer>();
+                    if (sprite != null) sprite.color = new Color(1f, 0.2f, 0f);
+                }
 
                 // Active frames
                 float activeDuration = attack.hitboxActiveFrames / (60f * attack.animationSpeed);
@@ -100,65 +179,72 @@ namespace TomatoFighters.World.States
                 hitbox.OnHitDetected -= OnHitDetected;
             }
 
-            // Recovery
+            // Recovery — restore visuals
             Context.SetActiveAttack(null);
-            if (sprite != null)
-                sprite.color = originalColor;
-
-            // Cooldown before next action
-            yield return new WaitForSeconds(Context.Data.attackCooldown);
-
-            _attackFinished = true;
+            if (telegraphCtrl != null)
+                telegraphCtrl.RestoreColor();
+            else
+            {
+                var sprite = Context.EnemyBase.GetComponentInChildren<SpriteRenderer>();
+                if (sprite != null) sprite.color = Color.white;
+            }
         }
 
-        private IEnumerator TelegraphPhase(SpriteRenderer sprite, Color originalColor,
-            float duration, bool isUnstoppable)
+        // ── Telegraph Fallback (for enemies without TelegraphVisualController) ──
+
+        private IEnumerator InlineTelegraphFallback(float duration, bool isUnstoppable)
         {
-            if (sprite != null)
+            var sprite = Context.EnemyBase.GetComponentInChildren<SpriteRenderer>();
+            if (sprite == null)
             {
-                // Unstoppable = red tint, Normal = yellow tint
-                sprite.color = isUnstoppable
-                    ? new Color(1f, 0.3f, 0.3f)  // Red warning
-                    : new Color(1f, 1f, 0.5f);    // Yellow warning
+                yield return new WaitForSeconds(duration);
+                yield break;
             }
 
             float elapsed = 0f;
             while (elapsed < duration)
             {
+                float t = elapsed / duration;
+                if (isUnstoppable)
+                    sprite.color = Color.Lerp(new Color(1f, 0.3f, 0.3f), new Color(1f, 0f, 0f), t);
+                else
+                    sprite.color = Color.Lerp(new Color(1f, 1f, 0.5f), new Color(1f, 0.6f, 0f), t);
+
                 elapsed += Time.deltaTime;
-
-                // Ramp color intensity during telegraph
-                if (sprite != null)
-                {
-                    float t = elapsed / duration;
-                    if (isUnstoppable)
-                    {
-                        // Red gets more intense
-                        sprite.color = Color.Lerp(new Color(1f, 0.3f, 0.3f), new Color(1f, 0f, 0f), t);
-                    }
-                    else
-                    {
-                        // Yellow → orange
-                        sprite.color = Color.Lerp(new Color(1f, 1f, 0.5f), new Color(1f, 0.6f, 0f), t);
-                    }
-                }
-
                 yield return null;
             }
 
-            // Flash white before strike
-            if (sprite != null)
-                sprite.color = Color.white;
-
+            sprite.color = Color.white;
             yield return null;
         }
+
+        // ── Abort Checks ────────────────────────────────────────────────
+
+        /// <summary>Check if the attack should abort due to stun or death.</summary>
+        private bool ShouldAbort()
+        {
+            return Context.EnemyBase.IsStunned || Context.EnemyBase.CurrentHealth <= 0f;
+        }
+
+        /// <summary>Wait for a duration, checking for abort each frame.</summary>
+        private IEnumerator WaitWithAbortCheck(float duration)
+        {
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                if (ShouldAbort()) yield break;
+                elapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
+
+        // ── Hit Detection ───────────────────────────────────────────────
 
         private void OnHitDetected(IDamageable target, Vector2 hitPoint)
         {
             var attack = Context.ActiveAttack;
             if (attack == null) return;
 
-            // Clash immunity check
             var clashTracker = Context.EnemyBase.GetComponent<ClashTracker>();
             if (clashTracker != null && clashTracker.HasClashImmunity(target))
                 return;
@@ -166,8 +252,8 @@ namespace TomatoFighters.World.States
             bool isUnstoppable = attack.telegraphType == TelegraphType.Unstoppable;
             var response = target.ResolveIncoming(Context.transform.position, isUnstoppable);
 
-            float damage = attack.damageMultiplier * 10f; // Base enemy ATK placeholder
-            float stunFill = damage * 0.1f; // Base stun contribution
+            float damage = attack.damageMultiplier * 10f;
+            float stunFill = damage * 0.1f;
 
             var packet = new DamagePacket(
                 type: DamageType.Physical,
@@ -175,7 +261,7 @@ namespace TomatoFighters.World.States
                 isPunishDamage: false,
                 knockbackForce: attack.knockbackForce,
                 launchForce: attack.launchForce,
-                source: CharacterType.Brutor, // Enemies use default
+                source: CharacterType.Brutor,
                 stunFillAmount: stunFill
             );
 
@@ -199,7 +285,6 @@ namespace TomatoFighters.World.States
                     break;
             }
 
-            // Notify defense system for visual feedback
             if (response != DamageResponse.Hit && target is MonoBehaviour defMb)
             {
                 var defProv = defMb.GetComponent<IDefenseProvider>();
@@ -207,9 +292,10 @@ namespace TomatoFighters.World.States
             }
         }
 
+        // ── Hitbox Lookup ───────────────────────────────────────────────
+
         private HitboxDamage FindHitbox(AttackData attack)
         {
-            // Look for child named Hitbox_{hitboxId}, falling back to first HitboxDamage
             if (!string.IsNullOrEmpty(attack.hitboxId))
             {
                 var hitboxT = Context.transform.Find($"Hitbox_{attack.hitboxId}");
@@ -220,7 +306,6 @@ namespace TomatoFighters.World.States
                 }
             }
 
-            // Fallback: find any HitboxDamage child
             return Context.GetComponentInChildren<HitboxDamage>(includeInactive: true);
         }
     }

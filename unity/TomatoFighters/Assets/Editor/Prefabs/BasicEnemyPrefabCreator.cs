@@ -23,6 +23,11 @@ namespace TomatoFighters.Editor.Prefabs
         private const string SLASH_ATTACK_PATH = ATTACK_FOLDER + "/BasicSlash.asset";
         private const string HEAVY_ATTACK_PATH = ATTACK_FOLDER + "/BasicHeavy.asset";
 
+        private const string PATTERN_FOLDER = "Assets/ScriptableObjects/Enemies/Patterns";
+        private const string QUICK_JABS_PATH = PATTERN_FOLDER + "/BasicMelee_QuickJabs.asset";
+        private const string SLASH_PATTERN_PATH = PATTERN_FOLDER + "/BasicMelee_Slash.asset";
+        private const string HEAVY_SLAM_PATH = PATTERN_FOLDER + "/BasicMelee_HeavySlam.asset";
+
         private const string ENEMY_HURTBOX_LAYER = "EnemyHurtbox";
         private const string ENEMY_HITBOX_LAYER = "EnemyHitbox";
 
@@ -32,6 +37,7 @@ namespace TomatoFighters.Editor.Prefabs
             PlayerPrefabCreator.EnsureFolderExists(PREFAB_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(SO_FOLDER);
             PlayerPrefabCreator.EnsureFolderExists(ATTACK_FOLDER);
+            PlayerPrefabCreator.EnsureFolderExists(PATTERN_FOLDER);
 
             var enemyData = CreateOrLoadEnemyData();
             var slashAttack = CreateOrLoadSlashAttack();
@@ -44,6 +50,19 @@ namespace TomatoFighters.Editor.Prefabs
             attacksProp.GetArrayElementAtIndex(0).objectReferenceValue = slashAttack;
             attacksProp.GetArrayElementAtIndex(1).objectReferenceValue = heavyAttack;
             dataSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // Create and wire attack patterns
+            var quickJabs = CreateOrLoadQuickJabsPattern(slashAttack);
+            var slashPattern = CreateOrLoadSlashPattern(slashAttack);
+            var heavySlam = CreateOrLoadHeavySlamPattern(heavyAttack);
+
+            var dataSO2 = new SerializedObject(enemyData);
+            var patternsProp = dataSO2.FindProperty("attackPatterns");
+            patternsProp.arraySize = 3;
+            patternsProp.GetArrayElementAtIndex(0).objectReferenceValue = quickJabs;
+            patternsProp.GetArrayElementAtIndex(1).objectReferenceValue = slashPattern;
+            patternsProp.GetArrayElementAtIndex(2).objectReferenceValue = heavySlam;
+            dataSO2.ApplyModifiedPropertiesWithoutUndo();
 
             var whiteSquare = TestDummyPrefabCreator.GetOrCreateWhiteSquareSprite();
 
@@ -142,6 +161,81 @@ namespace TomatoFighters.Editor.Prefabs
             return attack;
         }
 
+        // ── Attack Pattern Creation ────────────────────────────────────────
+
+        private static EnemyAttackPattern CreateOrLoadQuickJabsPattern(AttackData slashAttack)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<EnemyAttackPattern>(QUICK_JABS_PATH);
+            var pattern = existing != null ? existing : ScriptableObject.CreateInstance<EnemyAttackPattern>();
+
+            pattern.patternName = "Quick Jabs";
+            pattern.selectionWeight = 2.0f;
+            pattern.minRange = 0f;
+            pattern.maxRange = 1.5f;
+            pattern.patternCooldown = 1.5f;
+            pattern.steps = new AttackPatternStep[]
+            {
+                new AttackPatternStep { attack = slashAttack, delayBeforeStep = 0f },
+                new AttackPatternStep { attack = slashAttack, delayBeforeStep = 0.2f }
+            };
+
+            if (existing == null)
+                AssetDatabase.CreateAsset(pattern, QUICK_JABS_PATH);
+            else
+                EditorUtility.SetDirty(pattern);
+
+            AssetDatabase.SaveAssets();
+            return pattern;
+        }
+
+        private static EnemyAttackPattern CreateOrLoadSlashPattern(AttackData slashAttack)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<EnemyAttackPattern>(SLASH_PATTERN_PATH);
+            var pattern = existing != null ? existing : ScriptableObject.CreateInstance<EnemyAttackPattern>();
+
+            pattern.patternName = "Slash";
+            pattern.selectionWeight = 1.5f;
+            pattern.minRange = 0f;
+            pattern.maxRange = 2.0f;
+            pattern.patternCooldown = 1.0f;
+            pattern.steps = new AttackPatternStep[]
+            {
+                new AttackPatternStep { attack = slashAttack, delayBeforeStep = 0f }
+            };
+
+            if (existing == null)
+                AssetDatabase.CreateAsset(pattern, SLASH_PATTERN_PATH);
+            else
+                EditorUtility.SetDirty(pattern);
+
+            AssetDatabase.SaveAssets();
+            return pattern;
+        }
+
+        private static EnemyAttackPattern CreateOrLoadHeavySlamPattern(AttackData heavyAttack)
+        {
+            var existing = AssetDatabase.LoadAssetAtPath<EnemyAttackPattern>(HEAVY_SLAM_PATH);
+            var pattern = existing != null ? existing : ScriptableObject.CreateInstance<EnemyAttackPattern>();
+
+            pattern.patternName = "Heavy Slam";
+            pattern.selectionWeight = 0.5f;
+            pattern.minRange = 0f;
+            pattern.maxRange = 1.2f;
+            pattern.patternCooldown = 4.0f;
+            pattern.steps = new AttackPatternStep[]
+            {
+                new AttackPatternStep { attack = heavyAttack, delayBeforeStep = 0f }
+            };
+
+            if (existing == null)
+                AssetDatabase.CreateAsset(pattern, HEAVY_SLAM_PATH);
+            else
+                EditorUtility.SetDirty(pattern);
+
+            AssetDatabase.SaveAssets();
+            return pattern;
+        }
+
         // ── Prefab Setup ─────────────────────────────────────────────────
 
         private static GameObject SetupPrefab(EnemyData enemyData, Sprite whiteSquare)
@@ -219,6 +313,14 @@ namespace TomatoFighters.Editor.Prefabs
                     "Set playerLayer on EnemyAI manually.");
             }
             aiSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // TelegraphVisualController — wired to the sprite child's SpriteRenderer
+            var telegraphCtrl = EnsureComponent<TelegraphVisualController>(root);
+            var telegraphSO = new SerializedObject(telegraphCtrl);
+            var spriteProp = telegraphSO.FindProperty("_sprite");
+            if (spriteProp != null)
+                spriteProp.objectReferenceValue = sr;
+            telegraphSO.ApplyModifiedPropertiesWithoutUndo();
 
             // Hitbox child (Hitbox_Punch — matches hitboxId on attacks)
             var hitboxChild = FindOrCreateChild(root, "Hitbox_Punch");

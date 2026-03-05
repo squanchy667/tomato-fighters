@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.World.States;
@@ -26,6 +27,7 @@ namespace TomatoFighters.World
         private Rigidbody2D _rb;
         private EnemyData _data;
         private Vector2 _spawnPosition;
+        private TelegraphVisualController _telegraphVisual;
 
         /// <summary>The EnemyBase component on this GameObject.</summary>
         public EnemyBase EnemyBase => _enemyBase;
@@ -38,6 +40,9 @@ namespace TomatoFighters.World
 
         /// <summary>The position this enemy was at on Awake. Used by PatrolState.</summary>
         public Vector2 SpawnPosition => _spawnPosition;
+
+        /// <summary>The TelegraphVisualController for attack telegraph effects.</summary>
+        public TelegraphVisualController TelegraphVisual => _telegraphVisual;
 
         // ── State Machine ─────────────────────────────────────────────────
 
@@ -93,12 +98,58 @@ namespace TomatoFighters.World
         /// <summary>Whether the enemy is currently performing an Unstoppable attack (super armor).</summary>
         public bool IsPerformingUnstoppable => _isPerformingUnstoppable;
 
+        // ── Pattern Selection ───────────────────────────────────────────────
+
+        private readonly Dictionary<EnemyAttackPattern, float> _patternCooldowns = new();
+
+        /// <summary>
+        /// Selects a valid attack pattern based on range to target, cooldowns, and weighted random.
+        /// Delegates to <see cref="PatternSelector"/> for testable pure logic.
+        /// Returns null if no patterns are defined or none are valid (AttackState falls back to attacks[]).
+        /// </summary>
+        public EnemyAttackPattern SelectPattern()
+        {
+            var patterns = _data.attackPatterns;
+            if (patterns == null || patterns.Length == 0)
+                return null;
+
+            float distToTarget = CurrentTarget != null
+                ? Vector2.Distance(transform.position, CurrentTarget.position)
+                : 0f;
+
+            float randomValue = UnityEngine.Random.value;
+            return PatternSelector.Select(patterns, distToTarget, _patternCooldowns,
+                Time.time, randomValue);
+        }
+
+        /// <summary>Records that a pattern was used, starting its cooldown timer.</summary>
+        public void RecordPatternUsed(EnemyAttackPattern pattern)
+        {
+            if (pattern == null) return;
+            _patternCooldowns[pattern] = Time.time;
+        }
+
+        /// <summary>
+        /// Returns the animator trigger index for an AttackData by finding its position in EnemyData.attacks[].
+        /// Falls back to 0 if not found.
+        /// </summary>
+        public int GetAttackTriggerIndex(AttackData attack)
+        {
+            if (_data.attacks == null || attack == null) return 0;
+            for (int i = 0; i < _data.attacks.Length; i++)
+            {
+                if (_data.attacks[i] == attack) return i;
+            }
+            return 0;
+        }
+
         // ── Unity Lifecycle ───────────────────────────────────────────────
 
         private void Awake()
         {
             _enemyBase = GetComponent<EnemyBase>();
             _rb = GetComponent<Rigidbody2D>();
+            _telegraphVisual = GetComponent<TelegraphVisualController>();
             _spawnPosition = transform.position;
         }
 

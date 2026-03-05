@@ -36,6 +36,10 @@ namespace TomatoFighters.World
         [Tooltip("List of attacks this enemy can perform. Referenced by AI or timer logic.")]
         public AttackData[] attacks;
 
+        [Tooltip("Named attack patterns with selection conditions. If populated, " +
+                 "AttackState uses pattern-based execution. Otherwise falls back to attacks[].")]
+        public EnemyAttackPattern[] attackPatterns;
+
         [Header("AI Behavior")]
         [Tooltip("Detection radius for player targeting.")]
         public float aggroRange = 8f;

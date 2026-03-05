@@ -5,7 +5,8 @@
         "TomatoFighters.Characters",
         "TomatoFighters.Combat",
         "TomatoFighters.Shared",
-        "TomatoFighters.Paths"
+        "TomatoFighters.Paths",
+        "TomatoFighters.World"
     ],
     "includePlatforms": [
         "Editor"
