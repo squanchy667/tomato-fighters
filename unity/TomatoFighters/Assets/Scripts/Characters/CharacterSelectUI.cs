@@ -26,6 +26,9 @@ namespace TomatoFighters.Characters
 
         private void Start()
         {
+            if (spawner == null)
+                spawner = FindObjectOfType<CharacterSpawner>();
+
             Time.timeScale = 0f;
             _isSelecting = true;
             _whiteTexture = new Texture2D(1, 1);

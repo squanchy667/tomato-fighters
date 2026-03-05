@@ -27,6 +27,8 @@ namespace TomatoFighters.Editor
         private const string EVENTS_ROOT = "Assets/ScriptableObjects/Events";
         private const string REGISTRY_FOLDER = "Assets/ScriptableObjects/Characters";
         private const string REGISTRY_PATH = REGISTRY_FOLDER + "/CharacterRegistry.asset";
+        private const string RESOURCES_FOLDER = "Assets/Resources";
+        private const string RESOURCES_REGISTRY_PATH = RESOURCES_FOLDER + "/CharacterRegistry.asset";
 
         private const float ARENA_WIDTH = 20f;
         private const float ARENA_HEIGHT = 10f;
@@ -108,6 +110,11 @@ namespace TomatoFighters.Editor
             so.ApplyModifiedPropertiesWithoutUndo();
             EditorUtility.SetDirty(registry);
             AssetDatabase.SaveAssets();
+
+            // Copy to Resources so CharacterSpawner can load at runtime as fallback
+            PlayerPrefabCreator.EnsureFolderExists(RESOURCES_FOLDER);
+            AssetDatabase.CopyAsset(REGISTRY_PATH, RESOURCES_REGISTRY_PATH);
+            AssetDatabase.Refresh();
 
             Debug.Log($"[DemoScene] CharacterRegistry at {REGISTRY_PATH} — {CHARACTER_DEFS.Length} characters wired.");
             return registry;

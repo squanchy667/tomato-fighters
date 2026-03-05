@@ -33,6 +33,9 @@ namespace TomatoFighters.Characters
 
         private void Awake()
         {
+            if (registry == null)
+                registry = Resources.Load<CharacterRegistry>("CharacterRegistry");
+
             if (!deferSpawn)
                 SpawnSelected();
         }
