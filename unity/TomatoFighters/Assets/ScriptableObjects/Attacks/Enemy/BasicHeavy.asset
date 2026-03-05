@@ -15,7 +15,7 @@ MonoBehaviour:
   attackId: basic_heavy
   attackName: Basic Heavy Slam
   damageMultiplier: 1.2
-  knockbackForce: {x: 4, y: 0.5}
+  knockbackForce: {x: 7, y: 1.5}
   launchForce: {x: 0, y: 0}
   causesWallBounce: 0
   causesLaunch: 0
@@ -30,6 +30,8 @@ MonoBehaviour:
   telegraphType: 1
   isOTGCapable: 0
   isAirAttack: 0
+  hasPunishWindow: 0
+  punishWindowDuration: 1
   hitEffectPrefab: {fileID: 0}
   swingSound: {fileID: 0}
   hitSound: {fileID: 0}

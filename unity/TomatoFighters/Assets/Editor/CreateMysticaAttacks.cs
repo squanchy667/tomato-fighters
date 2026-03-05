@@ -24,7 +24,7 @@ namespace TomatoFighters.Editor
                 attackId    = "mystica_strike_1",
                 attackName  = "Magic Burst 1",
                 damageMultiplier   = 0.6f,
-                knockbackForce     = new Vector2(1.5f, 0f),
+                knockbackForce     = new Vector2(3.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 3,
                 hitboxActiveFrames = 4,
@@ -43,7 +43,7 @@ namespace TomatoFighters.Editor
                 attackId    = "mystica_strike_2",
                 attackName  = "Magic Burst 2",
                 damageMultiplier   = 0.8f,
-                knockbackForce     = new Vector2(2.0f, 0.3f),
+                knockbackForce     = new Vector2(4.0f, 0.6f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 3,
                 hitboxActiveFrames = 4,
@@ -62,7 +62,7 @@ namespace TomatoFighters.Editor
                 attackId    = "mystica_strike_3",
                 attackName  = "Magic Burst 3",
                 damageMultiplier   = 1.0f,
-                knockbackForce     = new Vector2(3.0f, 0.5f),
+                knockbackForce     = new Vector2(6.0f, 1.0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 4,
                 hitboxActiveFrames = 5,
@@ -81,7 +81,7 @@ namespace TomatoFighters.Editor
                 attackId    = "mystica_arcane_bolt",
                 attackName  = "Arcane Bolt",
                 damageMultiplier   = 1.4f,
-                knockbackForce     = new Vector2(2.0f, 1.0f),
+                knockbackForce     = new Vector2(4.0f, 2.0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 6,
                 hitboxActiveFrames = 6,
@@ -123,13 +123,7 @@ namespace TomatoFighters.Editor
             string path = $"{FOLDER}/{p.fileName}.asset";
 
             var existing = AssetDatabase.LoadAssetAtPath<AttackData>(path);
-            if (existing != null)
-            {
-                Debug.Log($"[CreateMysticaAttacks] {p.fileName} already exists, skipping.");
-                return;
-            }
-
-            var attack = ScriptableObject.CreateInstance<AttackData>();
+            var attack = existing != null ? existing : ScriptableObject.CreateInstance<AttackData>();
 
             attack.attackId           = p.attackId;
             attack.attackName         = p.attackName;
@@ -146,8 +140,10 @@ namespace TomatoFighters.Editor
             attack.isOTGCapable       = p.isOTGCapable;
             attack.isAirAttack        = p.isAirAttack;
 
-            AssetDatabase.CreateAsset(attack, path);
-            Debug.Log($"[CreateMysticaAttacks] Created {p.fileName} at {path}");
+            if (existing == null)
+                AssetDatabase.CreateAsset(attack, path);
+            else
+                EditorUtility.SetDirty(attack);
         }
 
         private static void EnsureFolderExists(string path)

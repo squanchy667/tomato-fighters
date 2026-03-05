@@ -16,11 +16,15 @@ MonoBehaviour:
   pressureThreshold: 40
   stunDuration: 1.5
   invulnerabilityDuration: 0.8
-  knockbackResistance: 0.2
+  knockbackResistance: 0
   movementSpeed: 5.5
   attacks:
   - {fileID: 11400000, guid: 57feebbfd865048a1b19a26025f27fc2, type: 2}
   - {fileID: 11400000, guid: a0e74e0022fd54537ab0833305764041, type: 2}
+  attackPatterns:
+  - {fileID: 11400000, guid: 47e873fdcab809a4daa0ba3dc29c6818, type: 2}
+  - {fileID: 11400000, guid: ee5a1cb5dae480b40bdfde29769f9a01, type: 2}
+  - {fileID: 11400000, guid: a64d9539480536744a7e779652cedb49, type: 2}
   aggroRange: 9
   attackRange: 1.4
   patrolRadius: 3

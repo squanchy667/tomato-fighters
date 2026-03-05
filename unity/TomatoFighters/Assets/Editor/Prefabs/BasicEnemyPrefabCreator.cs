@@ -86,7 +86,7 @@ namespace TomatoFighters.Editor.Prefabs
             data.pressureThreshold = 40f;
             data.stunDuration = 1.5f;
             data.invulnerabilityDuration = 0.8f;
-            data.knockbackResistance = 0.2f;
+            data.knockbackResistance = 0f;
             data.movementSpeed = 5.5f;
 
             // AI behavior
@@ -117,7 +117,7 @@ namespace TomatoFighters.Editor.Prefabs
             attack.attackId = "basic_slash";
             attack.attackName = "Basic Slash";
             attack.damageMultiplier = 0.6f;
-            attack.knockbackForce = new Vector2(2f, 0f);
+            attack.knockbackForce = new Vector2(4f, 0.5f);
             attack.launchForce = Vector2.zero;
             attack.hitboxId = "Punch";
             attack.hitboxStartFrame = 8;
@@ -143,7 +143,7 @@ namespace TomatoFighters.Editor.Prefabs
             attack.attackId = "basic_heavy";
             attack.attackName = "Basic Heavy Slam";
             attack.damageMultiplier = 1.2f;
-            attack.knockbackForce = new Vector2(4f, 0.5f);
+            attack.knockbackForce = new Vector2(7f, 1.5f);
             attack.launchForce = Vector2.zero;
             attack.hitboxId = "Punch";
             attack.hitboxStartFrame = 14;

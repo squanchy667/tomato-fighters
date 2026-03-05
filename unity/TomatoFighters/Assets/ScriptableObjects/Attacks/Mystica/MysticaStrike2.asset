@@ -15,7 +15,7 @@ MonoBehaviour:
   attackId: mystica_strike_2
   attackName: Magic Burst 2
   damageMultiplier: 0.8
-  knockbackForce: {x: 2, y: 0.3}
+  knockbackForce: {x: 4, y: 0.6}
   launchForce: {x: 0, y: 0}
   causesWallBounce: 0
   causesLaunch: 0
@@ -25,9 +25,13 @@ MonoBehaviour:
   hitboxActiveFrames: 4
   totalFrames: 18
   animationSpeed: 1
+  clashWindowStart: 0
+  clashWindowEnd: 0
   telegraphType: 0
   isOTGCapable: 0
   isAirAttack: 0
+  hasPunishWindow: 0
+  punishWindowDuration: 1
   hitEffectPrefab: {fileID: 0}
   swingSound: {fileID: 0}
   hitSound: {fileID: 0}

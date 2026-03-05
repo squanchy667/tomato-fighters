@@ -73,7 +73,7 @@ namespace TomatoFighters.Editor.Prefabs
 
             // -- BoxCollider2D (standing character proportions) --
             var col = EnsureComponent<BoxCollider2D>(root);
-            col.size = new Vector2(0.8f, 1.2f);
+            col.size = new Vector2(0.8f, 0.6f);
             col.offset = new Vector2(0f, 0.6f);
 
             // -- Sprite child (preserved if exists) --

@@ -176,10 +176,10 @@ namespace TomatoFighters.World
             // Use pre-calculated stun fill from attacker's stats (DD-1)
             AddStun(damage.stunFillAmount);
 
+            // State transition first (zeros velocity via Exit/Enter), then knockback
+            OnDamaged(damage);
             ApplyKnockback(damage.knockbackForce);
             ApplyLaunch(damage.launchForce);
-
-            OnDamaged(damage);
 
             if (_currentHealth <= 0f)
             {

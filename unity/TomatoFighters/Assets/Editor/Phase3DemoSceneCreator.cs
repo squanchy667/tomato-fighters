@@ -214,6 +214,7 @@ namespace TomatoFighters.Editor
 
             Physics2D.IgnoreLayerCollision(playerHitbox, enemyHurtbox, false);
             Physics2D.IgnoreLayerCollision(enemyHitbox, playerHurtbox, false);
+            Physics2D.IgnoreLayerCollision(playerHurtbox, enemyHurtbox, false); // Bodies block each other
             Physics2D.IgnoreLayerCollision(0, playerHurtbox, false);
             Physics2D.IgnoreLayerCollision(0, enemyHurtbox, false);
             Physics2D.IgnoreLayerCollision(playerHitbox, playerHurtbox, true);

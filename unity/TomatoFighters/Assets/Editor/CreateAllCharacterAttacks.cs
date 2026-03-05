@@ -44,7 +44,7 @@ namespace TomatoFighters.Editor
                 attackId           = "brutor_shield_bash_1",
                 attackName         = "Shield Bash 1",
                 damageMultiplier   = 0.8f,
-                knockbackForce     = new Vector2(2.5f, 0f),
+                knockbackForce     = new Vector2(5.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 4,
                 hitboxActiveFrames = 5,
@@ -60,7 +60,7 @@ namespace TomatoFighters.Editor
                 attackId           = "brutor_shield_bash_2",
                 attackName         = "Shield Bash 2",
                 damageMultiplier   = 0.9f,
-                knockbackForce     = new Vector2(3.0f, 0f),
+                knockbackForce     = new Vector2(6.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 4,
                 hitboxActiveFrames = 5,
@@ -76,7 +76,7 @@ namespace TomatoFighters.Editor
                 attackId           = "brutor_sweep",
                 attackName         = "Shield Sweep",
                 damageMultiplier   = 1.3f,
-                knockbackForce     = new Vector2(4.0f, 0.5f),
+                knockbackForce     = new Vector2(8.0f, 1.0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 5,
                 hitboxActiveFrames = 6,
@@ -93,7 +93,7 @@ namespace TomatoFighters.Editor
                 attackId           = "brutor_launcher",
                 attackName         = "Uppercut Launcher",
                 damageMultiplier   = 1.2f,
-                knockbackForce     = new Vector2(1.0f, 0f),
+                knockbackForce     = new Vector2(2.0f, 0.5f),
                 launchForce        = new Vector2(0f, 5.0f),
                 hitboxStartFrame   = 5,
                 hitboxActiveFrames = 5,
@@ -110,7 +110,7 @@ namespace TomatoFighters.Editor
                 attackId           = "brutor_launcher_slam",
                 attackName         = "Air Slam",
                 damageMultiplier   = 1.5f,
-                knockbackForce     = new Vector2(3.0f, -2.0f),
+                knockbackForce     = new Vector2(6.0f, -3.0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 6,
                 hitboxActiveFrames = 6,
@@ -127,7 +127,7 @@ namespace TomatoFighters.Editor
                 attackId           = "brutor_overhead_slam",
                 attackName         = "Overhead Slam",
                 damageMultiplier   = 1.2f,
-                knockbackForce     = new Vector2(2.0f, 0f),
+                knockbackForce     = new Vector2(4.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 6,
                 hitboxActiveFrames = 6,
@@ -144,7 +144,7 @@ namespace TomatoFighters.Editor
                 attackId           = "brutor_ground_pound",
                 attackName         = "Ground Pound",
                 damageMultiplier   = 1.5f,
-                knockbackForce     = new Vector2(5.0f, 1.0f),
+                knockbackForce     = new Vector2(10.0f, 2.0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 7,
                 hitboxActiveFrames = 7,
@@ -172,7 +172,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_slash_1",
                 attackName         = "Quick Slash 1",
                 damageMultiplier   = 0.6f,
-                knockbackForce     = new Vector2(1.0f, 0f),
+                knockbackForce     = new Vector2(2.5f, 0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 2,
                 hitboxActiveFrames = 3,
@@ -188,7 +188,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_slash_2",
                 attackName         = "Quick Slash 2",
                 damageMultiplier   = 0.7f,
-                knockbackForce     = new Vector2(1.0f, 0f),
+                knockbackForce     = new Vector2(2.5f, 0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 2,
                 hitboxActiveFrames = 3,
@@ -204,7 +204,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_slash_3",
                 attackName         = "Cross Slash",
                 damageMultiplier   = 0.8f,
-                knockbackForce     = new Vector2(1.5f, 0f),
+                knockbackForce     = new Vector2(3.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 2,
                 hitboxActiveFrames = 4,
@@ -220,7 +220,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_spin_finisher",
                 attackName         = "Spinning Finisher",
                 damageMultiplier   = 1.2f,
-                knockbackForce     = new Vector2(2.0f, 1.0f),
+                knockbackForce     = new Vector2(4.0f, 2.0f),
                 launchForce        = new Vector2(0f, 3.0f),
                 hitboxStartFrame   = 3,
                 hitboxActiveFrames = 5,
@@ -237,7 +237,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_lunge",
                 attackName         = "Lunge Thrust",
                 damageMultiplier   = 1.0f,
-                knockbackForce     = new Vector2(3.0f, 0f),
+                knockbackForce     = new Vector2(6.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 3,
                 hitboxActiveFrames = 4,
@@ -254,7 +254,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_heavy_slash",
                 attackName         = "Heavy Slash",
                 damageMultiplier   = 1.0f,
-                knockbackForce     = new Vector2(2.0f, 0f),
+                knockbackForce     = new Vector2(4.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 3,
                 hitboxActiveFrames = 4,
@@ -270,7 +270,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_lunge_finisher",
                 attackName         = "Piercing Lunge",
                 damageMultiplier   = 1.4f,
-                knockbackForce     = new Vector2(4.0f, 0f),
+                knockbackForce     = new Vector2(8.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 4,
                 hitboxActiveFrames = 5,
@@ -287,7 +287,7 @@ namespace TomatoFighters.Editor
                 attackId           = "slasher_quick_slash",
                 attackName         = "Quick Re-entry Slash",
                 damageMultiplier   = 0.7f,
-                knockbackForce     = new Vector2(1.0f, 0f),
+                knockbackForce     = new Vector2(2.5f, 0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 2,
                 hitboxActiveFrames = 3,
@@ -315,7 +315,7 @@ namespace TomatoFighters.Editor
                 attackId           = "viper_shot_1",
                 attackName         = "Quick Shot 1",
                 damageMultiplier   = 0.7f,
-                knockbackForce     = new Vector2(0.5f, 0f),
+                knockbackForce     = new Vector2(1.0f, 0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 2,
                 hitboxActiveFrames = 3,
@@ -331,7 +331,7 @@ namespace TomatoFighters.Editor
                 attackId           = "viper_shot_2",
                 attackName         = "Quick Shot 2",
                 damageMultiplier   = 0.8f,
-                knockbackForce     = new Vector2(0.5f, 0f),
+                knockbackForce     = new Vector2(1.0f, 0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 2,
                 hitboxActiveFrames = 3,
@@ -347,7 +347,7 @@ namespace TomatoFighters.Editor
                 attackId           = "viper_rapid_burst",
                 attackName         = "Rapid Burst",
                 damageMultiplier   = 1.1f,
-                knockbackForce     = new Vector2(1.0f, 0.5f),
+                knockbackForce     = new Vector2(2.0f, 1.0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 3,
                 hitboxActiveFrames = 5,
@@ -363,7 +363,7 @@ namespace TomatoFighters.Editor
                 attackId           = "viper_quick_charged",
                 attackName         = "Quick Charged Shot",
                 damageMultiplier   = 1.2f,
-                knockbackForce     = new Vector2(2.0f, 0f),
+                knockbackForce     = new Vector2(4.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 3,
                 hitboxActiveFrames = 4,
@@ -379,7 +379,7 @@ namespace TomatoFighters.Editor
                 attackId           = "viper_charged_shot",
                 attackName         = "Charged Shot",
                 damageMultiplier   = 1.2f,
-                knockbackForce     = new Vector2(2.0f, 0f),
+                knockbackForce     = new Vector2(4.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 5,
                 hitboxActiveFrames = 5,
@@ -395,7 +395,7 @@ namespace TomatoFighters.Editor
                 attackId           = "viper_piercing_shot",
                 attackName         = "Piercing Shot",
                 damageMultiplier   = 1.5f,
-                knockbackForce     = new Vector2(1.5f, 0f),
+                knockbackForce     = new Vector2(3.0f, 0.5f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 5,
                 hitboxActiveFrames = 6,
@@ -423,7 +423,7 @@ namespace TomatoFighters.Editor
                 attackId           = "mystica_empowered_bolt",
                 attackName         = "Empowered Arcane Bolt",
                 damageMultiplier   = 1.6f,
-                knockbackForce     = new Vector2(3.0f, 1.5f),
+                knockbackForce     = new Vector2(6.0f, 3.0f),
                 launchForce        = Vector2.zero,
                 hitboxStartFrame   = 7,
                 hitboxActiveFrames = 7,
@@ -465,13 +465,7 @@ namespace TomatoFighters.Editor
             string path = $"{folder}/{p.fileName}.asset";
 
             var existing = AssetDatabase.LoadAssetAtPath<AttackData>(path);
-            if (existing != null)
-            {
-                Debug.Log($"[CreateAllCharacterAttacks] {p.fileName} already exists, skipping.");
-                return 0;
-            }
-
-            var attack = ScriptableObject.CreateInstance<AttackData>();
+            var attack = existing != null ? existing : ScriptableObject.CreateInstance<AttackData>();
 
             attack.attackId           = p.attackId;
             attack.attackName         = p.attackName;
@@ -490,8 +484,11 @@ namespace TomatoFighters.Editor
             attack.clashWindowStart   = p.clashWindowStart;
             attack.clashWindowEnd     = p.clashWindowEnd;
 
-            AssetDatabase.CreateAsset(attack, path);
-            Debug.Log($"[CreateAllCharacterAttacks] Created {p.fileName} at {path}");
+            if (existing == null)
+                AssetDatabase.CreateAsset(attack, path);
+            else
+                EditorUtility.SetDirty(attack);
+
             return 1;
         }
 

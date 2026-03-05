@@ -15,7 +15,7 @@ MonoBehaviour:
   attackId: slasher_spin_finisher
   attackName: Spinning Finisher
   damageMultiplier: 1.2
-  knockbackForce: {x: 2, y: 1}
+  knockbackForce: {x: 4, y: 2}
   launchForce: {x: 0, y: 3}
   causesWallBounce: 0
   causesLaunch: 1
@@ -30,6 +30,8 @@ MonoBehaviour:
   telegraphType: 0
   isOTGCapable: 0
   isAirAttack: 0
+  hasPunishWindow: 0
+  punishWindowDuration: 1
   hitEffectPrefab: {fileID: 0}
   swingSound: {fileID: 0}
   hitSound: {fileID: 0}

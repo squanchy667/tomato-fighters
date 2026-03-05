@@ -279,6 +279,8 @@ GameObject:
   - component: {fileID: 5200029461505423277}
   - component: {fileID: 5819549645632184529}
   - component: {fileID: 6747074751074180475}
+  - component: {fileID: 5335481740286632419}
+  - component: {fileID: 8126061181365646630}
   m_Layer: 7
   m_Name: BasicMeleeEnemy
   m_TagString: Untagged
@@ -408,3 +410,28 @@ MonoBehaviour:
   healthBarPrefab: {fileID: 3507493924251747858, guid: 491a2520a41c54e7bb7abac10989835b, type: 3}
   healthBarOffset: {x: 0, y: 1.2, z: 0}
   defenseProviderComponent: {fileID: 0}
+--- !u!114 &5335481740286632419
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728791048165372856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: afa2b0249f1d645459b83566217b50fb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8126061181365646630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6728791048165372856}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2e000df4588cf24fb23dd6b76fb3371, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _sprite: {fileID: 7709405614441379108}
