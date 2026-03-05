@@ -102,6 +102,17 @@ namespace TomatoFighters.Shared.Data
         [Tooltip("Can be used while airborne.")]
         public bool isAirAttack;
 
+        // ── Punish Window ────────────────────────────────────────────────
+
+        [Header("Punish Window")]
+
+        [Tooltip("If true, the attacker enters a vulnerable punish state after this attack completes.")]
+        public bool hasPunishWindow;
+
+        [Tooltip("How long the attacker is vulnerable after this attack (seconds). Only used if hasPunishWindow is true.")]
+        [Range(0f, 5f)]
+        public float punishWindowDuration = 1.0f;
+
         // ── Effects (Phase 1: nullable) ─────────────────────────────────
 
         [Header("Effects")]

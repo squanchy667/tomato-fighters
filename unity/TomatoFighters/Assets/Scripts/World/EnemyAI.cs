@@ -98,6 +98,35 @@ namespace TomatoFighters.World
         /// <summary>Whether the enemy is currently performing an Unstoppable attack (super armor).</summary>
         public bool IsPerformingUnstoppable => _isPerformingUnstoppable;
 
+        // ── Attack Pool Override (for BossAI phase swaps) ──────────────────
+
+        private AttackData[] _attackPoolOverride;
+        private float _tempoMultiplier = 1f;
+
+        /// <summary>
+        /// Returns the active attack pool. If BossAI has set an override, returns that;
+        /// otherwise returns EnemyData.attacks[].
+        /// </summary>
+        public AttackData[] GetAvailableAttacks()
+        {
+            return _attackPoolOverride ?? _data.attacks;
+        }
+
+        /// <summary>Overrides the attack pool. Pass null to revert to EnemyData.attacks[].</summary>
+        public void SetAttackPool(AttackData[] attacks)
+        {
+            _attackPoolOverride = attacks;
+        }
+
+        /// <summary>Multiplier on attack cooldown. Higher = faster tempo. Default 1.0.</summary>
+        public float TempoMultiplier => _tempoMultiplier;
+
+        /// <summary>Sets the tempo multiplier. Used by BossAI on phase transitions.</summary>
+        public void SetTempoMultiplier(float multiplier)
+        {
+            _tempoMultiplier = Mathf.Max(0.1f, multiplier);
+        }
+
         // ── Pattern Selection ───────────────────────────────────────────────
 
         private readonly Dictionary<EnemyAttackPattern, float> _patternCooldowns = new();

@@ -88,6 +88,15 @@ namespace TomatoFighters.World
         /// <inheritdoc/>
         public bool IsInvulnerable => _isInvulnerable;
 
+        /// <summary>
+        /// Allows external systems (e.g. BossPhaseTransitionState) to toggle invulnerability.
+        /// Does not affect the stun-recovery blink — that uses its own internal flow.
+        /// </summary>
+        public void SetInvulnerableExternal(bool invulnerable)
+        {
+            _isInvulnerable = invulnerable;
+        }
+
         // ── IAttacker (virtual stubs) ─────────────────────────────────────
 
         /// <inheritdoc/>

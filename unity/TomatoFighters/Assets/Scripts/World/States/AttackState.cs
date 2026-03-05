@@ -34,8 +34,8 @@ namespace TomatoFighters.World.States
                 return;
             }
 
-            // Fallback: single random attack from attacks[]
-            var attacks = Context.Data.attacks;
+            // Fallback: single random attack from available pool (supports BossAI override)
+            var attacks = Context.GetAvailableAttacks();
             if (attacks == null || attacks.Length == 0)
             {
                 Debug.LogWarning("[AttackState] No attacks or patterns configured.", Context);
@@ -90,10 +90,19 @@ namespace TomatoFighters.World.States
                 yield return ExecuteAttack(step.attack);
 
                 if (ShouldAbort()) yield break;
+
+                // Last step with punish window — transition to punish state
+                bool isLastStep = i == pattern.steps.Length - 1;
+                if (isLastStep && step.attack.hasPunishWindow && step.attack.punishWindowDuration > 0f)
+                {
+                    Context.TransitionTo(new BossPunishState(Context, step.attack.punishWindowDuration));
+                    yield break;
+                }
             }
 
-            // Cooldown after full pattern
-            yield return WaitWithAbortCheck(Context.Data.attackCooldown);
+            // Cooldown after full pattern (tempo multiplier speeds up recovery)
+            float cooldown = Context.Data.attackCooldown / Context.TempoMultiplier;
+            yield return WaitWithAbortCheck(cooldown);
             _attackFinished = true;
         }
 
@@ -101,8 +110,16 @@ namespace TomatoFighters.World.States
         {
             yield return ExecuteAttack(attack);
 
-            // Cooldown before next action
-            yield return WaitWithAbortCheck(Context.Data.attackCooldown);
+            // Check punish window — boss enters vulnerable state after big attacks
+            if (attack.hasPunishWindow && attack.punishWindowDuration > 0f)
+            {
+                Context.TransitionTo(new BossPunishState(Context, attack.punishWindowDuration));
+                yield break;
+            }
+
+            // Cooldown before next action (tempo multiplier speeds up recovery)
+            float cooldown = Context.Data.attackCooldown / Context.TempoMultiplier;
+            yield return WaitWithAbortCheck(cooldown);
             _attackFinished = true;
         }
 
