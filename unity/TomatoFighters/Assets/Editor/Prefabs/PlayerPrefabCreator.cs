@@ -2,7 +2,9 @@ using TomatoFighters.Characters;
 using TomatoFighters.Characters.Passives;
 using TomatoFighters.Combat;
 using TomatoFighters.Shared.Components;
+using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
+using TomatoFighters.Shared.Events;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -122,6 +124,11 @@ namespace TomatoFighters.Editor.Prefabs
             comboSO.FindProperty("characterType").enumValueIndex = (int)config.characterType;
             comboSO.FindProperty("animator").objectReferenceValue = animator;
             comboSO.FindProperty("motor").objectReferenceValue = motor;
+            // Wire OnComboHitConfirmed SO event channel
+            var onComboHit = AssetDatabase.LoadAssetAtPath<IntEventChannel>(
+                "Assets/ScriptableObjects/Events/OnComboHitConfirmed.asset");
+            if (onComboHit != null)
+                comboSO.FindProperty("onComboHitConfirmed").objectReferenceValue = onComboHit;
             comboSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- ComboDebugUI --
@@ -174,18 +181,30 @@ namespace TomatoFighters.Editor.Prefabs
             var playerDamageable = EnsureComponent<PlayerDamageable>(root);
             var pdSO = new SerializedObject(playerDamageable);
             pdSO.FindProperty("defenseSystem").objectReferenceValue = defenseSystem;
+            // Wire OnPlayerHealthChanged SO event channel (baked into prefab for runtime use)
+            var onHealthChanged = AssetDatabase.LoadAssetAtPath<FloatEventChannel>(
+                "Assets/ScriptableObjects/Events/OnPlayerHealthChanged.asset");
+            if (onHealthChanged != null)
+                pdSO.FindProperty("onHealthChanged").objectReferenceValue = onHealthChanged;
             pdSO.ApplyModifiedPropertiesWithoutUndo();
+
+            // -- PlayerManaTracker (runtime mana + HUD event) --
+            var manaTracker = EnsureComponent<PlayerManaTracker>(root);
+            var mtSO = new SerializedObject(manaTracker);
+            var onManaChanged = AssetDatabase.LoadAssetAtPath<FloatEventChannel>(
+                "Assets/ScriptableObjects/Events/OnPlayerManaChanged.asset");
+            if (onManaChanged != null)
+                mtSO.FindProperty("onManaChanged").objectReferenceValue = onManaChanged;
+            // Wire CharacterBaseStats for mana values
+            string statsName = config.characterType.ToString() + "Stats";
+            var baseStats = AssetDatabase.LoadAssetAtPath<CharacterBaseStats>(
+                $"Assets/ScriptableObjects/Characters/{statsName}.asset");
+            if (baseStats != null)
+                mtSO.FindProperty("baseStats").objectReferenceValue = baseStats;
+            mtSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- HitboxManager.ownerDefenseSystem --
             // (Deferred to after HitboxManager is created below)
-
-            // -- DebugHealthBar (temp HP bar, replaced by T025 HUD) --
-            var healthBar = EnsureComponent<DebugHealthBar>(root);
-            var hbSO = new SerializedObject(healthBar);
-            var fillColorProp = hbSO.FindProperty("fillColor");
-            if (fillColorProp != null)
-                fillColorProp.colorValue = new Color(0.2f, 0.8f, 0.3f); // Green for player
-            hbSO.ApplyModifiedPropertiesWithoutUndo();
 
             // -- Hitbox children from config --
             CreateHitboxChildren(root, config);
