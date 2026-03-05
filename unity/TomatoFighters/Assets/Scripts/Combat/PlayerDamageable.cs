@@ -1,6 +1,7 @@
 using System.Collections;
 using TomatoFighters.Shared.Data;
 using TomatoFighters.Shared.Enums;
+using TomatoFighters.Shared.Events;
 using TomatoFighters.Shared.Interfaces;
 using UnityEngine;
 
@@ -20,6 +21,11 @@ namespace TomatoFighters.Combat
 
         [Header("Defense")]
         [SerializeField] private DefenseSystem defenseSystem;
+
+        [Header("HUD Events")]
+        [SerializeField]
+        [Tooltip("Fires with normalized health (0-1) on every health change. HUD subscribes.")]
+        private FloatEventChannel onHealthChanged;
 
         [Header("Hit Flash")]
         [SerializeField] private Color flashColor = Color.red;
@@ -48,6 +54,7 @@ namespace TomatoFighters.Combat
             // Use child SpriteRenderer (the visible one) — root SR has no sprite assigned
             _sprite = GetComponentInChildren<SpriteRenderer>();
             _currentHealth = maxHealth;
+            FireHealthChanged();
         }
 
         /// <inheritdoc/>
@@ -83,6 +90,8 @@ namespace TomatoFighters.Combat
                 _currentHealth = 0f;
                 Debug.Log("[PlayerDamageable] Player would be dead (stub — no death logic yet).");
             }
+
+            FireHealthChanged();
         }
 
         /// <inheritdoc/>
@@ -103,6 +112,14 @@ namespace TomatoFighters.Combat
         {
             if (force == Vector2.zero) return;
             _rb.AddForce(force, ForceMode2D.Impulse);
+        }
+
+        private void FireHealthChanged()
+        {
+            if (onHealthChanged != null && maxHealth > 0f)
+            {
+                onHealthChanged.Raise(Mathf.Clamp01(_currentHealth / maxHealth));
+            }
         }
 
         private void Flash()
