@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 383c1ebdae25f0442a895956ebe11c88, type: 3}
+  m_Name: TemporalShockRitual
+  m_EditorClassIdentifier: 
+  ritualName: Temporal Shock
+  description: Echo the stun effect after a delay. Requires Lightning and Time rituals.
+  family: 1
+  category: 3
+  trigger: 5
+  effectId: Lightning_Time_TemporalShock
+  effectPrefab: {fileID: 0}
+  isTwin: 1
+  secondFamily: 5
+  level1:
+    baseValue: 25
+    maxStacks: 1
+    stackingMultiplier: 1.35
+    ritualPower: 1
+  level2:
+    baseValue: 37.5
+    maxStacks: 1
+    stackingMultiplier: 1.35
+    ritualPower: 1
+  level3:
+    baseValue: 50
+    maxStacks: 1
+    stackingMultiplier: 1.35
+    ritualPower: 1

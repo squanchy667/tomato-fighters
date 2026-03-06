@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 383c1ebdae25f0442a895956ebe11c88, type: 3}
+  m_Name: ThunderBurnRitual
+  m_EditorClassIdentifier: 
+  ritualName: Thunder Burn
+  description: Chain lightning that also applies burn DoT. Requires Fire and Lightning
+    rituals.
+  family: 0
+  category: 3
+  trigger: 0
+  effectId: Fire_Lightning_ThunderBurn
+  effectPrefab: {fileID: 0}
+  isTwin: 1
+  secondFamily: 1
+  level1:
+    baseValue: 12
+    maxStacks: 3
+    stackingMultiplier: 1.25
+    ritualPower: 1
+  level2:
+    baseValue: 18
+    maxStacks: 3
+    stackingMultiplier: 1.25
+    ritualPower: 1
+  level3:
+    baseValue: 24
+    maxStacks: 3
+    stackingMultiplier: 1.25
+    ritualPower: 1
