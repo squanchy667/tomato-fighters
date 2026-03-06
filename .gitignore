@@ -67,6 +67,9 @@ $RECYCLE.BIN/
 sysinfo.txt
 crashlytics-build.properties
 
+# Secrets
+.env
+
 # Gradle (Android builds)
 *.apk
 *.aab
