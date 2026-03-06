@@ -244,6 +244,15 @@ namespace TomatoFighters.Roguelite
             {
                 if (entry.data.trigger != trigger) continue;
 
+                // Twin activation gate (T047): require at least one regular ritual from each family.
+                // The Twin itself contributes +1 to both family counts, so >= 2 means
+                // "the Twin plus at least one regular ritual from that family."
+                if (entry.data.isTwin)
+                {
+                    if (GetFamilyCount(entry.data.family) < 2 || GetFamilyCount(entry.data.secondFamily) < 2)
+                        continue;
+                }
+
                 if (_handlers.TryGetValue(entry.data.effectId, out var handler))
                     handler(new RitualContext(entry, hitPosition));
                 else
@@ -304,6 +313,14 @@ namespace TomatoFighters.Roguelite
             _handlers["Necro_SoulHarvest"] = NecroSoulHarvestHandler;
             _handlers["Necro_DeathBlow"]  = NecroDeathBlowHandler;
             _handlers["Necro_BoneShield"] = NecroBoneShieldHandler;
+
+            // Twin rituals (T047)
+            _handlers["Fire_Lightning_ThunderBurn"]    = TwinThunderBurnHandler;
+            _handlers["Fire_Thorn_BurningBrambles"]    = TwinBurningBramblesHandler;
+            _handlers["Water_Gale_Monsoon"]            = TwinMonsoonHandler;
+            _handlers["Lightning_Time_TemporalShock"]  = TwinTemporalShockHandler;
+            _handlers["Necro_Cosmic_VoidHarvest"]      = TwinVoidHarvestHandler;
+            _handlers["Thorn_Water_CoralBarrier"]      = TwinCoralBarrierHandler;
         }
 
         // ── Fire handlers ─────────────────────────────────────────────────────
@@ -529,6 +546,49 @@ namespace TomatoFighters.Roguelite
         private void NecroBoneShieldHandler(RitualContext ctx)
         {
             // TODO [Phase 4+]: Spawn bone minion on deflect that absorbs damage.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        // ── Twin handlers (T047) ───────────────────────────────────────────────
+
+        private void TwinThunderBurnHandler(RitualContext ctx)
+        {
+            // TODO [Phase 5+]: Chain lightning with burn DoT — combines Fire burn + Lightning chain.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void TwinBurningBramblesHandler(RitualContext ctx)
+        {
+            // TODO [Phase 5+]: Thorns reflect fire damage back to attacker on deflect.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void TwinMonsoonHandler(RitualContext ctx)
+        {
+            // TODO [Phase 5+]: Leave a slowing rain zone along dash path.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void TwinTemporalShockHandler(RitualContext ctx)
+        {
+            // TODO [Phase 5+]: Echo the stun effect after a delay on finisher.
+            SpawnVfx(ctx);
+        }
+
+        private void TwinVoidHarvestHandler(RitualContext ctx)
+        {
+            // TODO [Phase 5+]: Kill explosions that heal the player.
+            SpawnVfx(ctx);
+            ctx.entry.AddStack();
+        }
+
+        private void TwinCoralBarrierHandler(RitualContext ctx)
+        {
+            // TODO [Phase 5+]: Reactive thorns + damage reduction on taking damage.
             SpawnVfx(ctx);
             ctx.entry.AddStack();
         }
