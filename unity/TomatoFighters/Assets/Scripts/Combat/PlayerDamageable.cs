@@ -94,6 +94,21 @@ namespace TomatoFighters.Combat
             FireHealthChanged();
         }
 
+        /// <summary>
+        /// Restore health, clamped to max. Used by healing abilities (MendingAura, RallyingPresence).
+        /// </summary>
+        public void Heal(float amount)
+        {
+            if (amount <= 0f) return;
+            float prev = _currentHealth;
+            _currentHealth = Mathf.Min(_currentHealth + amount, maxHealth);
+            if (_currentHealth > prev)
+            {
+                FireHealthChanged();
+                Debug.Log($"[PlayerDamageable] Healed {_currentHealth - prev:F1}. HP: {_currentHealth:F1}/{maxHealth}");
+            }
+        }
+
         /// <inheritdoc/>
         public void AddStun(float amount)
         {
