@@ -19,10 +19,15 @@ namespace TomatoFighters.Characters.Abilities.Warden
         private const float COOLDOWN = 8f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
         private float _cooldownRemaining;
         private bool _isActive;
 
-        public Provoke(PathAbilityContext ctx) { _ctx = ctx; }
+        public Provoke(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Active;
@@ -51,6 +56,12 @@ namespace TomatoFighters.Characters.Abilities.Warden
                     tauntedCount++;
                 }
             }
+
+            // Burst AoE VFX — orange radial pulse
+            if (_vfxPrefab != null)
+                Object.Destroy(
+                    Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform.position, Quaternion.identity),
+                    0.5f);
 
             _cooldownRemaining = COOLDOWN;
             _isActive = true;

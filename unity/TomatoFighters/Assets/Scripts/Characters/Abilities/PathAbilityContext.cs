@@ -34,5 +34,12 @@ namespace TomatoFighters.Characters.Abilities
 
         /// <summary>Layer mask for enemy hurtbox detection (Provoke AoE, etc.).</summary>
         public LayerMask EnemyLayer { get; set; }
+
+        /// <summary>
+        /// VFX prefab for the ability being created. Set by PathAbilityExecutor
+        /// before each AbilityFactory.Create() call. Abilities should copy this
+        /// to a local field in their constructor since the context is shared.
+        /// </summary>
+        public GameObject VfxPrefab { get; set; }
     }
 }

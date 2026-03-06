@@ -30,6 +30,10 @@ namespace TomatoFighters.Characters
         [Tooltip("Component implementing IPathProvider (e.g. PathSystem).")]
         [SerializeField] private Component pathProviderComponent;
 
+        [Header("VFX")]
+        [Tooltip("Maps abilityId → VFX prefab. Created by AbilityVfxCreator.")]
+        [SerializeField] private AbilityVfxLookup vfxLookup;
+
         [Header("Targeting")]
         [SerializeField] private LayerMask enemyLayer;
 
@@ -190,13 +194,13 @@ namespace TomatoFighters.Characters
 
             if (mainPath != null)
             {
-                _mainAbility = AbilityFactory.Create(mainPath.tier1AbilityId, _context);
+                _mainAbility = CreateAbilityWithVfx(mainPath.tier1AbilityId);
                 RegisterModifier(_mainAbility);
             }
 
             if (secondaryPath != null)
             {
-                _secondaryAbility = AbilityFactory.Create(secondaryPath.tier1AbilityId, _context);
+                _secondaryAbility = CreateAbilityWithVfx(secondaryPath.tier1AbilityId);
                 RegisterModifier(_secondaryAbility);
             }
 
@@ -225,7 +229,7 @@ namespace TomatoFighters.Characters
             string abilityId = path.GetAbilityIdForTier(newTier);
             if (string.IsNullOrEmpty(abilityId)) return;
 
-            var ability = AbilityFactory.Create(abilityId, _context);
+            var ability = CreateAbilityWithVfx(abilityId);
             if (ability == null) return;
 
             // Store in the appropriate slot
@@ -250,7 +254,7 @@ namespace TomatoFighters.Characters
         /// </summary>
         public void DebugSetAbility(string abilityId, bool isMain)
         {
-            var ability = AbilityFactory.Create(abilityId, _context);
+            var ability = CreateAbilityWithVfx(abilityId);
             if (ability == null) return;
 
             if (isMain)
@@ -266,6 +270,16 @@ namespace TomatoFighters.Characters
 
             RegisterModifier(ability);
             TryAutoActivatePassive(ability);
+        }
+
+        /// <summary>
+        /// Sets the context VfxPrefab from the lookup before creating the ability,
+        /// so the ability constructor can capture its own VFX reference.
+        /// </summary>
+        private IPathAbility CreateAbilityWithVfx(string abilityId)
+        {
+            _context.VfxPrefab = vfxLookup != null ? vfxLookup.GetVfxPrefab(abilityId) : null;
+            return AbilityFactory.Create(abilityId, _context);
         }
 
         private void TryAutoActivatePassive(IPathAbility ability)

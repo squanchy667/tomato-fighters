@@ -16,9 +16,15 @@ namespace TomatoFighters.Characters.Abilities.Bulwark
         private const float DAMAGE_REDUCTION = 0.5f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
+        private GameObject _activeVfx;
         private bool _isActive;
 
-        public IronGuard(PathAbilityContext ctx) { _ctx = ctx; }
+        public IronGuard(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Toggle;
@@ -30,6 +36,11 @@ namespace TomatoFighters.Characters.Abilities.Bulwark
         public bool TryActivate()
         {
             _isActive = true;
+
+            // Sustained aura VFX — blue-orange shield glow, parented to player
+            if (_vfxPrefab != null)
+                _activeVfx = Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform);
+
             Debug.Log("[IronGuard] Stance activated — 50% move speed, 50% DR");
             return true;
         }
@@ -43,6 +54,8 @@ namespace TomatoFighters.Characters.Abilities.Bulwark
         public void Cleanup()
         {
             _isActive = false;
+            if (_activeVfx != null)
+                Object.Destroy(_activeVfx);
             Debug.Log("[IronGuard] Stance deactivated");
         }
 

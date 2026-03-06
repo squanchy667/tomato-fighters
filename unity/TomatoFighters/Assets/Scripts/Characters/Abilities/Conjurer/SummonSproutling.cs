@@ -20,6 +20,7 @@ namespace TomatoFighters.Characters.Abilities.Conjurer
         private const string PREFAB_PATH = "Sproutling";
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
         private readonly List<GameObject> _activeSproutlings = new();
         private float _cooldownRemaining;
         private GameObject _prefab;
@@ -27,6 +28,7 @@ namespace TomatoFighters.Characters.Abilities.Conjurer
         public SummonSproutling(PathAbilityContext ctx)
         {
             _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
             _prefab = Resources.Load<GameObject>(PREFAB_PATH);
         }
 
@@ -76,6 +78,12 @@ namespace TomatoFighters.Characters.Abilities.Conjurer
                 Debug.LogWarning("[SummonSproutling] Sproutling prefab not in Resources. " +
                     "Copy from Assets/Prefabs/Companions/ to Assets/Resources/.");
             }
+
+            // Spawn burst VFX — green leafy burst at sproutling spawn position
+            if (_vfxPrefab != null)
+                Object.Destroy(
+                    Object.Instantiate(_vfxPrefab, spawnPos, Quaternion.identity),
+                    0.5f);
 
             _activeSproutlings.Add(sproutGO);
             _cooldownRemaining = COOLDOWN;

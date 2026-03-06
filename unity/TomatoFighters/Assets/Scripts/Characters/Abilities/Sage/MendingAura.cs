@@ -16,9 +16,15 @@ namespace TomatoFighters.Characters.Abilities.Sage
         private const float HEAL_PERCENT_PER_SECOND = 0.03f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
+        private GameObject _activeVfx;
         private bool _isActive;
 
-        public MendingAura(PathAbilityContext ctx) { _ctx = ctx; }
+        public MendingAura(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Toggle;
@@ -37,6 +43,11 @@ namespace TomatoFighters.Characters.Abilities.Sage
             }
 
             _isActive = true;
+
+            // Sustained aura VFX — green heal particles, parented to player
+            if (_vfxPrefab != null)
+                _activeVfx = Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform);
+
             Debug.Log("[MendingAura] Aura activated — healing self, draining mana");
             return true;
         }
@@ -67,6 +78,8 @@ namespace TomatoFighters.Characters.Abilities.Sage
         public void Cleanup()
         {
             _isActive = false;
+            if (_activeVfx != null)
+                Object.Destroy(_activeVfx);
         }
     }
 }

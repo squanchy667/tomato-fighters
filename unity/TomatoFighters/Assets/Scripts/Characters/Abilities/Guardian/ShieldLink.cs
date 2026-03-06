@@ -14,10 +14,17 @@ namespace TomatoFighters.Characters.Abilities.Guardian
     {
         private const string ID = "Guardian_ShieldLink";
         private const float COOLDOWN = 12f;
+        private const float VFX_DURATION = 3f; // placeholder until co-op targeting
 
+        private readonly GameObject _vfxPrefab;
+        private readonly PathAbilityContext _ctx;
         private float _cooldownRemaining;
 
-        public ShieldLink(PathAbilityContext ctx) { }
+        public ShieldLink(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Active;
@@ -28,7 +35,12 @@ namespace TomatoFighters.Characters.Abilities.Guardian
 
         public bool TryActivate()
         {
-            // No meaningful solo effect — stub for co-op system
+            // Placeholder glow on player — no ally target system yet
+            if (_vfxPrefab != null)
+                Object.Destroy(
+                    Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform.position, Quaternion.identity),
+                    VFX_DURATION);
+
             _cooldownRemaining = COOLDOWN;
             Debug.Log("[ShieldLink] Activated (no effect in solo — awaiting co-op T051)");
             return true;

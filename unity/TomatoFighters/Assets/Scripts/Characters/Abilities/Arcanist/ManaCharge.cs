@@ -17,10 +17,18 @@ namespace TomatoFighters.Characters.Abilities.Arcanist
         private const float DR_WHILE_CHANNELING = 0.3f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
+        private GameObject _activeVfx;
+        private ParticleSystem _vfxParticleSystem;
+        private float _vfxBaseEmissionRate;
         private bool _isChanneling;
         private float _chargePercent;
 
-        public ManaCharge(PathAbilityContext ctx) { _ctx = ctx; }
+        public ManaCharge(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Channeled;
@@ -37,6 +45,20 @@ namespace TomatoFighters.Characters.Abilities.Arcanist
             _isChanneling = true;
             _chargePercent = 0f;
 
+            // Sustained charge VFX — purple energy spiral, parented to player
+            if (_vfxPrefab != null)
+            {
+                _activeVfx = Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform);
+                _vfxParticleSystem = _activeVfx.GetComponent<ParticleSystem>();
+                if (_vfxParticleSystem != null)
+                {
+                    var emission = _vfxParticleSystem.emission;
+                    _vfxBaseEmissionRate = emission.rateOverTime.constant;
+                    // Start at minimal emission — scales with charge
+                    emission.rateOverTime = _vfxBaseEmissionRate * 0.1f;
+                }
+            }
+
             // Lock movement while channeling
             if (_ctx.Motor != null)
                 _ctx.Motor.SetAttackLock(true);
@@ -50,6 +72,13 @@ namespace TomatoFighters.Characters.Abilities.Arcanist
             if (!_isChanneling) return;
 
             _chargePercent = Mathf.Min(_chargePercent + CHARGE_RATE * deltaTime, 100f);
+
+            // Scale VFX emission with charge percentage
+            if (_vfxParticleSystem != null)
+            {
+                var emission = _vfxParticleSystem.emission;
+                emission.rateOverTime = _vfxBaseEmissionRate * Mathf.Lerp(0.1f, 1f, _chargePercent / 100f);
+            }
 
             if (_chargePercent >= 100f)
             {
@@ -65,6 +94,13 @@ namespace TomatoFighters.Characters.Abilities.Arcanist
             if (_ctx.Motor != null)
                 _ctx.Motor.SetAttackLock(false);
 
+            // Destroy sustained VFX on release
+            if (_activeVfx != null)
+            {
+                Object.Destroy(_activeVfx);
+                _vfxParticleSystem = null;
+            }
+
             // Restore mana proportional to charge
             float manaRestored = _ctx.ManaTracker.MaxMana * (_chargePercent / 100f) * 0.5f;
             _ctx.ManaTracker.Restore(manaRestored);
@@ -79,6 +115,12 @@ namespace TomatoFighters.Characters.Abilities.Arcanist
         {
             if (_isChanneling && _ctx.Motor != null)
                 _ctx.Motor.SetAttackLock(false);
+
+            if (_activeVfx != null)
+            {
+                Object.Destroy(_activeVfx);
+                _vfxParticleSystem = null;
+            }
 
             _isChanneling = false;
             _chargePercent = 0f;

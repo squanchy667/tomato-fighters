@@ -15,11 +15,13 @@ namespace TomatoFighters.Characters.Abilities.Shadow
         private const float PASS_THROUGH_DAMAGE = 5f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
         private bool _isActive;
 
         public PhaseDash(PathAbilityContext ctx)
         {
             _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
         }
 
         public string AbilityId => ID;
@@ -32,6 +34,12 @@ namespace TomatoFighters.Characters.Abilities.Shadow
         public bool TryActivate()
         {
             _isActive = true;
+
+            // Trail VFX — purple afterimage burst at dash origin
+            if (_vfxPrefab != null)
+                Object.Destroy(
+                    Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform.position, Quaternion.identity),
+                    0.6f);
 
             // Subscribe to dash events for pass-through damage
             if (_ctx.Motor != null)

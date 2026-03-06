@@ -1,5 +1,6 @@
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Interfaces;
+using UnityEngine;
 
 namespace TomatoFighters.Characters.Abilities.Marksman
 {
@@ -12,9 +13,16 @@ namespace TomatoFighters.Characters.Abilities.Marksman
         private const string ID = "Marksman_PiercingShots";
         private const float PIERCE_FALLOFF = 0.8f;
 
+        private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
+        private GameObject _activeVfx;
         private bool _isActive;
 
-        public PiercingShots(PathAbilityContext ctx) { }
+        public PiercingShots(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Passive;
@@ -26,11 +34,22 @@ namespace TomatoFighters.Characters.Abilities.Marksman
         public bool TryActivate()
         {
             _isActive = true;
+
+            // Sustained passive indicator VFX — yellow arrow trail, parented to player
+            if (_vfxPrefab != null)
+                _activeVfx = Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform);
+
             return true;
         }
 
         public void Tick(float deltaTime) { }
-        public void Cleanup() { _isActive = false; }
+
+        public void Cleanup()
+        {
+            _isActive = false;
+            if (_activeVfx != null)
+                Object.Destroy(_activeVfx);
+        }
 
         // IPathAbilityModifier
         public int GetAdditionalTargetCount() => 0;

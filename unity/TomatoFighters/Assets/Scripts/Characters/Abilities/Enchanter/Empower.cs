@@ -18,11 +18,17 @@ namespace TomatoFighters.Characters.Abilities.Enchanter
         private const float COOLDOWN = 10f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
+        private GameObject _activeVfx;
         private float _cooldownRemaining;
         private float _buffTimeRemaining;
         private bool _isActive;
 
-        public Empower(PathAbilityContext ctx) { _ctx = ctx; }
+        public Empower(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Active;
@@ -42,6 +48,11 @@ namespace TomatoFighters.Characters.Abilities.Enchanter
             _isActive = true;
             _buffTimeRemaining = BUFF_DURATION;
             _cooldownRemaining = COOLDOWN;
+
+            // Sustained aura VFX — cyan/teal buff glow, parented to player
+            if (_vfxPrefab != null)
+                _activeVfx = Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform);
+
             Debug.Log($"[Empower] Self-buff active — +{ATK_BONUS * 100}% ATK, +{SPD_BONUS * 100}% SPD for {BUFF_DURATION}s");
             return true;
         }
@@ -57,6 +68,8 @@ namespace TomatoFighters.Characters.Abilities.Enchanter
                 if (_buffTimeRemaining <= 0f)
                 {
                     _isActive = false;
+                    if (_activeVfx != null)
+                        Object.Destroy(_activeVfx);
                     Debug.Log("[Empower] Buff expired");
                 }
             }
@@ -67,6 +80,8 @@ namespace TomatoFighters.Characters.Abilities.Enchanter
             _isActive = false;
             _buffTimeRemaining = 0f;
             _cooldownRemaining = 0f;
+            if (_activeVfx != null)
+                Object.Destroy(_activeVfx);
         }
     }
 }

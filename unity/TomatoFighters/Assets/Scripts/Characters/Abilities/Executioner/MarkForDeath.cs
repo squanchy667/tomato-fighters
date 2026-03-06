@@ -19,9 +19,14 @@ namespace TomatoFighters.Characters.Abilities.Executioner
         private const float COOLDOWN = 10f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
         private float _cooldownRemaining;
 
-        public MarkForDeath(PathAbilityContext ctx) { _ctx = ctx; }
+        public MarkForDeath(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Active;
@@ -69,6 +74,12 @@ namespace TomatoFighters.Characters.Abilities.Executioner
 
             statusEffectable.AddEffect(new StatusEffect(
                 StatusEffectType.Mark, MARK_DURATION, MARK_BONUS, _ctx.PlayerTransform));
+
+            // Target-placed VFX — red pulsing marker on the marked enemy
+            if (_vfxPrefab != null)
+                Object.Destroy(
+                    Object.Instantiate(_vfxPrefab, bestTarget.transform.position, Quaternion.identity),
+                    MARK_DURATION);
 
             _cooldownRemaining = COOLDOWN;
             Debug.Log($"[MarkForDeath] Marked {bestTarget.name} for +{MARK_BONUS * 100}% damage, {MARK_DURATION}s");

@@ -1,5 +1,6 @@
 using TomatoFighters.Shared.Enums;
 using TomatoFighters.Shared.Interfaces;
+using UnityEngine;
 
 namespace TomatoFighters.Characters.Abilities.Reaper
 {
@@ -13,9 +14,15 @@ namespace TomatoFighters.Characters.Abilities.Reaper
         private const int ADDITIONAL_TARGETS = 2;
         private const float ADDITIONAL_TARGET_SCALE = 0.6f;
 
+        private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
         private bool _isActive;
 
-        public CleavingStrikes(PathAbilityContext ctx) { }
+        public CleavingStrikes(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Passive;
@@ -27,6 +34,13 @@ namespace TomatoFighters.Characters.Abilities.Reaper
         public bool TryActivate()
         {
             _isActive = true;
+
+            // On-hit burst VFX — red arc/slash trail
+            if (_vfxPrefab != null)
+                Object.Destroy(
+                    Object.Instantiate(_vfxPrefab, _ctx.PlayerTransform.position, Quaternion.identity),
+                    0.3f);
+
             return true;
         }
 

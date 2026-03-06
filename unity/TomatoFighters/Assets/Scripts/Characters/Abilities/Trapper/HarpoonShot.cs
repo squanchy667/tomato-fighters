@@ -16,9 +16,14 @@ namespace TomatoFighters.Characters.Abilities.Trapper
         private const float COOLDOWN = 6f;
 
         private readonly PathAbilityContext _ctx;
+        private readonly GameObject _vfxPrefab;
         private float _cooldownRemaining;
 
-        public HarpoonShot(PathAbilityContext ctx) { _ctx = ctx; }
+        public HarpoonShot(PathAbilityContext ctx)
+        {
+            _ctx = ctx;
+            _vfxPrefab = ctx.VfxPrefab;
+        }
 
         public string AbilityId => ID;
         public AbilityActivationType ActivationType => AbilityActivationType.Active;
@@ -48,6 +53,12 @@ namespace TomatoFighters.Characters.Abilities.Trapper
             var harpoon = projectileGO.AddComponent<HarpoonProjectile>();
             harpoon.SetSource(_ctx.Motor != null ? _ctx.Motor.CharacterType : CharacterType.Viper);
             harpoon.Initialize(direction);
+
+            // Projectile trail VFX — yellow chain-link trail at launch point
+            if (_vfxPrefab != null)
+                Object.Destroy(
+                    Object.Instantiate(_vfxPrefab, spawnPos, Quaternion.identity),
+                    0.4f);
 
             _cooldownRemaining = COOLDOWN;
             Debug.Log($"[HarpoonShot] Fired harpoon {(facingRight ? "right" : "left")}");
