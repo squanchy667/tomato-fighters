@@ -31,11 +31,24 @@ namespace TomatoFighters.Editor
             CreateTimeFamily();
             CreateCosmicFamily();
             CreateNecroFamily();
+            CreateTwinRituals();
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
-            Debug.Log("[RitualDataCreator] Created 32 ritual assets (all 8 families).");
+            Debug.Log("[RitualDataCreator] Created 38 ritual assets (8 families + 6 twins).");
+        }
+
+        [MenuItem("TomatoFighters/Create Twin Ritual Assets")]
+        public static void CreateTwinRitualAssets()
+        {
+            EnsureFolder(ROOT);
+            CreateTwinRituals();
+
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Debug.Log("[RitualDataCreator] Created 6 Twin ritual assets.");
         }
 
         // ── Fire Family ───────────────────────────────────────────────────────
@@ -518,6 +531,92 @@ namespace TomatoFighters.Editor
             ));
         }
 
+        // ── Twin Rituals (T047) ───────────────────────────────────────────────
+
+        private static void CreateTwinRituals()
+        {
+            string folder = $"{ROOT}/Twins";
+            EnsureFolder(folder);
+
+            // Thunder Burn — Fire + Lightning, OnStrike
+            Save(folder, "ThunderBurnRitual", MakeTwin(
+                ritualName:   "Thunder Burn",
+                description:  "Chain lightning that also applies burn DoT. Requires Fire and Lightning rituals.",
+                family:       RitualFamily.Fire,
+                secondFamily: RitualFamily.Lightning,
+                trigger:      RitualTrigger.OnStrike,
+                effectId:     "Fire_Lightning_ThunderBurn",
+                l1: (baseValue: 12f, maxStacks: 3, stackMult: 1.25f, power: 1.0f),
+                l2: (baseValue: 18f, maxStacks: 3, stackMult: 1.25f, power: 1.0f),
+                l3: (baseValue: 24f, maxStacks: 3, stackMult: 1.25f, power: 1.0f)
+            ));
+
+            // Burning Brambles — Fire + Thorn, OnDeflect
+            Save(folder, "BurningBramblesRitual", MakeTwin(
+                ritualName:   "Burning Brambles",
+                description:  "Thorns reflect fire damage back to attackers. Requires Fire and Thorn rituals.",
+                family:       RitualFamily.Fire,
+                secondFamily: RitualFamily.Thorn,
+                trigger:      RitualTrigger.OnDeflect,
+                effectId:     "Fire_Thorn_BurningBrambles",
+                l1: (baseValue: 18f, maxStacks: 2, stackMult: 1.30f, power: 1.0f),
+                l2: (baseValue: 27f, maxStacks: 2, stackMult: 1.30f, power: 1.0f),
+                l3: (baseValue: 36f, maxStacks: 2, stackMult: 1.30f, power: 1.0f)
+            ));
+
+            // Monsoon — Water + Gale, OnDash
+            Save(folder, "MonsoonRitual", MakeTwin(
+                ritualName:   "Monsoon",
+                description:  "Dashing leaves a slowing rain zone behind. Requires Water and Gale rituals.",
+                family:       RitualFamily.Water,
+                secondFamily: RitualFamily.Gale,
+                trigger:      RitualTrigger.OnDash,
+                effectId:     "Water_Gale_Monsoon",
+                l1: (baseValue: 15f, maxStacks: 2, stackMult: 1.20f, power: 1.0f),
+                l2: (baseValue: 22.5f, maxStacks: 2, stackMult: 1.20f, power: 1.0f),
+                l3: (baseValue: 30f, maxStacks: 2, stackMult: 1.20f, power: 1.0f)
+            ));
+
+            // Temporal Shock — Lightning + Time, OnFinisher
+            Save(folder, "TemporalShockRitual", MakeTwin(
+                ritualName:   "Temporal Shock",
+                description:  "Echo the stun effect after a delay. Requires Lightning and Time rituals.",
+                family:       RitualFamily.Lightning,
+                secondFamily: RitualFamily.Time,
+                trigger:      RitualTrigger.OnFinisher,
+                effectId:     "Lightning_Time_TemporalShock",
+                l1: (baseValue: 25f, maxStacks: 1, stackMult: 1.35f, power: 1.0f),
+                l2: (baseValue: 37.5f, maxStacks: 1, stackMult: 1.35f, power: 1.0f),
+                l3: (baseValue: 50f, maxStacks: 1, stackMult: 1.35f, power: 1.0f)
+            ));
+
+            // Void Harvest — Necro + Cosmic, OnKill
+            Save(folder, "VoidHarvestRitual", MakeTwin(
+                ritualName:   "Void Harvest",
+                description:  "Kill explosions that heal the player. Requires Necro and Cosmic rituals.",
+                family:       RitualFamily.Necro,
+                secondFamily: RitualFamily.Cosmic,
+                trigger:      RitualTrigger.OnKill,
+                effectId:     "Necro_Cosmic_VoidHarvest",
+                l1: (baseValue: 20f, maxStacks: 2, stackMult: 1.30f, power: 1.0f),
+                l2: (baseValue: 30f, maxStacks: 2, stackMult: 1.30f, power: 1.0f),
+                l3: (baseValue: 40f, maxStacks: 2, stackMult: 1.30f, power: 1.0f)
+            ));
+
+            // Coral Barrier — Thorn + Water, OnTakeDamage
+            Save(folder, "CoralBarrierRitual", MakeTwin(
+                ritualName:   "Coral Barrier",
+                description:  "Reactive thorns and damage reduction on taking damage. Requires Thorn and Water rituals.",
+                family:       RitualFamily.Thorn,
+                secondFamily: RitualFamily.Water,
+                trigger:      RitualTrigger.OnTakeDamage,
+                effectId:     "Thorn_Water_CoralBarrier",
+                l1: (baseValue: 10f, maxStacks: 4, stackMult: 1.15f, power: 1.0f),
+                l2: (baseValue: 15f, maxStacks: 4, stackMult: 1.15f, power: 1.0f),
+                l3: (baseValue: 20f, maxStacks: 4, stackMult: 1.15f, power: 1.0f)
+            ));
+        }
+
         // ── Helpers ───────────────────────────────────────────────────────────
 
         private static RitualData Make(
@@ -546,6 +645,24 @@ namespace TomatoFighters.Editor
             data.level3 = new RitualLevelData
                 { baseValue = l3.baseValue, maxStacks = l3.maxStacks, stackingMultiplier = l3.stackMult, ritualPower = l3.power };
 
+            return data;
+        }
+
+        private static RitualData MakeTwin(
+            string ritualName,
+            string description,
+            RitualFamily family,
+            RitualFamily secondFamily,
+            RitualTrigger trigger,
+            string effectId,
+            (float baseValue, int maxStacks, float stackMult, float power) l1,
+            (float baseValue, int maxStacks, float stackMult, float power) l2,
+            (float baseValue, int maxStacks, float stackMult, float power) l3)
+        {
+            var data = Make(ritualName, description, family, RitualCategory.Twin,
+                           trigger, effectId, l1, l2, l3);
+            data.isTwin       = true;
+            data.secondFamily = secondFamily;
             return data;
         }
 
