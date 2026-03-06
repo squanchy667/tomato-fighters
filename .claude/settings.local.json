@@ -29,7 +29,10 @@
       "Bash(cp:*)",
       "Read(//tmp/**)",
       "Bash(comm:*)",
-      "Bash(do:*)"
+      "Bash(do:*)",
+      "Bash(find /Users/galmoussan/projects/claude/tomato-fighters/tomato-fighters/unity/TomatoFighters/Assets/Scripts -path \"*/Paths/*\" -name \"*.cs\" 2>/dev/null | head -15)",
+      "Bash(cd /Users/galmoussan/projects/claude/tomato-fighters/tomato-fighters-docs && git merge --no-commit --no-ff tal 2>&1; echo \"EXIT: $?\")",
+      "Bash(cd /Users/galmoussan/projects/claude/tomato-fighters/tomato-fighters-docs && grep -rn \"<<<<<<\\\\|======\\\\|>>>>>>\" TASK_BOARD.md resources/changelog.md; echo \"EXIT: $?\")"
     ]
   }
 }

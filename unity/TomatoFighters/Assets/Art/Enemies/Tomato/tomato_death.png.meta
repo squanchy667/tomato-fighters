@@ -509,7 +509,23 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      tomato_death_0: -3621095005514409409
+      tomato_death_1: -6006910320577486937
+      tomato_death_10: 2777875797217667552
+      tomato_death_11: 5707525453556282457
+      tomato_death_12: -5495376230274436417
+      tomato_death_13: -819132756250455444
+      tomato_death_14: -2524160553829373613
+      tomato_death_15: 1343998881622960294
+      tomato_death_2: -7632815992312246008
+      tomato_death_3: -2457656779350199279
+      tomato_death_4: -29000341926060408
+      tomato_death_5: -1430416480611400164
+      tomato_death_6: -3213420874731709876
+      tomato_death_7: -807220725917709958
+      tomato_death_8: 5674917996640554269
+      tomato_death_9: -7925450216507236063
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 383c1ebdae25f0442a895956ebe11c88, type: 3}
-  m_Name: BlazingDashRitual
+  m_Name: 
   m_EditorClassIdentifier: 
   ritualName: Blazing Dash
   description: Dashing leaves a trail of flames that burns enemies who enter it.

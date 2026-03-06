@@ -259,7 +259,13 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      tomato_idle_0: -9163462255839999511
+      tomato_idle_1: 564341981603040052
+      tomato_idle_2: -7954455178744782452
+      tomato_idle_3: 7994201410817203889
+      tomato_idle_4: -1555883645792101318
+      tomato_idle_5: -9218602644186554507
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 383c1ebdae25f0442a895956ebe11c88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ritualName: Gale Jump
+  description: Jumping creates a wind slam on landing that damages enemies below.
+  family: 4
+  category: 2
+  trigger: 8
+  effectId: Gale_GaleJump
+  effectPrefab: {fileID: 0}
+  isTwin: 0
+  secondFamily: 0
+  level1:
+    baseValue: 8
+    maxStacks: 3
+    stackingMultiplier: 1.1
+    ritualPower: 1
+  level2:
+    baseValue: 8
+    maxStacks: 4
+    stackingMultiplier: 1.15
+    ritualPower: 1
+  level3:
+    baseValue: 8
+    maxStacks: 5
+    stackingMultiplier: 1.2
+    ritualPower: 1

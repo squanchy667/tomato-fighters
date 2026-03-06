@@ -309,7 +309,15 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      eggplant_wizard_walk_0: -3262221740557357584
+      eggplant_wizard_walk_1: -1148357841162392103
+      eggplant_wizard_walk_2: -8323067232050884546
+      eggplant_wizard_walk_3: -18442998945558554
+      eggplant_wizard_walk_4: 3049804042213497258
+      eggplant_wizard_walk_5: -4804547200065998337
+      eggplant_wizard_walk_6: -2656909941157369452
+      eggplant_wizard_walk_7: 8726956828056072117
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

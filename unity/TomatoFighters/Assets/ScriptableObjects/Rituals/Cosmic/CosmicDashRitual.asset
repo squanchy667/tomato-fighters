@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 383c1ebdae25f0442a895956ebe11c88, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ritualName: Cosmic Dash
+  description: Dashing leaves a trail of cosmic energy that damages enemies.
+  family: 6
+  category: 1
+  trigger: 2
+  effectId: Cosmic_CosmicDash
+  effectPrefab: {fileID: 0}
+  isTwin: 0
+  secondFamily: 0
+  level1:
+    baseValue: 16
+    maxStacks: 1
+    stackingMultiplier: 1
+    ritualPower: 1
+  level2:
+    baseValue: 16
+    maxStacks: 1
+    stackingMultiplier: 1
+    ritualPower: 1.5
+  level3:
+    baseValue: 16
+    maxStacks: 1
+    stackingMultiplier: 1
+    ritualPower: 2

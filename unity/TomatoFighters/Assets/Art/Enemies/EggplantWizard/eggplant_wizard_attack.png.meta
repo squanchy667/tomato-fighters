@@ -259,7 +259,13 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      eggplant_wizard_attack_0: 7094072541824972847
+      eggplant_wizard_attack_1: -7846997138610408481
+      eggplant_wizard_attack_2: -7458199821175662520
+      eggplant_wizard_attack_3: -4426452474839907250
+      eggplant_wizard_attack_4: 3844878662308727460
+      eggplant_wizard_attack_5: -5167890966204092932
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

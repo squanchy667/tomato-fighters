@@ -284,7 +284,14 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      tomato_attack_1_0: -6979785725007490073
+      tomato_attack_1_1: 8458357707000150850
+      tomato_attack_1_2: 4073335910295986673
+      tomato_attack_1_3: 4246626706084913327
+      tomato_attack_1_4: -568100046899110622
+      tomato_attack_1_5: -828824623673257719
+      tomato_attack_1_6: 6958443621793188109
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
