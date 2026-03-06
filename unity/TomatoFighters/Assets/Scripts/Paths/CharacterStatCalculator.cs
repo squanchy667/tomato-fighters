@@ -15,7 +15,7 @@ namespace TomatoFighters.Paths
     ///   <item><description>Roguelite — checks stats for passive and buff effects (T017)</description></item>
     /// </list></para>
     ///
-    /// <para><b>Formula per stat:</b> (Base + PathBonus) × RitualMultiplier × TrinketMultiplier × SoulTreeBonus</para>
+    /// <para><b>Formula per stat:</b> (Base + PathBonus + InspirationFlat) × RitualMultiplier × TrinketMultiplier × SoulTreeBonus × InspirationMultiplier</para>
     ///
     /// <para><b>Stateless</b> — all inputs are passed via parameters, making this class
     /// thread-safe and unit-testable without a Unity scene.</para>
@@ -25,7 +25,7 @@ namespace TomatoFighters.Paths
         /// <summary>
         /// Calculates all 10 character stats for the current run state.
         ///
-        /// <para>Formula per stat: (Base + PathBonus) × Ritual × Trinket × SoulTree</para>
+        /// <para>Formula per stat: (Base + PathBonus + InspirationFlat) × Ritual × Trinket × SoulTree × InspirationMultiplier</para>
         ///
         /// <para>Integer stats (HP, DEF, MNA) are rounded to nearest int.
         /// CritChance is clamped to [0, 1].
@@ -120,15 +120,16 @@ namespace TomatoFighters.Paths
 
         /// <summary>
         /// Core formula for a single stat.
-        /// (baseValue + pathBonus) × ritualMultiplier × trinketMultiplier × soulTreeBonus
+        /// (baseValue + pathBonus + inspirationFlat) × ritualMultiplier × trinketMultiplier × soulTreeBonus × inspirationMultiplier
         /// </summary>
         private static float CalcFloat(StatType stat, float baseValue, StatModifierInput input)
         {
             int i = (int)stat;
-            return (baseValue + input.pathBonuses[i])
+            return (baseValue + input.pathBonuses[i] + input.inspirationFlatBonuses[i])
                    * input.ritualMultipliers[i]
                    * input.trinketMultipliers[i]
-                   * input.soulTreeBonuses[i];
+                   * input.soulTreeBonuses[i]
+                   * input.inspirationMultipliers[i];
         }
     }
 }

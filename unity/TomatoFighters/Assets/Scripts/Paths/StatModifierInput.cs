@@ -55,8 +55,22 @@ namespace TomatoFighters.Paths
         public float[] soulTreeBonuses;
 
         /// <summary>
+        /// Per-stat additive bonuses from collected inspirations (flat modifiers).
+        /// Added to base + pathBonuses before multipliers are applied.
+        /// Neutral value: 0f (no bonus).
+        /// </summary>
+        public float[] inspirationFlatBonuses;
+
+        /// <summary>
+        /// Per-stat multiplicative modifiers from collected inspirations (percent modifiers).
+        /// Applied as the final multiplier in the stat formula.
+        /// Neutral value: 1.0f (no modification).
+        /// </summary>
+        public float[] inspirationMultipliers;
+
+        /// <summary>
         /// Creates a <see cref="StatModifierInput"/> with no active modifiers.
-        /// All path bonuses are 0f; all multipliers are 1.0f.
+        /// All path/inspiration bonuses are 0f; all multipliers are 1.0f.
         ///
         /// <para>Pass the result to <see cref="CharacterStatCalculator.Calculate"/>
         /// to get the character's unmodified base stats as <see cref="FinalStats"/>.</para>
@@ -66,27 +80,32 @@ namespace TomatoFighters.Paths
         {
             int count = StatCount;
 
-            // pathBonuses default to 0f — C# zero-initializes float arrays
-            var pathBonuses = new float[count];
+            // pathBonuses and inspirationFlatBonuses default to 0f — C# zero-initializes float arrays
+            var pathBonuses            = new float[count];
+            var inspirationFlatBonuses = new float[count];
 
-            var ritualMultipliers  = new float[count];
-            var trinketMultipliers = new float[count];
-            var soulTreeBonuses    = new float[count];
+            var ritualMultipliers      = new float[count];
+            var trinketMultipliers     = new float[count];
+            var soulTreeBonuses        = new float[count];
+            var inspirationMultipliers = new float[count];
 
             for (int i = 0; i < count; i++)
             {
-                ritualMultipliers[i]  = 1.0f;
-                trinketMultipliers[i] = 1.0f;
-                soulTreeBonuses[i]    = 1.0f;
+                ritualMultipliers[i]      = 1.0f;
+                trinketMultipliers[i]     = 1.0f;
+                soulTreeBonuses[i]        = 1.0f;
+                inspirationMultipliers[i] = 1.0f;
             }
 
             return new StatModifierInput
             {
-                baseStats          = baseStats,
-                pathBonuses        = pathBonuses,
-                ritualMultipliers  = ritualMultipliers,
-                trinketMultipliers = trinketMultipliers,
-                soulTreeBonuses    = soulTreeBonuses,
+                baseStats              = baseStats,
+                pathBonuses            = pathBonuses,
+                ritualMultipliers      = ritualMultipliers,
+                trinketMultipliers     = trinketMultipliers,
+                soulTreeBonuses        = soulTreeBonuses,
+                inspirationFlatBonuses = inspirationFlatBonuses,
+                inspirationMultipliers = inspirationMultipliers,
             };
         }
     }
