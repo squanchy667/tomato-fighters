@@ -63,6 +63,9 @@ namespace TomatoFighters.Combat.Juggle
         public event Action OnLanded;
 
         /// <inheritdoc/>
+        public event Action OnOTGEnd;
+
+        /// <inheritdoc/>
         public event Action OnTechRecoverStart;
 
         /// <inheritdoc/>
@@ -70,6 +73,9 @@ namespace TomatoFighters.Combat.Juggle
 
         /// <inheritdoc/>
         public event Action<Vector2, float> OnWallBounced;
+
+        /// <inheritdoc/>
+        public event Action OnBlockedHit;
 
         // ── Unity Lifecycle ─────────────────────────────────────────────
 
@@ -134,6 +140,13 @@ namespace TomatoFighters.Combat.Juggle
         {
             _isInKnockback = true;
             _knockbackTimer = config.knockbackRecoveryTime;
+        }
+
+        /// <inheritdoc/>
+        public void NotifyBlockedHit()
+        {
+            OnBlockedHit?.Invoke();
+            Debug.Log("[JuggleSystem] Blocked hit — OTG/TechRecover gating");
         }
 
         /// <inheritdoc/>
@@ -283,7 +296,11 @@ namespace TomatoFighters.Combat.Juggle
         private void TransitionTo(JuggleState newState)
         {
             if (_state == newState) return;
+            var oldState = _state;
             _state = newState;
+
+            if (oldState == JuggleState.OTG)
+                OnOTGEnd?.Invoke();
         }
 
         private void UpdateSpriteOffset()

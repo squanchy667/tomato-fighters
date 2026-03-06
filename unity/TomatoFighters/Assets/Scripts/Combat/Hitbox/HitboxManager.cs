@@ -285,6 +285,30 @@ namespace TomatoFighters.Combat
                 return;
             }
 
+            // OTG/TechRecover hit-gating: block attacks that can't hit downed enemies
+            if (target is MonoBehaviour targetMb)
+            {
+                var juggleTarget = targetMb.GetComponent<IJuggleTarget>();
+                if (juggleTarget != null)
+                {
+                    var juggleState = juggleTarget.CurrentJuggleState;
+
+                    if (juggleState == JuggleState.OTG && !attackData.isOTGCapable)
+                    {
+                        juggleTarget.NotifyBlockedHit();
+                        Debug.Log($"[HitboxManager] Hit BLOCKED — target in OTG, attack '{attackData.attackName}' is not OTG-capable");
+                        return;
+                    }
+
+                    if (juggleState == JuggleState.TechRecover)
+                    {
+                        juggleTarget.NotifyBlockedHit();
+                        Debug.Log($"[HitboxManager] Hit BLOCKED — target in TechRecover");
+                        return;
+                    }
+                }
+            }
+
             var characterType = comboController != null
                 ? comboController.CharacterType
                 : CharacterType.Brutor;

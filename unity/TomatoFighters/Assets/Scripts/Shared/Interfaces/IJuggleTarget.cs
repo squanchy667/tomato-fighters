@@ -48,6 +48,9 @@ namespace TomatoFighters.Shared.Interfaces
         /// <summary>Fired when the entity transitions from airborne to grounded/OTG.</summary>
         event Action OnLanded;
 
+        /// <summary>Fired when OTG state ends for any reason (tech recover, relaunch, etc.).</summary>
+        event Action OnOTGEnd;
+
         /// <summary>Fired when OTG state ends and the entity begins tech recovery.</summary>
         event Action OnTechRecoverStart;
 
@@ -56,5 +59,14 @@ namespace TomatoFighters.Shared.Interfaces
 
         /// <summary>Fired when a wall bounce occurs. Provides bounce position and minor damage dealt.</summary>
         event Action<Vector2, float> OnWallBounced;
+
+        /// <summary>
+        /// Notify the juggle system that a hit was blocked by OTG/TechRecover gating.
+        /// The entity handles its own visual feedback (e.g. "immune" indicator).
+        /// </summary>
+        void NotifyBlockedHit();
+
+        /// <summary>Fired when a hit is blocked by OTG/TechRecover gating. Used for "immune" visual feedback.</summary>
+        event Action OnBlockedHit;
     }
 }

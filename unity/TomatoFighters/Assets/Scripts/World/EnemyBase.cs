@@ -84,6 +84,12 @@ namespace TomatoFighters.World
         // ── Invulnerability ───────────────────────────────────────────────
 
         private bool _isInvulnerable;
+        private Color _originalColor;
+        private Coroutine _techRecoverBlinkCoroutine;
+        private Coroutine _blockedHitFlashCoroutine;
+
+        // OTG tint: darker reddish tone signals "hit me with Arcana"
+        private static readonly Color OTG_TINT = new Color(0.8f, 0.4f, 0.4f, 1f);
 
         /// <inheritdoc/>
         public bool IsInvulnerable => _isInvulnerable;
@@ -123,6 +129,7 @@ namespace TomatoFighters.World
         {
             Rb = GetComponent<Rigidbody2D>();
             Sprite = GetComponentInChildren<SpriteRenderer>();
+            if (Sprite != null) _originalColor = Sprite.color;
             Colliders = GetComponentsInChildren<Collider2D>();
             _defenseProvider = defenseProviderComponent as IDefenseProvider;
             _juggleTarget = GetComponent<IJuggleTarget>();
@@ -130,6 +137,11 @@ namespace TomatoFighters.World
             if (_juggleTarget != null)
             {
                 _juggleTarget.OnWallBounced += HandleWallBounce;
+                _juggleTarget.OnLanded += HandleOTGStart;
+                _juggleTarget.OnOTGEnd += HandleOTGEnd;
+                _juggleTarget.OnTechRecoverStart += HandleTechRecoverStart;
+                _juggleTarget.OnTechRecoverEnd += HandleTechRecoverEnd;
+                _juggleTarget.OnBlockedHit += HandleBlockedHit;
             }
 
             _currentHealth = enemyData.maxHealth;
@@ -347,6 +359,81 @@ namespace TomatoFighters.World
                 _currentHealth = 0f;
                 Die();
             }
+        }
+
+        // ── OTG / TechRecover Visual Feedback ─────────────────────────────
+
+        /// <summary>OTG started (landed after juggle) — apply reddish tint.</summary>
+        private void HandleOTGStart()
+        {
+            if (Sprite == null) return;
+            Sprite.color = OTG_TINT;
+        }
+
+        /// <summary>OTG ended (any reason: tech recover, relaunch, etc.) — remove tint.</summary>
+        private void HandleOTGEnd()
+        {
+            if (Sprite != null) Sprite.color = _originalColor;
+        }
+
+        /// <summary>TechRecover started — start invuln blink.</summary>
+        private void HandleTechRecoverStart()
+        {
+            if (Sprite == null) return;
+            _techRecoverBlinkCoroutine = StartCoroutine(TechRecoverBlink());
+        }
+
+        /// <summary>TechRecover ended — stop blink, restore color.</summary>
+        private void HandleTechRecoverEnd()
+        {
+            if (_techRecoverBlinkCoroutine != null)
+            {
+                StopCoroutine(_techRecoverBlinkCoroutine);
+                _techRecoverBlinkCoroutine = null;
+            }
+
+            if (Sprite != null) Sprite.color = _originalColor;
+        }
+
+        /// <summary>A hit was blocked by OTG/TechRecover gating — flash "immune" indicator.</summary>
+        private void HandleBlockedHit()
+        {
+            if (Sprite == null) return;
+
+            // Restart flash if already playing
+            if (_blockedHitFlashCoroutine != null)
+                StopCoroutine(_blockedHitFlashCoroutine);
+
+            _blockedHitFlashCoroutine = StartCoroutine(BlockedHitFlash());
+        }
+
+        private IEnumerator TechRecoverBlink()
+        {
+            const float blinkInterval = 0.08f;
+            bool isWhite = false;
+
+            // Blink until coroutine is stopped by HandleTechRecoverEnd
+            while (true)
+            {
+                isWhite = !isWhite;
+                Sprite.color = isWhite ? Color.white : _originalColor;
+                yield return new WaitForSeconds(blinkInterval);
+            }
+        }
+
+        private IEnumerator BlockedHitFlash()
+        {
+            Color currentColor = Sprite.color;
+            Sprite.color = Color.cyan;
+            yield return new WaitForSeconds(0.15f);
+
+            // Restore to whatever state color should be (OTG tint or original)
+            if (_juggleTarget != null && _juggleTarget.CurrentJuggleState == JuggleState.OTG)
+                Sprite.color = OTG_TINT;
+            else
+                Sprite.color = currentColor;
+
+            _blockedHitFlashCoroutine = null;
         }
 
         // ── Virtual Hooks ─────────────────────────────────────────────────
