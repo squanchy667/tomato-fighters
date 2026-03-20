@@ -9,6 +9,11 @@ namespace TomatoFighters.Editor
     /// <summary>
     /// Creator Script that generates all 24 InspirationData ScriptableObjects.
     /// 4 characters x 3 paths x 2 per path (1 stat + 1 ability).
+    ///
+    /// <para><b>T041 Status: READY.</b> Run <c>TomatoFighters → Create Inspiration Assets</c>
+    /// from the Unity Editor menu bar to generate all 24 assets into
+    /// <c>Assets/ScriptableObjects/Inspirations/</c>. This step cannot be automated
+    /// via code execution — it requires the Unity Editor to be open.</para>
     /// </summary>
     public static class CreateInspirationAssets
     {
